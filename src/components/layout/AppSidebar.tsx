@@ -16,7 +16,8 @@ import {
   FileText,
   Package,
   DollarSign,
-  Receipt
+  Receipt,
+  Headphones
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -49,6 +50,7 @@ const navItems: NavItem[] = [
   { title: "Financeiro", href: "/financeiro", icon: DollarSign },
   { title: "Faturas", href: "/faturas", icon: Receipt },
   { title: "Tarefas", href: "/tarefas", icon: ClipboardList },
+  { title: "Suporte", href: "/suporte", icon: Headphones },
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart, comingSoon: true },
   { title: "Produtos", href: "/configuracoes/produtos", icon: Package, adminOnly: true },
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
