@@ -11,6 +11,8 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import Leads from "./pages/Leads";
+import Deals from "./pages/Deals";
+import Products from "./pages/Products";
 import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
@@ -74,6 +76,22 @@ const App = () => (
               element={
                 <ProtectedRoute requireAdmin>
                   <Users />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/produtos"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <Products />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/propostas"
+              element={
+                <ProtectedRoute>
+                  <Deals />
                 </ProtectedRoute>
               }
             />

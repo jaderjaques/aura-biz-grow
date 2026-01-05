@@ -17,12 +17,16 @@ import {
 } from "@/components/ui/collapsible";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLeads } from "@/hooks/useLeads";
+import { useDeals } from "@/hooks/useDeals";
 import { useAuth } from "@/contexts/AuthContext";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { LeadsKanban } from "@/components/leads/LeadsKanban";
 import { NewLeadDialog } from "@/components/leads/NewLeadDialog";
 import { ImportCSVDialog } from "@/components/leads/ImportCSVDialog";
 import { LeadDetailsSidebar } from "@/components/leads/LeadDetailsSidebar";
+import { NewDealDialog } from "@/components/deals/NewDealDialog";
+import { Lead } from "@/types/leads";
+import { SelectedProduct } from "@/types/products";
 import {
   Users,
   UserPlus,
@@ -51,6 +55,7 @@ export default function Leads() {
     deleteLead,
     importLeads,
   } = useLeads();
+  const { createDeal } = useDeals();
   const { isAdmin } = useAuth();
   const { toast } = useToast();
 
@@ -64,6 +69,8 @@ export default function Leads() {
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [showLeadDetails, setShowLeadDetails] = useState(false);
+  const [showNewDealDialog, setShowNewDealDialog] = useState(false);
+  const [dealLead, setDealLead] = useState<Lead | null>(null);
 
   const handleSearch = useCallback(() => {
     fetchLeads({
@@ -115,6 +122,18 @@ export default function Leads() {
 
   const handleSelectAll = (selected: boolean) => {
     setSelectedLeads(selected ? leads.map((l) => l.id) : []);
+  };
+
+  const handleCreateDealFromLead = (lead: Lead) => {
+    setDealLead(lead);
+    setShowNewDealDialog(true);
+    setShowLeadDetails(false);
+  };
+
+  const handleDealCreated = async (dealData: any, products: SelectedProduct[]) => {
+    await createDeal(dealData, products);
+    setShowNewDealDialog(false);
+    setDealLead(null);
   };
 
   return (
@@ -359,6 +378,14 @@ export default function Leads() {
           fetchLeads();
           fetchMetrics();
         }}
+        onCreateDeal={handleCreateDealFromLead}
+      />
+
+      <NewDealDialog
+        open={showNewDealDialog}
+        onOpenChange={setShowNewDealDialog}
+        onSubmit={handleDealCreated}
+        lead={dealLead}
       />
     </AppLayout>
   );
