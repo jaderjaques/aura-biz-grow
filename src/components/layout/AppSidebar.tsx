@@ -39,7 +39,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: Home },
-  { title: "Leads", href: "/leads", icon: Users, badge: 0, comingSoon: true },
+  { title: "Leads", href: "/leads", icon: Users },
   { title: "Clientes", href: "/clientes", icon: Briefcase, comingSoon: true },
   { title: "Funil de Vendas", href: "/funil", icon: BarChart3, comingSoon: true },
   { title: "Tarefas", href: "/tarefas", icon: ClipboardList, comingSoon: true },
