@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,14 +16,17 @@ import { FileText, DollarSign, CheckCircle, TrendingUp, Plus } from "lucide-reac
 import { useDeals } from "@/hooks/useDeals";
 import { DealsTable } from "@/components/deals/DealsTable";
 import { NewDealDialog } from "@/components/deals/NewDealDialog";
+import { ConvertToCustomerDialog } from "@/components/customers/ConvertToCustomerDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DealWithDetails, SelectedProduct } from "@/types/products";
 
 export default function Deals() {
+  const navigate = useNavigate();
   const {
     deals,
     loading,
+    fetchDeals,
     createDeal,
     markAsWon,
     markAsLost,
@@ -35,6 +39,8 @@ export default function Deals() {
   const [filterStage, setFilterStage] = useState("all");
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<DealWithDetails | null>(null);
+  const [showConvertDialog, setShowConvertDialog] = useState(false);
+  const [dealToConvert, setDealToConvert] = useState<DealWithDetails | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -304,7 +310,13 @@ export default function Deals() {
                 deals={filteredDeals}
                 onView={handleView}
                 onGenerateQuote={handleGenerateQuote}
-                onMarkAsWon={markAsWon}
+                onMarkAsWon={(dealId) => {
+                  const deal = deals.find((d) => d.id === dealId);
+                  if (deal) {
+                    setDealToConvert(deal);
+                    setShowConvertDialog(true);
+                  }
+                }}
                 onMarkAsLost={markAsLost}
               />
             )}
@@ -316,6 +328,16 @@ export default function Deals() {
         open={showNewDialog}
         onOpenChange={setShowNewDialog}
         onSubmit={handleCreateDeal}
+      />
+
+      <ConvertToCustomerDialog
+        open={showConvertDialog}
+        onOpenChange={setShowConvertDialog}
+        deal={dealToConvert}
+        onSuccess={(customerId) => {
+          fetchDeals();
+          navigate(`/clientes`);
+        }}
       />
     </AppLayout>
   );

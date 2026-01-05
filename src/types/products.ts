@@ -11,7 +11,11 @@ export interface DealWithDetails extends Deal {
   lead?: {
     id: string;
     company_name: string;
+    trading_name: string | null;
+    cnpj: string | null;
+    segment: string | null;
     contact_name: string | null;
+    position: string | null;
     phone: string;
     email: string | null;
   } | null;

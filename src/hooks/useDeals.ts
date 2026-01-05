@@ -15,7 +15,7 @@ export function useDeals() {
         .from("deals")
         .select(`
           *,
-          lead:leads(id, company_name, contact_name, phone, email),
+          lead:leads(id, company_name, trading_name, cnpj, segment, contact_name, position, phone, email),
           assigned_user:profiles!deals_assigned_to_fkey(id, full_name, avatar_url),
           deal_products(*, product:products(*))
         `)
