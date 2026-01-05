@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { format, differenceInDays, startOfMonth, endOfMonth, subMonths, startOfQuarter, startOfYear } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import {
   Table,
   TableBody,
@@ -61,6 +60,7 @@ export function InvoicesTable() {
   const [filterCustomer, setFilterCustomer] = useState("all");
   const [filterPeriod, setFilterPeriod] = useState("all");
   const [filterPaymentMethod, setFilterPaymentMethod] = useState("all");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithDetails | null>(null);
   const [showMarkAsPaid, setShowMarkAsPaid] = useState(false);
@@ -130,7 +130,6 @@ export function InvoicesTable() {
     return labels[type] || type;
   };
 
-  // Filter by period
   const filterByPeriod = (invoice: InvoiceWithDetails) => {
     if (filterPeriod === "all") return true;
     const issueDate = invoice.issue_date ? new Date(invoice.issue_date) : new Date(invoice.created_at || "");
@@ -150,7 +149,6 @@ export function InvoicesTable() {
     }
   };
 
-  // Filter by payment method
   const filterByPaymentMethod = (invoice: InvoiceWithDetails) => {
     if (filterPaymentMethod === "all") return true;
     return invoice.payment_method === filterPaymentMethod;
@@ -158,7 +156,6 @@ export function InvoicesTable() {
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
-      // Search filter
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
         const matchesSearch =
@@ -167,18 +164,12 @@ export function InvoicesTable() {
           invoice.customer?.contact_name?.toLowerCase().includes(search);
         if (!matchesSearch) return false;
       }
-
-      // Period filter
       if (!filterByPeriod(invoice)) return false;
-
-      // Payment method filter
       if (!filterByPaymentMethod(invoice)) return false;
-
       return true;
     });
   }, [invoices, searchTerm, filterPeriod, filterPaymentMethod]);
 
-  // Stats calculations
   const stats = useMemo(() => {
     const now = new Date();
     const monthStart = startOfMonth(now);
@@ -324,154 +315,148 @@ export function InvoicesTable() {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {/* Search */}
-              <div className="md:col-span-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por número, cliente..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
+        {/* Filters - Without Card Wrapper */}
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por número, cliente..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-
-              {/* Status Filter */}
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="pending">Pendentes</SelectItem>
-                  <SelectItem value="sent">Enviadas</SelectItem>
-                  <SelectItem value="paid">Pagas</SelectItem>
-                  <SelectItem value="overdue">Vencidas</SelectItem>
-                  <SelectItem value="cancelled">Canceladas</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Type Filter */}
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="setup">Setup</SelectItem>
-                  <SelectItem value="monthly">Mensalidade</SelectItem>
-                  <SelectItem value="addon">Add-on</SelectItem>
-                  <SelectItem value="consulting">Consultoria</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
-            {/* Advanced Filters */}
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="mt-4">
-                  <SlidersHorizontal className="mr-2 h-4 w-4" />
-                  Filtros Avançados
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Select value={filterCustomer} onValueChange={setFilterCustomer}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {customers?.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.company_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="pending">Pendentes</SelectItem>
+                <SelectItem value="sent">Enviadas</SelectItem>
+                <SelectItem value="paid">Pagas</SelectItem>
+                <SelectItem value="overdue">Vencidas</SelectItem>
+                <SelectItem value="cancelled">Canceladas</SelectItem>
+              </SelectContent>
+            </Select>
 
-                  <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Período" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="this_month">Este mês</SelectItem>
-                      <SelectItem value="last_month">Mês passado</SelectItem>
-                      <SelectItem value="this_quarter">Este trimestre</SelectItem>
-                      <SelectItem value="this_year">Este ano</SelectItem>
-                    </SelectContent>
-                  </Select>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="setup">Setup</SelectItem>
+                <SelectItem value="monthly">Mensalidade</SelectItem>
+                <SelectItem value="addon">Add-on</SelectItem>
+                <SelectItem value="consulting">Consultoria</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-                  <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Forma de Pagamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      <SelectItem value="boleto">Boleto</SelectItem>
-                      <SelectItem value="pix">PIX</SelectItem>
-                      <SelectItem value="card">Cartão</SelectItem>
-                      <SelectItem value="bank_transfer">Transferência</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </CardContent>
-        </Card>
+          <Collapsible open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <SlidersHorizontal className="mr-2 h-4 w-4" />
+                Filtros Avançados
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <div className="grid grid-cols-3 gap-4">
+                <Select value={filterCustomer} onValueChange={setFilterCustomer}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {customers?.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.company_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="this_month">Este mês</SelectItem>
+                    <SelectItem value="last_month">Mês passado</SelectItem>
+                    <SelectItem value="this_quarter">Este trimestre</SelectItem>
+                    <SelectItem value="this_year">Este ano</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Forma Pagamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="card">Cartão</SelectItem>
+                    <SelectItem value="bank_transfer">Transferência</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
 
         {/* Table */}
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>
-                {filteredInvoices.length} {filteredInvoices.length === 1 ? "fatura" : "faturas"}
+                {filteredInvoices.length === 0
+                  ? "Nenhuma fatura encontrada"
+                  : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? "fatura" : "faturas"}`}
               </CardTitle>
-              <Button variant="outline" size="sm" onClick={exportToCSV}>
-                <Download className="mr-2 h-4 w-4" />
-                Exportar
-              </Button>
+              {filteredInvoices.length > 0 && (
+                <Button variant="outline" size="sm" onClick={exportToCSV}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Emissão</TableHead>
-                  <TableHead>Vencimento</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Carregando...</p>
+              </div>
+            ) : filteredInvoices.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
+                <p className="text-muted-foreground font-medium">Nenhuma fatura encontrada</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Tente ajustar os filtros ou criar uma nova fatura
+                </p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      Carregando...
-                    </TableCell>
+                    <TableHead>Número</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Emissão</TableHead>
+                    <TableHead>Vencimento</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
-                ) : filteredInvoices.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12">
-                      <FileText className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
-                      <p className="text-muted-foreground">Nenhuma fatura encontrada</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Tente ajustar os filtros ou criar uma nova fatura
-                      </p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredInvoices.map((invoice) => (
+                </TableHeader>
+                <TableBody>
+                  {filteredInvoices.map((invoice) => (
                     <TableRow
                       key={invoice.id}
                       className="cursor-pointer hover:bg-muted/50"
@@ -531,7 +516,7 @@ export function InvoicesTable() {
                             invoice.status !== "paid" &&
                             invoice.status !== "cancelled" && (
                               <p className="text-xs text-destructive">
-                                Vencido há {differenceInDays(new Date(), new Date(invoice.due_date))}{" "}
+                                Venceu há {differenceInDays(new Date(), new Date(invoice.due_date))}{" "}
                                 dias
                               </p>
                             )}
@@ -585,10 +570,10 @@ export function InvoicesTable() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
