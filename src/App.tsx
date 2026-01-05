@@ -16,6 +16,7 @@ import Products from "./pages/Products";
 import Customers from "./pages/Customers";
 import FinancialDashboard from "./pages/FinancialDashboard";
 import Invoices from "./pages/Invoices";
+import Tasks from "./pages/Tasks";
 import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
@@ -119,6 +120,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Invoices />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tarefas"
+              element={
+                <ProtectedRoute>
+                  <Tasks />
                 </ProtectedRoute>
               }
             />
