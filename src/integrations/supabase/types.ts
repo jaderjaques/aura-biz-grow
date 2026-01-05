@@ -113,6 +113,115 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          active: boolean | null
+          api_key: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          key_name: string
+          last_used_at: string | null
+          rate_limit_requests_per_minute: number | null
+          scopes: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          api_key: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          key_name: string
+          last_used_at?: string | null
+          rate_limit_requests_per_minute?: number | null
+          scopes?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          api_key?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          key_name?: string
+          last_used_at?: string | null
+          rate_limit_requests_per_minute?: number | null
+          scopes?: string[] | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_configs: {
+        Row: {
+          action_config: Json | null
+          action_type: string
+          active: boolean | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          failed_executions: number | null
+          id: string
+          last_execution_at: string | null
+          name: string
+          successful_executions: number | null
+          total_executions: number | null
+          trigger_conditions: Json | null
+          trigger_event: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_config?: Json | null
+          action_type: string
+          active?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          failed_executions?: number | null
+          id?: string
+          last_execution_at?: string | null
+          name: string
+          successful_executions?: number | null
+          total_executions?: number | null
+          trigger_conditions?: Json | null
+          trigger_event: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_config?: Json | null
+          action_type?: string
+          active?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          failed_executions?: number | null
+          id?: string
+          last_execution_at?: string | null
+          name?: string
+          successful_executions?: number | null
+          total_executions?: number | null
+          trigger_conditions?: Json | null
+          trigger_event?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_configs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_settings: {
         Row: {
           billing_contact_name: string | null
@@ -813,6 +922,103 @@ export type Database = {
           },
         ]
       }
+      integration_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          integration_type: string
+          ip_address: string | null
+          request_data: Json | null
+          response_data: Json | null
+          response_status: string | null
+          success: boolean | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          integration_type: string
+          ip_address?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          response_status?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          integration_type?: string
+          ip_address?: string | null
+          request_data?: Json | null
+          response_data?: Json | null
+          response_status?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_settings: {
+        Row: {
+          active: boolean | null
+          config: Json
+          created_at: string | null
+          id: string
+          integration_name: string
+          last_test_at: string | null
+          last_test_success: boolean | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          config: Json
+          created_at?: string | null
+          id?: string
+          integration_name: string
+          last_test_at?: string | null
+          last_test_success?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          config?: Json
+          created_at?: string | null
+          id?: string
+          integration_name?: string
+          last_test_at?: string | null
+          last_test_success?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_status_history: {
         Row: {
           changed_at: string | null
@@ -1176,6 +1382,59 @@ export type Database = {
           },
           {
             foreignKeyName: "leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_templates: {
+        Row: {
+          active: boolean | null
+          body: string
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          preview_text: string | null
+          subject: string | null
+          template_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          body: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          preview_text?: string | null
+          subject?: string | null
+          template_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          body?: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          preview_text?: string | null
+          subject?: string | null
+          template_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -2134,6 +2393,136 @@ export type Database = {
           },
         ]
       }
+      webhook_logs: {
+        Row: {
+          attempt_number: number | null
+          created_at: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          request_body: Json | null
+          request_headers: Json | null
+          request_url: string | null
+          response_body: string | null
+          response_status: number | null
+          response_time_ms: number | null
+          success: boolean | null
+          webhook_id: string | null
+        }
+        Insert: {
+          attempt_number?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          request_body?: Json | null
+          request_headers?: Json | null
+          request_url?: string | null
+          response_body?: string | null
+          response_status?: number | null
+          response_time_ms?: number | null
+          success?: boolean | null
+          webhook_id?: string | null
+        }
+        Update: {
+          attempt_number?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          request_body?: Json | null
+          request_headers?: Json | null
+          request_url?: string | null
+          response_body?: string | null
+          response_status?: number | null
+          response_time_ms?: number | null
+          success?: boolean | null
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          active: boolean | null
+          auth_config: Json | null
+          auth_type: string | null
+          created_at: string | null
+          custom_headers: Json | null
+          events: string[]
+          failed_deliveries: number | null
+          id: string
+          last_delivery_at: string | null
+          last_delivery_status: string | null
+          name: string
+          retry_enabled: boolean | null
+          retry_max_attempts: number | null
+          successful_deliveries: number | null
+          total_deliveries: number | null
+          updated_at: string | null
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          auth_config?: Json | null
+          auth_type?: string | null
+          created_at?: string | null
+          custom_headers?: Json | null
+          events: string[]
+          failed_deliveries?: number | null
+          id?: string
+          last_delivery_at?: string | null
+          last_delivery_status?: string | null
+          name: string
+          retry_enabled?: boolean | null
+          retry_max_attempts?: number | null
+          successful_deliveries?: number | null
+          total_deliveries?: number | null
+          updated_at?: string | null
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          auth_config?: Json | null
+          auth_type?: string | null
+          created_at?: string | null
+          custom_headers?: Json | null
+          events?: string[]
+          failed_deliveries?: number | null
+          id?: string
+          last_delivery_at?: string | null
+          last_delivery_status?: string | null
+          name?: string
+          retry_enabled?: boolean | null
+          retry_max_attempts?: number | null
+          successful_deliveries?: number | null
+          total_deliveries?: number | null
+          updated_at?: string | null
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2147,6 +2536,7 @@ export type Database = {
         Args: { lead_record: Database["public"]["Tables"]["leads"]["Row"] }
         Returns: number
       }
+      generate_api_key: { Args: never; Returns: string }
       generate_contract_number: { Args: never; Returns: string }
       generate_deal_number: { Args: never; Returns: string }
       generate_invoice_number: { Args: never; Returns: string }
