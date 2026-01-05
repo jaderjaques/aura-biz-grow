@@ -9,6 +9,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Users from "./pages/Users";
+import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +25,7 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/aceitar-convite" element={<AcceptInvite />} />
             
             {/* Protected routes */}
             <Route
@@ -54,6 +57,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireAdmin>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/usuarios"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <Users />
                 </ProtectedRoute>
               }
             />
