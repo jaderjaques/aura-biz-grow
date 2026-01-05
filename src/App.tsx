@@ -14,6 +14,8 @@ import Leads from "./pages/Leads";
 import Deals from "./pages/Deals";
 import Products from "./pages/Products";
 import Customers from "./pages/Customers";
+import FinancialDashboard from "./pages/FinancialDashboard";
+import Invoices from "./pages/Invoices";
 import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
@@ -101,6 +103,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Customers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/financeiro"
+              element={
+                <ProtectedRoute>
+                  <FinancialDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/faturas"
+              element={
+                <ProtectedRoute>
+                  <Invoices />
                 </ProtectedRoute>
               }
             />
