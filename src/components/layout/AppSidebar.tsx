@@ -14,7 +14,9 @@ import {
   Menu,
   UserPlus,
   FileText,
-  Package
+  Package,
+  DollarSign,
+  Receipt
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -44,6 +46,8 @@ const navItems: NavItem[] = [
   { title: "Leads", href: "/leads", icon: Users },
   { title: "Propostas", href: "/propostas", icon: FileText },
   { title: "Clientes", href: "/clientes", icon: Briefcase },
+  { title: "Financeiro", href: "/financeiro", icon: DollarSign },
+  { title: "Faturas", href: "/faturas", icon: Receipt },
   { title: "Tarefas", href: "/tarefas", icon: ClipboardList, comingSoon: true },
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart, comingSoon: true },
   { title: "Produtos", href: "/configuracoes/produtos", icon: Package, adminOnly: true },

@@ -65,6 +65,62 @@ export type Database = {
           },
         ]
       }
+      billing_settings: {
+        Row: {
+          billing_contact_name: string | null
+          billing_email: string | null
+          billing_phone: string | null
+          created_at: string | null
+          customer_id: string | null
+          grace_period_days: number | null
+          id: string
+          notes: string | null
+          payment_day: number | null
+          preferred_payment_method: string | null
+          send_overdue_notification: boolean | null
+          send_reminder_days_before: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          billing_contact_name?: string | null
+          billing_email?: string | null
+          billing_phone?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          grace_period_days?: number | null
+          id?: string
+          notes?: string | null
+          payment_day?: number | null
+          preferred_payment_method?: string | null
+          send_overdue_notification?: boolean | null
+          send_reminder_days_before?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          billing_contact_name?: string | null
+          billing_email?: string | null
+          billing_phone?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          grace_period_days?: number | null
+          id?: string
+          notes?: string | null
+          payment_day?: number | null
+          preferred_payment_method?: string | null
+          send_overdue_notification?: boolean | null
+          send_reminder_days_before?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_settings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_history: {
         Row: {
           action: string
@@ -634,6 +690,241 @@ export type Database = {
           },
         ]
       }
+      financial_alerts: {
+        Row: {
+          action_notes: string | null
+          action_required: boolean | null
+          action_taken: boolean | null
+          action_taken_at: string | null
+          action_taken_by: string | null
+          alert_date: string | null
+          alert_type: string
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          message: string
+          notification_channel: string | null
+          notified: boolean | null
+          notified_at: string | null
+          related_id: string | null
+          related_type: string | null
+          severity: string | null
+        }
+        Insert: {
+          action_notes?: string | null
+          action_required?: boolean | null
+          action_taken?: boolean | null
+          action_taken_at?: string | null
+          action_taken_by?: string | null
+          alert_date?: string | null
+          alert_type: string
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          message: string
+          notification_channel?: string | null
+          notified?: boolean | null
+          notified_at?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          severity?: string | null
+        }
+        Update: {
+          action_notes?: string | null
+          action_required?: boolean | null
+          action_taken?: boolean | null
+          action_taken_at?: string | null
+          action_taken_by?: string | null
+          alert_date?: string | null
+          alert_type?: string
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          message?: string
+          notification_channel?: string | null
+          notified?: boolean | null
+          notified_at?: string | null
+          related_id?: string | null
+          related_type?: string | null
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_alerts_action_taken_by_fkey"
+            columns: ["action_taken_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_alerts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_status_history: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          from_status: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          to_status: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          from_status?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          from_status?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_status_history_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          amount: number
+          boleto_barcode: string | null
+          boleto_url: string | null
+          contract_id: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          description: string | null
+          discount_amount: number | null
+          due_date: string
+          id: string
+          internal_notes: string | null
+          invoice_number: string
+          invoice_type: string
+          is_recurring: boolean | null
+          issue_date: string | null
+          notes: string | null
+          payment_confirmation: string | null
+          payment_date: string | null
+          payment_method: string | null
+          pdf_url: string | null
+          pix_code: string | null
+          pix_qrcode_url: string | null
+          recurrence_id: string | null
+          status: string | null
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          boleto_barcode?: string | null
+          boleto_url?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          discount_amount?: number | null
+          due_date: string
+          id?: string
+          internal_notes?: string | null
+          invoice_number: string
+          invoice_type: string
+          is_recurring?: boolean | null
+          issue_date?: string | null
+          notes?: string | null
+          payment_confirmation?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          pdf_url?: string | null
+          pix_code?: string | null
+          pix_qrcode_url?: string | null
+          recurrence_id?: string | null
+          status?: string | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          boleto_barcode?: string | null
+          boleto_url?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string | null
+          discount_amount?: number | null
+          due_date?: string
+          id?: string
+          internal_notes?: string | null
+          invoice_number?: string
+          invoice_type?: string
+          is_recurring?: boolean | null
+          issue_date?: string | null
+          notes?: string | null
+          payment_confirmation?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          pdf_url?: string | null
+          pix_code?: string | null
+          pix_qrcode_url?: string | null
+          recurrence_id?: string | null
+          status?: string | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_tags: {
         Row: {
           created_at: string | null
@@ -778,6 +1069,92 @@ export type Database = {
           {
             foreignKeyName: "leads_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          bank_statement_date: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          receipt_url: string | null
+          reconciled: boolean | null
+          reconciled_at: string | null
+          reconciled_by: string | null
+          transaction_id: string | null
+        }
+        Insert: {
+          amount: number
+          bank_statement_date?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_date: string
+          payment_method: string
+          receipt_url?: string | null
+          reconciled?: boolean | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          transaction_id?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_statement_date?: string | null
+          confirmed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          receipt_url?: string | null
+          reconciled?: boolean | null
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_reconciled_by_fkey"
+            columns: ["reconciled_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1158,6 +1535,7 @@ export type Database = {
       }
       generate_contract_number: { Args: never; Returns: string }
       generate_deal_number: { Args: never; Returns: string }
+      generate_invoice_number: { Args: never; Returns: string }
       generate_quote_number: { Args: never; Returns: string }
       get_invite_by_token: {
         Args: { token_value: string }
