@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -128,7 +129,7 @@ export default function FinancialDashboard() {
   };
 
   return (
-    <>
+    <AppLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -451,6 +452,6 @@ export default function FinancialDashboard() {
         onOpenChange={setShowMarkAsPaid}
         invoice={selectedInvoice}
       />
-    </>
+    </AppLayout>
   );
 }
