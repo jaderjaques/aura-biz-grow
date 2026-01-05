@@ -18,8 +18,8 @@ interface Role {
 
 const settingsTabs = [
   { id: "roles", label: "Cargos", icon: Shield, href: "/configuracoes/roles" },
+  { id: "integracoes", label: "Integrações", icon: Key, href: "/configuracoes/integracoes" },
   { id: "equipe", label: "Equipe", icon: Users, href: "/configuracoes/equipe", comingSoon: true },
-  { id: "api", label: "API Keys", icon: Key, href: "/configuracoes/api", comingSoon: true },
   { id: "notificacoes", label: "Notificações", icon: Bell, href: "/configuracoes/notificacoes", comingSoon: true },
   { id: "empresa", label: "Empresa", icon: Building, href: "/configuracoes/empresa", comingSoon: true },
 ];

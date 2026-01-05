@@ -18,6 +18,7 @@ import FinancialDashboard from "./pages/FinancialDashboard";
 import Invoices from "./pages/Invoices";
 import Tasks from "./pages/Tasks";
 import Tickets from "./pages/Tickets";
+import Integrations from "./pages/Integrations";
 import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
@@ -137,6 +138,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Tickets />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/integracoes"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <Integrations />
                 </ProtectedRoute>
               }
             />
