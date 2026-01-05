@@ -20,6 +20,8 @@ import Tasks from "./pages/Tasks";
 import Tickets from "./pages/Tickets";
 import Integrations from "./pages/Integrations";
 import Reports from "./pages/Reports";
+import Roles from "./pages/Roles";
+import AuditLogs from "./pages/AuditLogs";
 import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
@@ -74,7 +76,15 @@ const App = () => (
               path="/configuracoes/roles"
               element={
                 <ProtectedRoute requireAdmin>
-                  <Settings />
+                  <Roles />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/auditoria"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AuditLogs />
                 </ProtectedRoute>
               }
             />
