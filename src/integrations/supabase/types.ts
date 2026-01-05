@@ -65,6 +65,166 @@ export type Database = {
           },
         ]
       }
+      deal_products: {
+        Row: {
+          complexity_selected: Json | null
+          created_at: string | null
+          deal_id: string | null
+          discount_amount: number | null
+          discount_percent: number | null
+          id: string
+          notes: string | null
+          product_id: string | null
+          quantity: number | null
+          start_date: string | null
+          subtotal: number | null
+          total: number | null
+          unit_price: number
+        }
+        Insert: {
+          complexity_selected?: Json | null
+          created_at?: string | null
+          deal_id?: string | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          quantity?: number | null
+          start_date?: string | null
+          subtotal?: number | null
+          total?: number | null
+          unit_price: number
+        }
+        Update: {
+          complexity_selected?: Json | null
+          created_at?: string | null
+          deal_id?: string | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          id?: string
+          notes?: string | null
+          product_id?: string | null
+          quantity?: number | null
+          start_date?: string | null
+          subtotal?: number | null
+          total?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_products_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          actual_close_date: string | null
+          assigned_to: string | null
+          closed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          deal_number: string | null
+          description: string | null
+          discount_total: number | null
+          expected_close_date: string | null
+          id: string
+          lead_id: string | null
+          lost_reason: string | null
+          notes: string | null
+          payment_terms: string | null
+          probability: number | null
+          recurring_value: number | null
+          setup_value: number | null
+          stage: string | null
+          status: string | null
+          title: string
+          total_value: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_close_date?: string | null
+          assigned_to?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_number?: string | null
+          description?: string | null
+          discount_total?: number | null
+          expected_close_date?: string | null
+          id?: string
+          lead_id?: string | null
+          lost_reason?: string | null
+          notes?: string | null
+          payment_terms?: string | null
+          probability?: number | null
+          recurring_value?: number | null
+          setup_value?: number | null
+          stage?: string | null
+          status?: string | null
+          title: string
+          total_value?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_close_date?: string | null
+          assigned_to?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_number?: string | null
+          description?: string | null
+          discount_total?: number | null
+          expected_close_date?: string | null
+          id?: string
+          lead_id?: string | null
+          lost_reason?: string | null
+          notes?: string | null
+          payment_terms?: string | null
+          probability?: number | null
+          recurring_value?: number | null
+          setup_value?: number | null
+          stage?: string | null
+          status?: string | null
+          title?: string
+          total_value?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_tags: {
         Row: {
           created_at: string | null
@@ -248,6 +408,80 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          active: boolean | null
+          allow_custom_pricing: boolean | null
+          available_for_upsell: boolean | null
+          base_price: number
+          billing_cycle: string | null
+          category: string
+          complexity_factors: Json | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_recurring: boolean | null
+          max_discount_percent: number | null
+          min_price: number | null
+          name: string
+          requires_setup: boolean | null
+          sku: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          allow_custom_pricing?: boolean | null
+          available_for_upsell?: boolean | null
+          base_price: number
+          billing_cycle?: string | null
+          category: string
+          complexity_factors?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          max_discount_percent?: number | null
+          min_price?: number | null
+          name: string
+          requires_setup?: boolean | null
+          sku?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          allow_custom_pricing?: boolean | null
+          available_for_upsell?: boolean | null
+          base_price?: number
+          billing_cycle?: string | null
+          category?: string
+          complexity_factors?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          max_discount_percent?: number | null
+          min_price?: number | null
+          name?: string
+          requires_setup?: boolean | null
+          sku?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           api_key: string | null
@@ -319,6 +553,87 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          id: string
+          introduction: string | null
+          pdf_generated_at: string | null
+          pdf_url: string | null
+          quote_number: string
+          rejected_at: string | null
+          rejection_reason: string | null
+          sent_at: string | null
+          status: string | null
+          terms_and_conditions: string | null
+          title: string
+          total_value: number | null
+          valid_until: string | null
+          version: number | null
+          viewed_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          introduction?: string | null
+          pdf_generated_at?: string | null
+          pdf_url?: string | null
+          quote_number: string
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
+          status?: string | null
+          terms_and_conditions?: string | null
+          title: string
+          total_value?: number | null
+          valid_until?: string | null
+          version?: number | null
+          viewed_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          introduction?: string | null
+          pdf_generated_at?: string | null
+          pdf_url?: string | null
+          quote_number?: string
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
+          status?: string | null
+          terms_and_conditions?: string | null
+          title?: string
+          total_value?: number | null
+          valid_until?: string | null
+          version?: number | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
             referencedColumns: ["id"]
           },
         ]
@@ -432,6 +747,8 @@ export type Database = {
         Args: { lead_record: Database["public"]["Tables"]["leads"]["Row"] }
         Returns: number
       }
+      generate_deal_number: { Args: never; Returns: string }
+      generate_quote_number: { Args: never; Returns: string }
       get_invite_by_token: {
         Args: { token_value: string }
         Returns: {

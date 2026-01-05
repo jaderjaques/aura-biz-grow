@@ -53,6 +53,7 @@ interface LeadDetailsSidebarProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onRefresh: () => void;
+  onCreateDeal?: (lead: Lead) => void;
 }
 
 export function LeadDetailsSidebar({
@@ -62,6 +63,7 @@ export function LeadDetailsSidebar({
   onEdit,
   onDelete,
   onRefresh,
+  onCreateDeal,
 }: LeadDetailsSidebarProps) {
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(false);
@@ -226,6 +228,17 @@ export function LeadDetailsSidebar({
 
               {/* Tab: Visão Geral */}
               <TabsContent value="overview" className="space-y-4 mt-4">
+                {/* Create Deal Button */}
+                {onCreateDeal && (
+                  <Button
+                    onClick={() => onCreateDeal(lead)}
+                    className="w-full bg-gradient-to-r from-primary to-accent"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Criar Proposta
+                  </Button>
+                )}
+
                 {/* Quick Actions */}
                 <div className="grid grid-cols-4 gap-2">
                   <Button variant="outline" size="sm" className="flex-col h-auto py-3" asChild>

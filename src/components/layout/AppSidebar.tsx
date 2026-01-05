@@ -12,7 +12,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  UserPlus
+  UserPlus,
+  FileText,
+  Package
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -40,10 +42,11 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: Home },
   { title: "Leads", href: "/leads", icon: Users },
+  { title: "Propostas", href: "/propostas", icon: FileText },
   { title: "Clientes", href: "/clientes", icon: Briefcase, comingSoon: true },
-  { title: "Funil de Vendas", href: "/funil", icon: BarChart3, comingSoon: true },
   { title: "Tarefas", href: "/tarefas", icon: ClipboardList, comingSoon: true },
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart, comingSoon: true },
+  { title: "Produtos", href: "/configuracoes/produtos", icon: Package, adminOnly: true },
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
   { title: "Configurações", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
