@@ -14,6 +14,240 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: string
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          lead_id: string | null
+          scheduled_at: string | null
+          title: string
+        }
+        Insert: {
+          activity_type: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          lead_id?: string | null
+          scheduled_at?: string | null
+          title: string
+        }
+        Update: {
+          activity_type?: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          lead_id?: string | null
+          scheduled_at?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_tags: {
+        Row: {
+          created_at: string | null
+          lead_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          lead_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string | null
+          lead_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_tags_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          assigned_at: string | null
+          assigned_to: string | null
+          cnpj: string | null
+          company_name: string
+          company_size: string | null
+          contact_name: string | null
+          created_at: string | null
+          created_by: string | null
+          deleted_at: string | null
+          email: string | null
+          employee_count: number | null
+          estimated_value: number | null
+          first_contact_at: string | null
+          id: string
+          instagram: string | null
+          last_contact_at: string | null
+          lead_score: number | null
+          needs: string | null
+          notes: string | null
+          phone: string
+          position: string | null
+          probability: number | null
+          segment: string | null
+          source: string
+          source_details: Json | null
+          stage: string | null
+          status: string | null
+          trading_name: string | null
+          updated_at: string | null
+          viewed_at: string | null
+          website: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          cnpj?: string | null
+          company_name: string
+          company_size?: string | null
+          contact_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          employee_count?: number | null
+          estimated_value?: number | null
+          first_contact_at?: string | null
+          id?: string
+          instagram?: string | null
+          last_contact_at?: string | null
+          lead_score?: number | null
+          needs?: string | null
+          notes?: string | null
+          phone: string
+          position?: string | null
+          probability?: number | null
+          segment?: string | null
+          source?: string
+          source_details?: Json | null
+          stage?: string | null
+          status?: string | null
+          trading_name?: string | null
+          updated_at?: string | null
+          viewed_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to?: string | null
+          cnpj?: string | null
+          company_name?: string
+          company_size?: string | null
+          contact_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          employee_count?: number | null
+          estimated_value?: number | null
+          first_contact_at?: string | null
+          id?: string
+          instagram?: string | null
+          last_contact_at?: string | null
+          lead_score?: number | null
+          needs?: string | null
+          notes?: string | null
+          phone?: string
+          position?: string | null
+          probability?: number | null
+          segment?: string | null
+          source?: string
+          source_details?: Json | null
+          stage?: string | null
+          status?: string | null
+          trading_name?: string | null
+          updated_at?: string | null
+          viewed_at?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pipeline_stages: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_closed_lost: boolean | null
+          is_closed_won: boolean | null
+          name: string
+          stage_order: number
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_closed_lost?: boolean | null
+          is_closed_won?: boolean | null
+          name: string
+          stage_order: number
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_closed_lost?: boolean | null
+          is_closed_won?: boolean | null
+          name?: string
+          stage_order?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           api_key: string | null
@@ -113,6 +347,78 @@ export type Database = {
         }
         Relationships: []
       }
+      stage_history: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          duration_seconds: number | null
+          from_stage: string | null
+          id: string
+          lead_id: string | null
+          notes: string | null
+          to_stage: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          duration_seconds?: number | null
+          from_stage?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          to_stage?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          duration_seconds?: number | null
+          from_stage?: string | null
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          to_stage?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stage_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tags: {
+        Row: {
+          category: string | null
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -121,6 +427,10 @@ export type Database = {
       accept_invite: {
         Args: { auth_user_id: string; token_value: string }
         Returns: boolean
+      }
+      calculate_lead_score: {
+        Args: { lead_record: Database["public"]["Tables"]["leads"]["Row"] }
+        Returns: number
       }
       get_invite_by_token: {
         Args: { token_value: string }
