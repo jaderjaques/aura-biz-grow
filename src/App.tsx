@@ -13,6 +13,7 @@ import Users from "./pages/Users";
 import Leads from "./pages/Leads";
 import Deals from "./pages/Deals";
 import Products from "./pages/Products";
+import Customers from "./pages/Customers";
 import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
@@ -92,6 +93,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Deals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clientes"
+              element={
+                <ProtectedRoute>
+                  <Customers />
                 </ProtectedRoute>
               }
             />

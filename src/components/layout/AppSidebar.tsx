@@ -43,7 +43,7 @@ const navItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: Home },
   { title: "Leads", href: "/leads", icon: Users },
   { title: "Propostas", href: "/propostas", icon: FileText },
-  { title: "Clientes", href: "/clientes", icon: Briefcase, comingSoon: true },
+  { title: "Clientes", href: "/clientes", icon: Briefcase },
   { title: "Tarefas", href: "/tarefas", icon: ClipboardList, comingSoon: true },
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart, comingSoon: true },
   { title: "Produtos", href: "/configuracoes/produtos", icon: Package, adminOnly: true },
