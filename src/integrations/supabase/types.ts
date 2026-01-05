@@ -22,10 +22,16 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          invite_accepted_at: string | null
+          invite_expires_at: string | null
+          invite_sent_at: string | null
+          invite_token: string | null
+          invited_by: string | null
           is_active: boolean | null
           last_login_at: string | null
           phone: string | null
           role_id: string | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
@@ -35,10 +41,16 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          invite_accepted_at?: string | null
+          invite_expires_at?: string | null
+          invite_sent_at?: string | null
+          invite_token?: string | null
+          invited_by?: string | null
           is_active?: boolean | null
           last_login_at?: string | null
           phone?: string | null
           role_id?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -48,13 +60,26 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          invite_accepted_at?: string | null
+          invite_expires_at?: string | null
+          invite_sent_at?: string | null
+          invite_token?: string | null
+          invited_by?: string | null
           is_active?: boolean | null
           last_login_at?: string | null
           phone?: string | null
           role_id?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_role_id_fkey"
             columns: ["role_id"]
@@ -93,6 +118,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invite: {
+        Args: { auth_user_id: string; token_value: string }
+        Returns: boolean
+      }
+      get_invite_by_token: {
+        Args: { token_value: string }
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+          invite_expires_at: string
+          role_name: string
+          status: string
+        }[]
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {

@@ -11,7 +11,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Menu
+  Menu,
+  UserPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -43,6 +44,7 @@ const navItems: NavItem[] = [
   { title: "Funil de Vendas", href: "/funil", icon: BarChart3, comingSoon: true },
   { title: "Tarefas", href: "/tarefas", icon: ClipboardList, comingSoon: true },
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart, comingSoon: true },
+  { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
   { title: "Configurações", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
 
