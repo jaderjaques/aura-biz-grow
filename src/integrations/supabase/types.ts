@@ -65,6 +65,415 @@ export type Database = {
           },
         ]
       }
+      contract_history: {
+        Row: {
+          action: string
+          changed_at: string | null
+          changed_by: string | null
+          contract_id: string | null
+          details: Json | null
+          from_status: string | null
+          id: string
+          notes: string | null
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          changed_at?: string | null
+          changed_by?: string | null
+          contract_id?: string | null
+          details?: Json | null
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          changed_at?: string | null
+          changed_by?: string | null
+          contract_id?: string | null
+          details?: Json | null
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_history_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_templates: {
+        Row: {
+          active: boolean | null
+          content: string
+          contract_type: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          content: string
+          contract_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          content?: string
+          contract_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contracts: {
+        Row: {
+          auto_renew: boolean | null
+          billing_cycle: string | null
+          cancellation_date: string | null
+          cancellation_reason: string | null
+          cancellation_requested_by: string | null
+          contract_html: string | null
+          contract_number: string
+          contract_pdf_url: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          deal_id: string | null
+          end_date: string | null
+          id: string
+          next_renewal_date: string | null
+          notes: string | null
+          payment_day: number | null
+          payment_method: string | null
+          products: Json | null
+          recurring_value: number | null
+          renewal_alert_sent: boolean | null
+          renewal_notice_days: number | null
+          setup_value: number | null
+          signature_data: Json | null
+          signature_type: string | null
+          signed_by_customer_cpf: string | null
+          signed_by_customer_name: string | null
+          signed_date: string | null
+          start_date: string
+          status: string | null
+          template_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          cancellation_date?: string | null
+          cancellation_reason?: string | null
+          cancellation_requested_by?: string | null
+          contract_html?: string | null
+          contract_number: string
+          contract_pdf_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          deal_id?: string | null
+          end_date?: string | null
+          id?: string
+          next_renewal_date?: string | null
+          notes?: string | null
+          payment_day?: number | null
+          payment_method?: string | null
+          products?: Json | null
+          recurring_value?: number | null
+          renewal_alert_sent?: boolean | null
+          renewal_notice_days?: number | null
+          setup_value?: number | null
+          signature_data?: Json | null
+          signature_type?: string | null
+          signed_by_customer_cpf?: string | null
+          signed_by_customer_name?: string | null
+          signed_date?: string | null
+          start_date: string
+          status?: string | null
+          template_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_renew?: boolean | null
+          billing_cycle?: string | null
+          cancellation_date?: string | null
+          cancellation_reason?: string | null
+          cancellation_requested_by?: string | null
+          contract_html?: string | null
+          contract_number?: string
+          contract_pdf_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          deal_id?: string | null
+          end_date?: string | null
+          id?: string
+          next_renewal_date?: string | null
+          notes?: string | null
+          payment_day?: number | null
+          payment_method?: string | null
+          products?: Json | null
+          recurring_value?: number | null
+          renewal_alert_sent?: boolean | null
+          renewal_notice_days?: number | null
+          setup_value?: number | null
+          signature_data?: Json | null
+          signature_type?: string | null
+          signed_by_customer_cpf?: string | null
+          signed_by_customer_name?: string | null
+          signed_date?: string | null
+          start_date?: string
+          status?: string | null
+          template_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_cancellation_requested_by_fkey"
+            columns: ["cancellation_requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          account_manager: string | null
+          city: string | null
+          cnpj: string | null
+          company_name: string
+          company_size: string | null
+          complement: string | null
+          contact_name: string
+          cpf: string | null
+          created_at: string | null
+          created_by: string | null
+          current_tools: Json | null
+          customer_since: string | null
+          deal_id: string | null
+          email: string
+          employee_count: number | null
+          facebook: string | null
+          foundation_year: number | null
+          id: string
+          instagram: string | null
+          lead_id: string | null
+          lifetime_value: number | null
+          linkedin: string | null
+          monthly_value: number | null
+          municipal_registration: string | null
+          neighborhood: string | null
+          notes: string | null
+          number: string | null
+          phone: string
+          portal_enabled: boolean | null
+          portal_user_id: string | null
+          position: string | null
+          revenue_range: string | null
+          segment: string | null
+          state: string | null
+          state_registration: string | null
+          status: string | null
+          street: string | null
+          trading_name: string | null
+          updated_at: string | null
+          uses_instagram_business: boolean | null
+          uses_whatsapp_business: boolean | null
+          website: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          account_manager?: string | null
+          city?: string | null
+          cnpj?: string | null
+          company_name: string
+          company_size?: string | null
+          complement?: string | null
+          contact_name: string
+          cpf?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_tools?: Json | null
+          customer_since?: string | null
+          deal_id?: string | null
+          email: string
+          employee_count?: number | null
+          facebook?: string | null
+          foundation_year?: number | null
+          id?: string
+          instagram?: string | null
+          lead_id?: string | null
+          lifetime_value?: number | null
+          linkedin?: string | null
+          monthly_value?: number | null
+          municipal_registration?: string | null
+          neighborhood?: string | null
+          notes?: string | null
+          number?: string | null
+          phone: string
+          portal_enabled?: boolean | null
+          portal_user_id?: string | null
+          position?: string | null
+          revenue_range?: string | null
+          segment?: string | null
+          state?: string | null
+          state_registration?: string | null
+          status?: string | null
+          street?: string | null
+          trading_name?: string | null
+          updated_at?: string | null
+          uses_instagram_business?: boolean | null
+          uses_whatsapp_business?: boolean | null
+          website?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          account_manager?: string | null
+          city?: string | null
+          cnpj?: string | null
+          company_name?: string
+          company_size?: string | null
+          complement?: string | null
+          contact_name?: string
+          cpf?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_tools?: Json | null
+          customer_since?: string | null
+          deal_id?: string | null
+          email?: string
+          employee_count?: number | null
+          facebook?: string | null
+          foundation_year?: number | null
+          id?: string
+          instagram?: string | null
+          lead_id?: string | null
+          lifetime_value?: number | null
+          linkedin?: string | null
+          monthly_value?: number | null
+          municipal_registration?: string | null
+          neighborhood?: string | null
+          notes?: string | null
+          number?: string | null
+          phone?: string
+          portal_enabled?: boolean | null
+          portal_user_id?: string | null
+          position?: string | null
+          revenue_range?: string | null
+          segment?: string | null
+          state?: string | null
+          state_registration?: string | null
+          status?: string | null
+          street?: string | null
+          trading_name?: string | null
+          updated_at?: string | null
+          uses_instagram_business?: boolean | null
+          uses_whatsapp_business?: boolean | null
+          website?: string | null
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_account_manager_fkey"
+            columns: ["account_manager"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_products: {
         Row: {
           complexity_selected: Json | null
@@ -747,6 +1156,7 @@ export type Database = {
         Args: { lead_record: Database["public"]["Tables"]["leads"]["Row"] }
         Returns: number
       }
+      generate_contract_number: { Args: never; Returns: string }
       generate_deal_number: { Args: never; Returns: string }
       generate_quote_number: { Args: never; Returns: string }
       get_invite_by_token: {
