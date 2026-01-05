@@ -973,6 +973,66 @@ export type Database = {
           },
         ]
       }
+      knowledge_base: {
+        Row: {
+          active: boolean | null
+          category_id: string | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          helpful_count: number | null
+          id: string
+          public: boolean | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          category_id?: string | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          helpful_count?: number | null
+          id?: string
+          public?: boolean | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          category_id?: string | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          helpful_count?: number | null
+          id?: string
+          public?: boolean | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_tags: {
         Row: {
           created_at: string | null
@@ -1391,6 +1451,54 @@ export type Database = {
           },
         ]
       }
+      quick_replies: {
+        Row: {
+          active: boolean | null
+          category_id: string | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          shortcut: string | null
+          title: string
+        }
+        Insert: {
+          active?: boolean | null
+          category_id?: string | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          shortcut?: string | null
+          title: string
+        }
+        Update: {
+          active?: boolean | null
+          category_id?: string | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          shortcut?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_replies_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quick_replies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotes: {
         Row: {
           accepted_at: string | null
@@ -1495,6 +1603,41 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      sla_configs: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          first_response_hours: number
+          id: string
+          priority: string
+          resolution_hours: number
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          first_response_hours: number
+          id?: string
+          priority: string
+          resolution_hours: number
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          first_response_hours?: number
+          id?: string
+          priority?: string
+          resolution_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_configs_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stage_history: {
         Row: {
@@ -1806,6 +1949,191 @@ export type Database = {
           },
         ]
       }
+      ticket_categories: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          sla_first_response_hours: number | null
+          sla_resolution_hours: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          sla_first_response_hours?: number | null
+          sla_resolution_hours?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          sla_first_response_hours?: number | null
+          sla_resolution_hours?: number | null
+        }
+        Relationships: []
+      }
+      ticket_messages: {
+        Row: {
+          attachments: Json | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_customer: boolean | null
+          is_internal: boolean | null
+          message: string
+          ticket_id: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_customer?: boolean | null
+          is_internal?: boolean | null
+          message: string
+          ticket_id?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_customer?: boolean | null
+          is_internal?: boolean | null
+          message?: string
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          assigned_to: string | null
+          category_id: string | null
+          closed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          customer_feedback: string | null
+          customer_id: string | null
+          customer_rating: number | null
+          description: string
+          first_response_at: string | null
+          id: string
+          kanban_order: number | null
+          priority: string | null
+          resolved_at: string | null
+          sla_first_response_deadline: string | null
+          sla_first_response_violated: boolean | null
+          sla_resolution_deadline: string | null
+          sla_resolution_violated: boolean | null
+          status: string | null
+          subject: string
+          ticket_number: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category_id?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_feedback?: string | null
+          customer_id?: string | null
+          customer_rating?: number | null
+          description: string
+          first_response_at?: string | null
+          id?: string
+          kanban_order?: number | null
+          priority?: string | null
+          resolved_at?: string | null
+          sla_first_response_deadline?: string | null
+          sla_first_response_violated?: boolean | null
+          sla_resolution_deadline?: string | null
+          sla_resolution_violated?: boolean | null
+          status?: string | null
+          subject: string
+          ticket_number?: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category_id?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_feedback?: string | null
+          customer_id?: string | null
+          customer_rating?: number | null
+          description?: string
+          first_response_at?: string | null
+          id?: string
+          kanban_order?: number | null
+          priority?: string | null
+          resolved_at?: string | null
+          sla_first_response_deadline?: string | null
+          sla_first_response_violated?: boolean | null
+          sla_resolution_deadline?: string | null
+          sla_resolution_violated?: boolean | null
+          status?: string | null
+          subject?: string
+          ticket_number?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1823,6 +2151,7 @@ export type Database = {
       generate_deal_number: { Args: never; Returns: string }
       generate_invoice_number: { Args: never; Returns: string }
       generate_quote_number: { Args: never; Returns: string }
+      generate_ticket_number: { Args: never; Returns: string }
       get_invite_by_token: {
         Args: { token_value: string }
         Returns: {
