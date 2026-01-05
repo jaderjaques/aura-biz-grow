@@ -19,6 +19,7 @@ import Invoices from "./pages/Invoices";
 import Tasks from "./pages/Tasks";
 import Tickets from "./pages/Tickets";
 import Integrations from "./pages/Integrations";
+import Reports from "./pages/Reports";
 import AcceptInvite from "./pages/AcceptInvite";
 import NotFound from "./pages/NotFound";
 
@@ -146,6 +147,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireAdmin>
                   <Integrations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/relatorios"
+              element={
+                <ProtectedRoute>
+                  <Reports />
                 </ProtectedRoute>
               }
             />

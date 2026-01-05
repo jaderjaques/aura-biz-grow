@@ -687,6 +687,62 @@ export type Database = {
           },
         ]
       }
+      dashboard_widgets: {
+        Row: {
+          active: boolean | null
+          config: Json
+          created_at: string | null
+          dashboard_name: string | null
+          height: number
+          id: string
+          position_x: number
+          position_y: number
+          title: string
+          updated_at: string | null
+          user_id: string | null
+          widget_type: string
+          width: number
+        }
+        Insert: {
+          active?: boolean | null
+          config: Json
+          created_at?: string | null
+          dashboard_name?: string | null
+          height?: number
+          id?: string
+          position_x?: number
+          position_y?: number
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+          widget_type: string
+          width?: number
+        }
+        Update: {
+          active?: boolean | null
+          config?: Json
+          created_at?: string | null
+          dashboard_name?: string | null
+          height?: number
+          id?: string
+          position_x?: number
+          position_y?: number
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+          widget_type?: string
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_widgets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_products: {
         Row: {
           complexity_selected: Json | null
@@ -843,6 +899,50 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      export_logs: {
+        Row: {
+          created_at: string | null
+          export_type: string
+          file_size_bytes: number | null
+          file_url: string | null
+          filters: Json | null
+          id: string
+          report_type: string | null
+          rows_exported: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          export_type: string
+          file_size_bytes?: number | null
+          file_url?: string | null
+          filters?: Json | null
+          id?: string
+          report_type?: string | null
+          rows_exported?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          export_type?: string
+          file_size_bytes?: number | null
+          file_url?: string | null
+          filters?: Json | null
+          id?: string
+          report_type?: string | null
+          rows_exported?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "export_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1442,6 +1542,117 @@ export type Database = {
           },
         ]
       }
+      metrics_snapshots: {
+        Row: {
+          arr: number | null
+          average_cac: number | null
+          average_completion_time_hours: number | null
+          average_deal_value: number | null
+          average_ltv: number | null
+          average_resolution_time_hours: number | null
+          churn_mrr: number | null
+          churned_customers: number | null
+          conversion_rate: number | null
+          created_at: string | null
+          customer_churn_rate: number | null
+          customer_satisfaction_avg: number | null
+          deals_lost: number | null
+          deals_won: number | null
+          expansion_mrr: number | null
+          id: string
+          leads_converted: number | null
+          ltv_cac_ratio: number | null
+          mrr: number | null
+          new_customers: number | null
+          new_mrr: number | null
+          qualified_leads: number | null
+          sla_compliance_rate: number | null
+          snapshot_date: string
+          tasks_completed: number | null
+          tasks_overdue: number | null
+          tickets_created: number | null
+          tickets_resolved: number | null
+          total_customers: number | null
+          total_deals: number | null
+          total_leads: number | null
+          total_pipeline_value: number | null
+          total_revenue: number | null
+          win_rate: number | null
+        }
+        Insert: {
+          arr?: number | null
+          average_cac?: number | null
+          average_completion_time_hours?: number | null
+          average_deal_value?: number | null
+          average_ltv?: number | null
+          average_resolution_time_hours?: number | null
+          churn_mrr?: number | null
+          churned_customers?: number | null
+          conversion_rate?: number | null
+          created_at?: string | null
+          customer_churn_rate?: number | null
+          customer_satisfaction_avg?: number | null
+          deals_lost?: number | null
+          deals_won?: number | null
+          expansion_mrr?: number | null
+          id?: string
+          leads_converted?: number | null
+          ltv_cac_ratio?: number | null
+          mrr?: number | null
+          new_customers?: number | null
+          new_mrr?: number | null
+          qualified_leads?: number | null
+          sla_compliance_rate?: number | null
+          snapshot_date: string
+          tasks_completed?: number | null
+          tasks_overdue?: number | null
+          tickets_created?: number | null
+          tickets_resolved?: number | null
+          total_customers?: number | null
+          total_deals?: number | null
+          total_leads?: number | null
+          total_pipeline_value?: number | null
+          total_revenue?: number | null
+          win_rate?: number | null
+        }
+        Update: {
+          arr?: number | null
+          average_cac?: number | null
+          average_completion_time_hours?: number | null
+          average_deal_value?: number | null
+          average_ltv?: number | null
+          average_resolution_time_hours?: number | null
+          churn_mrr?: number | null
+          churned_customers?: number | null
+          conversion_rate?: number | null
+          created_at?: string | null
+          customer_churn_rate?: number | null
+          customer_satisfaction_avg?: number | null
+          deals_lost?: number | null
+          deals_won?: number | null
+          expansion_mrr?: number | null
+          id?: string
+          leads_converted?: number | null
+          ltv_cac_ratio?: number | null
+          mrr?: number | null
+          new_customers?: number | null
+          new_mrr?: number | null
+          qualified_leads?: number | null
+          sla_compliance_rate?: number | null
+          snapshot_date?: string
+          tasks_completed?: number | null
+          tasks_overdue?: number | null
+          tickets_created?: number | null
+          tickets_resolved?: number | null
+          total_customers?: number | null
+          total_deals?: number | null
+          total_leads?: number | null
+          total_pipeline_value?: number | null
+          total_revenue?: number | null
+          win_rate?: number | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -1862,6 +2073,68 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      saved_reports: {
+        Row: {
+          config: Json
+          created_at: string | null
+          description: string | null
+          id: string
+          is_favorite: boolean | null
+          last_generated_at: string | null
+          name: string
+          report_type: string
+          schedule_config: Json | null
+          schedule_frequency: string | null
+          schedule_recipients: string[] | null
+          scheduled: boolean | null
+          shared_with_team: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          config: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          last_generated_at?: string | null
+          name: string
+          report_type: string
+          schedule_config?: Json | null
+          schedule_frequency?: string | null
+          schedule_recipients?: string[] | null
+          scheduled?: boolean | null
+          shared_with_team?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_favorite?: boolean | null
+          last_generated_at?: string | null
+          name?: string
+          report_type?: string
+          schedule_config?: Json | null
+          schedule_frequency?: string | null
+          schedule_recipients?: string[] | null
+          scheduled?: boolean | null
+          shared_with_team?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sla_configs: {
         Row: {
