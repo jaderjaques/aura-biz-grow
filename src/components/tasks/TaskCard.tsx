@@ -4,6 +4,7 @@ import { format, differenceInDays } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Phone,
   Mail,
@@ -13,6 +14,7 @@ import {
   Building,
   Calendar,
   CheckCircle,
+  Check,
 } from "lucide-react";
 import { TaskWithDetails, TASK_TYPE_LABELS } from "@/types/tasks";
 import { cn } from "@/lib/utils";
@@ -20,6 +22,7 @@ import { cn } from "@/lib/utils";
 interface TaskCardProps {
   task: TaskWithDetails;
   onClick: () => void;
+  onComplete?: (task: TaskWithDetails) => void;
   isDragging?: boolean;
 }
 
@@ -38,7 +41,7 @@ const getTaskTypeIcon = (type: string) => {
   }
 };
 
-export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
+export function TaskCard({ task, onClick, onComplete, isDragging }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -68,6 +71,13 @@ export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
         total: task.checklist.length,
       }
     : null;
+
+  const handleCompleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onComplete && task.status !== "done") {
+      onComplete(task);
+    }
+  };
 
   return (
     <Card
@@ -150,26 +160,41 @@ export function TaskCard({ task, onClick, isDragging }: TaskCardProps) {
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-1">
-          {task.assigned_user ? (
-            <Avatar className="h-6 w-6">
-              <AvatarFallback className="text-xs bg-primary/10">
-                {task.assigned_user.full_name[0]}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <div className="h-6 w-6" />
-          )}
+          <div className="flex items-center gap-2">
+            {task.assigned_user ? (
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-xs bg-primary/10">
+                  {task.assigned_user.full_name[0]}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <div className="h-6 w-6" />
+            )}
 
-          {task.due_date && (
-            <div
-              className={cn(
-                "flex items-center gap-1 text-xs",
-                isOverdue ? "text-destructive" : "text-muted-foreground"
-              )}
+            {task.due_date && (
+              <div
+                className={cn(
+                  "flex items-center gap-1 text-xs",
+                  isOverdue ? "text-destructive" : "text-muted-foreground"
+                )}
+              >
+                <Calendar className="h-3 w-3" />
+                {format(new Date(task.due_date), "dd/MM")}
+              </div>
+            )}
+          </div>
+
+          {/* Complete button */}
+          {task.status !== "done" && onComplete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30"
+              onClick={handleCompleteClick}
+              title="Concluir tarefa"
             >
-              <Calendar className="h-3 w-3" />
-              {format(new Date(task.due_date), "dd/MM")}
-            </div>
+              <Check className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </CardContent>

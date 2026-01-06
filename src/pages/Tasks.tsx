@@ -24,8 +24,10 @@ import { useTasks } from "@/hooks/useTasks";
 import { TasksKanban } from "@/components/tasks/TasksKanban";
 import { TasksList } from "@/components/tasks/TasksList";
 import { NewTaskDialog } from "@/components/tasks/NewTaskDialog";
+import { CompleteTaskDialog } from "@/components/tasks/CompleteTaskDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { TaskWithDetails } from "@/types/tasks";
 
 export default function Tasks() {
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
@@ -34,6 +36,8 @@ export default function Tasks() {
   const [filterDueDate, setFilterDueDate] = useState("all");
   const [showNewTask, setShowNewTask] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [taskToComplete, setTaskToComplete] = useState<TaskWithDetails | null>(null);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
   const { tasks, isLoading, metrics } = useTasks({
     assignedTo: filterAssigned,
@@ -57,6 +61,11 @@ export default function Tasks() {
     setSelectedTaskId(taskId);
     // TODO: Open task details sidebar/modal
     console.log("Open task:", taskId);
+  };
+
+  const handleCompleteTask = (task: TaskWithDetails) => {
+    setTaskToComplete(task);
+    setShowCompleteDialog(true);
   };
 
   return (
@@ -204,17 +213,34 @@ export default function Tasks() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : viewMode === "kanban" ? (
-          <TasksKanban tasks={tasks} onOpenTask={handleOpenTask} />
+          <TasksKanban 
+            tasks={tasks} 
+            onOpenTask={handleOpenTask} 
+            onCompleteTask={handleCompleteTask}
+          />
         ) : (
           <Card>
             <CardContent className="pt-6">
-              <TasksList tasks={tasks} onOpenTask={handleOpenTask} />
+              <TasksList 
+                tasks={tasks} 
+                onOpenTask={handleOpenTask}
+                onCompleteTask={handleCompleteTask}
+              />
             </CardContent>
           </Card>
         )}
       </div>
 
       <NewTaskDialog open={showNewTask} onOpenChange={setShowNewTask} />
+      
+      <CompleteTaskDialog
+        task={taskToComplete}
+        open={showCompleteDialog}
+        onOpenChange={(open) => {
+          setShowCompleteDialog(open);
+          if (!open) setTaskToComplete(null);
+        }}
+      />
     </AppLayout>
   );
 }

@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 interface TasksListProps {
   tasks: TaskWithDetails[];
   onOpenTask: (taskId: string) => void;
+  onCompleteTask?: (task: TaskWithDetails) => void;
 }
 
 const getTaskTypeIcon = (type: string) => {
@@ -81,12 +82,16 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-export function TasksList({ tasks, onOpenTask }: TasksListProps) {
+export function TasksList({ tasks, onOpenTask, onCompleteTask }: TasksListProps) {
   const { updateTaskStatus, deleteTask } = useTasks();
 
-  const handleComplete = (taskId: string, e: React.MouseEvent) => {
+  const handleComplete = (task: TaskWithDetails, e: React.MouseEvent) => {
     e.stopPropagation();
-    updateTaskStatus.mutate({ id: taskId, status: "done" });
+    if (onCompleteTask) {
+      onCompleteTask(task);
+    } else {
+      updateTaskStatus.mutate({ id: task.id, status: "done" });
+    }
   };
 
   const handleDelete = async (taskId: string) => {
@@ -233,7 +238,7 @@ export function TasksList({ tasks, onOpenTask }: TasksListProps) {
                         Ver Detalhes
                       </DropdownMenuItem>
                       {task.status !== "done" && (
-                        <DropdownMenuItem onClick={(e) => handleComplete(task.id, e as unknown as React.MouseEvent)}>
+                        <DropdownMenuItem onClick={(e) => handleComplete(task, e as unknown as React.MouseEvent)}>
                           <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
                           Marcar como Concluída
                         </DropdownMenuItem>
