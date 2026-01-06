@@ -36,6 +36,7 @@ const routeNames: Record<string, string> = {
   roles: "Cargos",
   financeiro: "Financeiro",
   faturas: "Faturas",
+  suporte: "Suporte",
 };
 
 export function AppHeader() {
