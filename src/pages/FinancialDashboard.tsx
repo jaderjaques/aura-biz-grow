@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -41,7 +42,9 @@ import {
   Download,
   AlertTriangle,
   Info,
+  Wallet,
 } from "lucide-react";
+import { CashflowTab } from "@/components/financial/CashflowTab";
 import {
   LineChart,
   Line,
@@ -63,6 +66,7 @@ import { cn } from "@/lib/utils";
 
 export default function FinancialDashboard() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [dateRange, setDateRange] = useState("this_month");
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithDetails | null>(null);
@@ -160,7 +164,19 @@ export default function FinancialDashboard() {
           </div>
         </div>
 
-        {/* Metrics Cards */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="dashboard">
+              <DollarSign className="mr-2 h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="cashflow">
+              <Wallet className="mr-2 h-4 w-4" />
+              Fluxo de Caixa
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-6 mt-6">
         <div className="grid grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -444,6 +460,12 @@ export default function FinancialDashboard() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="cashflow" className="mt-6">
+            <CashflowTab />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <NewInvoiceDialog open={showNewInvoice} onOpenChange={setShowNewInvoice} />

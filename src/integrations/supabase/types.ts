@@ -278,6 +278,39 @@ export type Database = {
           },
         ]
       }
+      bank_accounts: {
+        Row: {
+          account_number: string | null
+          active: boolean | null
+          bank_name: string | null
+          created_at: string | null
+          current_balance: number | null
+          id: string
+          initial_balance: number | null
+          name: string
+        }
+        Insert: {
+          account_number?: string | null
+          active?: boolean | null
+          bank_name?: string | null
+          created_at?: string | null
+          current_balance?: number | null
+          id?: string
+          initial_balance?: number | null
+          name: string
+        }
+        Update: {
+          account_number?: string | null
+          active?: boolean | null
+          bank_name?: string | null
+          created_at?: string | null
+          current_balance?: number | null
+          id?: string
+          initial_balance?: number | null
+          name?: string
+        }
+        Relationships: []
+      }
       billing_settings: {
         Row: {
           billing_contact_name: string | null
@@ -330,6 +363,115 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: true
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_transactions: {
+        Row: {
+          amount: number
+          attachments: Json | null
+          created_at: string | null
+          created_by: string | null
+          customer_id: string | null
+          description: string
+          expense_category_id: string | null
+          id: string
+          invoice_id: string | null
+          is_recurring: boolean | null
+          notes: string | null
+          parent_transaction_id: string | null
+          payment_method: string | null
+          recurrence_frequency: string | null
+          revenue_category_id: string | null
+          tags: string[] | null
+          transaction_date: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          attachments?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          description: string
+          expense_category_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          is_recurring?: boolean | null
+          notes?: string | null
+          parent_transaction_id?: string | null
+          payment_method?: string | null
+          recurrence_frequency?: string | null
+          revenue_category_id?: string | null
+          tags?: string[] | null
+          transaction_date: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          attachments?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          customer_id?: string | null
+          description?: string
+          expense_category_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          is_recurring?: boolean | null
+          notes?: string | null
+          parent_transaction_id?: string | null
+          payment_method?: string | null
+          recurrence_frequency?: string | null
+          revenue_category_id?: string | null
+          tags?: string[] | null
+          transaction_date?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_transactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_transactions_expense_category_id_fkey"
+            columns: ["expense_category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_transactions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_transactions_parent_transaction_id_fkey"
+            columns: ["parent_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "cash_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_transactions_revenue_category_id_fkey"
+            columns: ["revenue_category_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -999,6 +1141,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      expense_categories: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       export_logs: {
         Row: {
@@ -2171,6 +2340,33 @@ export type Database = {
           },
         ]
       }
+      revenue_categories: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           created_at: string | null
@@ -3017,6 +3213,14 @@ export type Database = {
       accept_invite: {
         Args: { auth_user_id: string; token_value: string }
         Returns: boolean
+      }
+      calculate_balance: {
+        Args: { p_end_date?: string; p_start_date?: string }
+        Returns: {
+          net_balance: number
+          total_expenses: number
+          total_revenue: number
+        }[]
       }
       calculate_lead_score: {
         Args: { lead_record: Database["public"]["Tables"]["leads"]["Row"] }
