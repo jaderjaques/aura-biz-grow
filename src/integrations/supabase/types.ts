@@ -2511,6 +2511,7 @@ export type Database = {
           attachments: Json | null
           checklist: Json | null
           completed_at: string | null
+          completion_notes: string | null
           created_at: string | null
           created_by: string | null
           customer_id: string | null
@@ -2540,6 +2541,7 @@ export type Database = {
           attachments?: Json | null
           checklist?: Json | null
           completed_at?: string | null
+          completion_notes?: string | null
           created_at?: string | null
           created_by?: string | null
           customer_id?: string | null
@@ -2569,6 +2571,7 @@ export type Database = {
           attachments?: Json | null
           checklist?: Json | null
           completed_at?: string | null
+          completion_notes?: string | null
           created_at?: string | null
           created_by?: string | null
           customer_id?: string | null

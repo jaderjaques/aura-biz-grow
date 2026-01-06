@@ -22,6 +22,7 @@ import { KanbanColumn } from "./KanbanColumn";
 interface TasksKanbanProps {
   tasks: TaskWithDetails[];
   onOpenTask: (taskId: string) => void;
+  onCompleteTask?: (task: TaskWithDetails) => void;
 }
 
 const COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
@@ -31,7 +32,7 @@ const COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: "done", title: "Concluído", color: "#10B981" },
 ];
 
-export function TasksKanban({ tasks, onOpenTask }: TasksKanbanProps) {
+export function TasksKanban({ tasks, onOpenTask, onCompleteTask }: TasksKanbanProps) {
   const { updateTaskStatus } = useTasks();
   const [activeTask, setActiveTask] = useState<TaskWithDetails | null>(null);
 
@@ -124,6 +125,7 @@ export function TasksKanban({ tasks, onOpenTask }: TasksKanbanProps) {
                     key={task.id}
                     task={task}
                     onClick={() => onOpenTask(task.id)}
+                    onComplete={onCompleteTask}
                   />
                 ))}
               </div>
