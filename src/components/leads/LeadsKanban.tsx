@@ -8,6 +8,7 @@ import {
   useSensor,
   useSensors,
   closestCorners,
+  useDroppable,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
@@ -152,8 +153,19 @@ interface KanbanColumnProps {
 }
 
 function KanbanColumn({ stage, leads, onOpenLead }: KanbanColumnProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: stage.name,
+    data: { stage: stage.name },
+  });
+
   return (
-    <div className="flex flex-col min-w-[280px] max-w-[280px] h-full">
+    <div 
+      ref={setNodeRef}
+      className={cn(
+        "flex flex-col min-w-[280px] max-w-[280px] h-full transition-all",
+        isOver && "ring-2 ring-primary ring-offset-2 rounded-lg"
+      )}
+    >
       <Card className="flex flex-col h-full">
         <CardHeader className="py-3 px-4 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -175,7 +187,7 @@ function KanbanColumn({ stage, leads, onOpenLead }: KanbanColumnProps) {
               items={leads.map((l) => l.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="space-y-2 pb-4">
+              <div className="space-y-2 pb-4 min-h-[100px]">
                 {leads.map((lead) => (
                   <KanbanCard
                     key={lead.id}
@@ -183,6 +195,11 @@ function KanbanColumn({ stage, leads, onOpenLead }: KanbanColumnProps) {
                     onClick={() => onOpenLead(lead.id)}
                   />
                 ))}
+                {leads.length === 0 && (
+                  <div className="text-xs text-muted-foreground text-center py-4">
+                    Arraste leads para cá
+                  </div>
+                )}
               </div>
             </SortableContext>
           </ScrollArea>
@@ -217,19 +234,23 @@ export function LeadsKanban({ leads, stages, onOpenLead, onMoveStage }: LeadsKan
 
     if (!over) return;
 
-    const activeData = active.data.current as { lead: Lead; stage: string };
-    const overId = over.id as string;
+    const activeData = active.data.current as { lead: Lead; stage: string } | undefined;
+    if (!activeData) return;
 
-    // Find target stage
-    const targetStage = stages.find((s) => s.name === overId);
-    const targetLead = leads.find((l) => l.id === overId);
+    const overId = over.id as string;
+    const overData = over.data.current as { stage?: string } | undefined;
 
     let newStage: string | null = null;
 
-    if (targetStage) {
-      newStage = targetStage.name;
-    } else if (targetLead) {
-      newStage = targetLead.stage;
+    // Check if dropped on a column (droppable)
+    if (overData?.stage) {
+      newStage = overData.stage;
+    } else {
+      // Check if dropped on another lead - find that lead's stage
+      const targetLead = leads.find((l) => l.id === overId);
+      if (targetLead) {
+        newStage = targetLead.stage;
+      }
     }
 
     if (newStage && newStage !== activeData.stage) {
@@ -248,15 +269,12 @@ export function LeadsKanban({ leads, stages, onOpenLead, onMoveStage }: LeadsKan
     >
       <div className="flex gap-4 overflow-x-auto pb-4 h-[calc(100vh-320px)]">
         {stages.map((stage) => (
-          <div key={stage.id} id={stage.name}>
-            <SortableContext items={[stage.name]}>
-              <KanbanColumn
-                stage={stage}
-                leads={getLeadsByStage(stage.name)}
-                onOpenLead={onOpenLead}
-              />
-            </SortableContext>
-          </div>
+          <KanbanColumn
+            key={stage.id}
+            stage={stage}
+            leads={getLeadsByStage(stage.name)}
+            onOpenLead={onOpenLead}
+          />
         ))}
       </div>
 
