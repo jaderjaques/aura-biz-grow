@@ -2140,8 +2140,10 @@ export type Database = {
         Row: {
           api_key: string | null
           avatar_url: string | null
+          backup_codes: string[] | null
           created_at: string | null
           email: string
+          failed_login_attempts: number | null
           full_name: string
           id: string
           invite_accepted_at: string | null
@@ -2151,16 +2153,24 @@ export type Database = {
           invited_by: string | null
           is_active: boolean | null
           last_login_at: string | null
+          locked_until: string | null
+          password_changed_at: string | null
           phone: string | null
           role_id: string | null
+          security_questions: Json | null
           status: string | null
+          totp_enabled: boolean | null
+          totp_secret: string | null
+          totp_verified_at: string | null
           updated_at: string | null
         }
         Insert: {
           api_key?: string | null
           avatar_url?: string | null
+          backup_codes?: string[] | null
           created_at?: string | null
           email: string
+          failed_login_attempts?: number | null
           full_name: string
           id: string
           invite_accepted_at?: string | null
@@ -2170,16 +2180,24 @@ export type Database = {
           invited_by?: string | null
           is_active?: boolean | null
           last_login_at?: string | null
+          locked_until?: string | null
+          password_changed_at?: string | null
           phone?: string | null
           role_id?: string | null
+          security_questions?: Json | null
           status?: string | null
+          totp_enabled?: boolean | null
+          totp_secret?: string | null
+          totp_verified_at?: string | null
           updated_at?: string | null
         }
         Update: {
           api_key?: string | null
           avatar_url?: string | null
+          backup_codes?: string[] | null
           created_at?: string | null
           email?: string
+          failed_login_attempts?: number | null
           full_name?: string
           id?: string
           invite_accepted_at?: string | null
@@ -2189,9 +2207,15 @@ export type Database = {
           invited_by?: string | null
           is_active?: boolean | null
           last_login_at?: string | null
+          locked_until?: string | null
+          password_changed_at?: string | null
           phone?: string | null
           role_id?: string | null
+          security_questions?: Json | null
           status?: string | null
+          totp_enabled?: boolean | null
+          totp_secret?: string | null
+          totp_verified_at?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -2482,6 +2506,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "saved_reports_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      security_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          severity: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_events_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -3226,6 +3291,11 @@ export type Database = {
         Args: { lead_record: Database["public"]["Tables"]["leads"]["Row"] }
         Returns: number
       }
+      disable_totp_2fa: { Args: { p_user_id: string }; Returns: boolean }
+      enable_totp_2fa: {
+        Args: { p_secret: string; p_user_id: string }
+        Returns: boolean
+      }
       generate_api_key: { Args: never; Returns: string }
       generate_contract_number: { Args: never; Returns: string }
       generate_deal_number: { Args: never; Returns: string }
@@ -3247,7 +3317,29 @@ export type Database = {
         Args: { p_permission_name: string; p_user_id: string }
         Returns: boolean
       }
+      increment_failed_login: { Args: { p_user_id: string }; Returns: number }
+      is_account_locked: { Args: { p_user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      log_security_event: {
+        Args: {
+          p_details?: Json
+          p_event_type: string
+          p_ip_address?: string
+          p_severity?: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      reset_failed_login: { Args: { p_user_id: string }; Returns: undefined }
+      save_backup_codes: {
+        Args: { p_codes: string[]; p_user_id: string }
+        Returns: boolean
+      }
+      use_backup_code: {
+        Args: { p_code: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "Administrador" | "Funcionário"
