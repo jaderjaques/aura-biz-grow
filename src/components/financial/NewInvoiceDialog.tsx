@@ -58,11 +58,15 @@ export function NewInvoiceDialog({
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<InvoiceFormData>({
     defaultValues: {
+      customer_id: preselectedCustomerId ?? "",
+      invoice_type: "",
+      payment_method: "",
       amount: 0,
       discount_amount: 0,
       tax_amount: 0,
       issue_date: format(new Date(), "yyyy-MM-dd"),
       due_date: "",
+      description: "",
       is_recurring: false,
     },
   });
@@ -77,11 +81,19 @@ export function NewInvoiceDialog({
   }, [amount, discountAmount, taxAmount]);
 
   useEffect(() => {
+    if (!open) return;
+
     if (preselectedCustomerId) {
       setSelectedCustomerId(preselectedCustomerId);
-      setValue("customer_id", preselectedCustomerId);
+      setValue("customer_id", preselectedCustomerId, { shouldValidate: true });
+      return;
     }
-  }, [preselectedCustomerId, setValue]);
+
+    // Keeps form state in sync when dialog is reopened and a customer is still selected in the UI
+    if (selectedCustomerId) {
+      setValue("customer_id", selectedCustomerId, { shouldValidate: true });
+    }
+  }, [open, preselectedCustomerId, selectedCustomerId, setValue]);
 
   useEffect(() => {
     if (selectedCustomerId) {
@@ -133,6 +145,13 @@ export function NewInvoiceDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Campos controlados via setValue (Select/Checkbox) */}
+          <input type="hidden" {...register("customer_id", { required: true })} />
+          <input type="hidden" {...register("invoice_type", { required: true })} />
+          <input type="hidden" {...register("payment_method", { required: true })} />
+          <input type="hidden" {...register("contract_id")} />
+          <input type="hidden" {...register("is_recurring")} />
+
           {/* Cliente */}
           <div className="space-y-2">
             <Label htmlFor="customer">Cliente *</Label>
