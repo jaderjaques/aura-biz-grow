@@ -47,10 +47,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchProfile = async (userId: string) => {
+    // SECURITY: Only select safe columns, never expose totp_secret, backup_codes, etc.
     const { data, error } = await supabase
       .from("profiles")
       .select(`
-        *,
+        id,
+        full_name,
+        email,
+        phone,
+        avatar_url,
+        role_id,
+        is_active,
+        created_at,
+        updated_at,
+        totp_enabled,
+        totp_verified_at,
+        failed_login_attempts,
+        locked_until,
         role:roles(id, name, description)
       `)
       .eq("id", userId)

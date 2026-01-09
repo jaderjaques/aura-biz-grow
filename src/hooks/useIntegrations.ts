@@ -27,15 +27,28 @@ export function useCreateApiKey() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // Generate API key
+      // Generate API key with secure random bytes
       const apiKey = `rua_${crypto.randomUUID().replace(/-/g, "")}`;
+      
+      // SECURITY: Create hash of the API key for storage
+      // The plain key is only shown once to the user, then only the hash is stored
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(apiKey);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', keyData);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const apiKeyHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      // Extract prefix for identification (first 12 chars: rua_xxxxxxxx)
+      const apiKeyPrefix = apiKey.substring(0, 12);
 
       const { data: result, error } = await supabase
         .from("api_keys")
         .insert({
           user_id: user.id,
           key_name: data.key_name,
-          api_key: apiKey,
+          api_key: apiKeyPrefix + '...', // Store only truncated version for display
+          api_key_hash: apiKeyHash,       // Store hash for validation
+          api_key_prefix: apiKeyPrefix,   // Store prefix for identification
           scopes: data.scopes,
           expires_at: data.expires_at || null,
         })
@@ -43,7 +56,10 @@ export function useCreateApiKey() {
         .single();
 
       if (error) throw error;
-      return result as ApiKey;
+      
+      // Return the full API key for one-time display to user
+      // This is the only time the full key is available
+      return { ...result, api_key: apiKey } as ApiKey;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["api-keys"] });
