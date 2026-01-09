@@ -134,17 +134,17 @@ export function use2FA() {
 
     try {
       // SECURITY: Get current secret via RPC to avoid exposing it in client responses
-      // The RPC function validates ownership before returning the secret
-      const { data: profileData, error: fetchError } = await supabase
-        .rpc('get_own_totp_secret');
+      // Using explicit typing since RPC function may not be in auto-generated types yet
+      const { data: secretData, error: fetchError } = await supabase
+        .rpc('get_own_totp_secret' as never) as { data: { totp_secret: string }[] | null; error: Error | null };
 
-      if (fetchError || !profileData?.totp_secret) {
+      if (fetchError || !secretData || secretData.length === 0 || !secretData[0]?.totp_secret) {
         setError('Erro ao verificar configuração 2FA');
         return false;
       }
 
       // Verify the token
-      const isValid = verifyTOTP(profileData.totp_secret, token, user.email);
+      const isValid = verifyTOTP(secretData[0].totp_secret, token, user.email);
       if (!isValid) {
         setError('Código inválido');
         return false;
@@ -195,13 +195,19 @@ export function use2FA() {
 
     try {
       // SECURITY: Get TOTP secret via RPC to avoid exposing sensitive data in client
-      const { data: profileData, error: fetchError } = await supabase
-        .rpc('get_totp_secret_for_login', { p_user_id: userId });
+      // Using explicit typing since RPC function may not be in auto-generated types yet
+      const { data: secretData, error: fetchError } = await supabase
+        .rpc('get_totp_secret_for_login' as never, { p_user_id: userId } as never) as { 
+          data: { totp_secret: string; backup_codes: string[] }[] | null; 
+          error: Error | null 
+        };
 
-      if (fetchError || !profileData?.totp_secret) {
+      if (fetchError || !secretData || secretData.length === 0 || !secretData[0]?.totp_secret) {
         setError('Erro ao verificar 2FA');
         return false;
       }
+
+      const profileData = secretData[0];
 
       // First try TOTP verification
       const isValid = verifyTOTP(profileData.totp_secret, token, userEmail);

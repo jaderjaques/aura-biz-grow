@@ -3319,6 +3319,19 @@ export type Database = {
           status: string
         }[]
       }
+      get_own_totp_secret: {
+        Args: never
+        Returns: {
+          totp_secret: string
+        }[]
+      }
+      get_totp_secret_for_login: {
+        Args: { p_user_id: string }
+        Returns: {
+          backup_codes: string[]
+          totp_secret: string
+        }[]
+      }
       has_permission: {
         Args: { p_permission_name: string; p_user_id: string }
         Returns: boolean
