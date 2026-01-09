@@ -10,6 +10,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { TwoFactorVerifyDialog } from "@/components/security/TwoFactorVerifyDialog";
+import { use2FA } from "@/hooks/use2FA";
 import { toast } from "sonner";
 
 const loginSchema = z.object({
@@ -21,9 +24,12 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const { user, signIn, loading } = useAuth();
+  const { check2FARequired, verifyLoginTOTP, isLoading: is2FALoading, error: twoFAError, clearError } = use2FA();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [show2FADialog, setShow2FADialog] = useState(false);
+  const [pendingUser, setPendingUser] = useState<{ id: string; email: string } | null>(null);
 
   const from = (location.state as any)?.from?.pathname || "/dashboard";
 
@@ -43,26 +49,82 @@ export default function Login() {
     );
   }
 
-  if (user) {
+  if (user && !show2FADialog) {
     return <Navigate to={from} replace />;
   }
 
   const handleLogin = async (data: LoginFormData) => {
     setIsSubmitting(true);
-    const { error } = await signIn(data.email, data.password);
-    setIsSubmitting(false);
-
-    if (error) {
-      if (error.message.includes("Invalid login credentials")) {
-        toast.error("Email ou senha inválidos");
-      } else if (error.message.includes("Email not confirmed")) {
-        toast.error("Por favor, confirme seu email antes de fazer login");
-      } else {
-        toast.error(error.message);
+    
+    try {
+      const { error, data: authData } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Email ou senha inválidos");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Por favor, confirme seu email antes de fazer login");
+        } else {
+          toast.error(error.message);
+        }
+        setIsSubmitting(false);
+        return;
       }
-    } else {
-      toast.success("Login realizado com sucesso!");
+
+      // Check if 2FA is required
+      if (authData.user) {
+        const requires2FA = await check2FARequired(authData.user.id);
+        
+        if (requires2FA) {
+          // Sign out temporarily and show 2FA dialog
+          await supabase.auth.signOut();
+          setPendingUser({ id: authData.user.id, email: authData.user.email || data.email });
+          setShow2FADialog(true);
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // No 2FA required, login successful
+        toast.success("Login realizado com sucesso!");
+      }
+    } catch (err) {
+      toast.error("Erro ao fazer login");
     }
+    
+    setIsSubmitting(false);
+  };
+
+  const handle2FAVerify = async (code: string): Promise<boolean> => {
+    if (!pendingUser) return false;
+    
+    const isValid = await verifyLoginTOTP(pendingUser.id, pendingUser.email, code);
+    
+    if (isValid) {
+      // Re-authenticate the user
+      const formData = form.getValues();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+      
+      if (!error) {
+        setShow2FADialog(false);
+        setPendingUser(null);
+        toast.success("Login realizado com sucesso!");
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
+  const handle2FACancel = async () => {
+    setShow2FADialog(false);
+    setPendingUser(null);
+    clearError();
   };
 
   return (
@@ -178,6 +240,15 @@ export default function Login() {
           </form>
         </Form>
       </Card>
+
+      {/* 2FA Verification Dialog */}
+      <TwoFactorVerifyDialog
+        open={show2FADialog}
+        onVerify={handle2FAVerify}
+        onCancel={handle2FACancel}
+        isLoading={is2FALoading}
+        error={twoFAError}
+      />
     </div>
   );
 }

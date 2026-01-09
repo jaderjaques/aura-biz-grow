@@ -3320,6 +3320,20 @@ export type Database = {
       increment_failed_login: { Args: { p_user_id: string }; Returns: number }
       is_account_locked: { Args: { p_user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_changes?: Json
+          p_description?: string
+          p_ip_address?: string
+          p_resource_id?: string
+          p_resource_type: string
+          p_severity?: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       log_security_event: {
         Args: {
           p_details?: Json

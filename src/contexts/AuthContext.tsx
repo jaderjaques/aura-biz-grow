@@ -13,6 +13,10 @@ interface Profile {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  totp_enabled: boolean;
+  totp_verified_at: string | null;
+  failed_login_attempts: number;
+  locked_until: string | null;
   role?: {
     id: string;
     name: string;
