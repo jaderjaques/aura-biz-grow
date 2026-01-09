@@ -99,12 +99,12 @@ export function use2FA() {
         throw codesError;
       }
 
-      // Log security event
-      await supabase.from('security_events').insert({
-        user_id: user.id,
-        event_type: '2fa_enabled',
-        severity: 'info',
-      });
+      // Log security event via RPC (direct inserts are blocked by RLS)
+      await supabase.rpc('log_security_event', {
+        p_user_id: user.id,
+        p_event_type: '2fa_enabled',
+        p_severity: 'info'
+      } as never);
 
       if (codesError) {
         throw codesError;
@@ -165,12 +165,12 @@ export function use2FA() {
         throw disableError;
       }
 
-      // Log security event
-      await supabase.from('security_events').insert({
-        user_id: user.id,
-        event_type: '2fa_disabled',
-        severity: 'warning',
-      });
+      // Log security event via RPC (direct inserts are blocked by RLS)
+      await supabase.rpc('log_security_event', {
+        p_user_id: user.id,
+        p_event_type: '2fa_disabled',
+        p_severity: 'warning'
+      } as never);
 
       await refreshProfile();
       return true;
@@ -237,13 +237,13 @@ export function use2FA() {
             })
             .eq('id', userId);
 
-          // Log security event
-          await supabase.from('security_events').insert({
-            user_id: userId,
-            event_type: 'backup_code_used',
-            details: { remaining_codes: newCodes.length },
-            severity: 'warning',
-          });
+          // Log security event via RPC (direct inserts are blocked by RLS)
+          await supabase.rpc('log_security_event', {
+            p_user_id: userId,
+            p_event_type: 'backup_code_used',
+            p_details: { remaining_codes: newCodes.length },
+            p_severity: 'warning'
+          } as never);
 
           return true;
         }

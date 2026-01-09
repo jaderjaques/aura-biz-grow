@@ -3354,17 +3354,26 @@ export type Database = {
         }
         Returns: string
       }
-      log_security_event: {
-        Args: {
-          p_details?: Json
-          p_event_type: string
-          p_ip_address?: string
-          p_severity?: string
-          p_user_agent?: string
-          p_user_id: string
-        }
-        Returns: string
-      }
+      log_security_event:
+        | {
+            Args: {
+              p_details?: Json
+              p_event_type: string
+              p_severity?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_details?: Json
+              p_event_type: string
+              p_ip_address?: string
+              p_severity?: string
+              p_user_agent?: string
+              p_user_id: string
+            }
+            Returns: string
+          }
       reset_failed_login: { Args: { p_user_id: string }; Returns: undefined }
       save_backup_codes: {
         Args: { p_codes: string[]; p_user_id: string }
