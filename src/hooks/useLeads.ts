@@ -210,6 +210,13 @@ export function useLeads() {
 
   const updateLeadStage = useCallback(async (leadId: string, fromStage: string, toStage: string) => {
     try {
+      // Check if moving to "Ganho" stage
+      const { data: targetStage } = await supabase
+        .from('pipeline_stages')
+        .select('is_closed_won')
+        .eq('name', toStage)
+        .single();
+
       // Update lead
       const { error: updateError } = await supabase
         .from('leads')
@@ -225,6 +232,81 @@ export function useLeads() {
         to_stage: toStage,
         changed_by: user?.id,
       });
+
+      // If moving to "Ganho" and lead has a deal, create customer
+      if (targetStage?.is_closed_won) {
+        const { data: deal } = await supabase
+          .from('deals')
+          .select('id, total_value, recurring_value')
+          .eq('lead_id', leadId)
+          .eq('status', 'open')
+          .single();
+
+        if (deal) {
+          // Mark deal as won
+          await supabase
+            .from('deals')
+            .update({
+              status: 'won',
+              stage: 'ganho',
+              actual_close_date: new Date().toISOString().split('T')[0],
+              closed_at: new Date().toISOString(),
+              probability: 100,
+            })
+            .eq('id', deal.id);
+
+          // Get lead data to create customer
+          const { data: lead } = await supabase
+            .from('leads')
+            .select('*')
+            .eq('id', leadId)
+            .single();
+
+          if (lead) {
+            // Check if customer already exists for this lead
+            const { data: existingCustomer } = await supabase
+              .from('customers')
+              .select('id')
+              .eq('lead_id', leadId)
+              .single();
+
+            if (!existingCustomer) {
+              // Create customer from lead
+              const { error: customerError } = await supabase
+                .from('customers')
+                .insert({
+                  company_name: lead.company_name,
+                  trading_name: lead.trading_name,
+                  cnpj: lead.cnpj,
+                  contact_name: lead.contact_name || lead.company_name,
+                  position: lead.position,
+                  phone: lead.phone,
+                  email: lead.email || '',
+                  website: lead.website,
+                  instagram: lead.instagram,
+                  segment: lead.segment,
+                  company_size: lead.company_size,
+                  employee_count: lead.employee_count,
+                  lead_id: leadId,
+                  deal_id: deal.id,
+                  status: 'active',
+                  customer_since: new Date().toISOString().split('T')[0],
+                  monthly_value: deal.recurring_value || 0,
+                  created_by: user?.id,
+                });
+
+              if (customerError) {
+                console.error('Error creating customer:', customerError);
+              } else {
+                toast({
+                  title: '🎉 Cliente criado!',
+                  description: `${lead.company_name} foi convertido em cliente automaticamente.`,
+                });
+              }
+            }
+          }
+        }
+      }
 
       toast({
         title: 'Lead movido!',
