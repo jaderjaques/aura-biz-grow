@@ -117,6 +117,8 @@ export type Database = {
         Row: {
           active: boolean | null
           api_key: string
+          api_key_hash: string | null
+          api_key_prefix: string | null
           created_at: string | null
           expires_at: string | null
           id: string
@@ -129,6 +131,8 @@ export type Database = {
         Insert: {
           active?: boolean | null
           api_key: string
+          api_key_hash?: string | null
+          api_key_prefix?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
@@ -141,6 +145,8 @@ export type Database = {
         Update: {
           active?: boolean | null
           api_key?: string
+          api_key_hash?: string | null
+          api_key_prefix?: string | null
           created_at?: string | null
           expires_at?: string | null
           id?: string
@@ -3317,6 +3323,7 @@ export type Database = {
         Args: { p_permission_name: string; p_user_id: string }
         Returns: boolean
       }
+      hash_api_key: { Args: { key_value: string }; Returns: string }
       increment_failed_login: { Args: { p_user_id: string }; Returns: number }
       is_account_locked: { Args: { p_user_id: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
@@ -3353,6 +3360,17 @@ export type Database = {
       use_backup_code: {
         Args: { p_code: string; p_user_id: string }
         Returns: boolean
+      }
+      validate_api_key: {
+        Args: { key_value: string }
+        Returns: {
+          active: boolean
+          expires_at: string
+          id: string
+          key_name: string
+          scopes: string[]
+          user_id: string
+        }[]
       }
     }
     Enums: {

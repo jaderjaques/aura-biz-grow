@@ -133,12 +133,10 @@ export function use2FA() {
     setError(null);
 
     try {
-      // Get current secret to verify token
+      // SECURITY: Get current secret via RPC to avoid exposing it in client responses
+      // The RPC function validates ownership before returning the secret
       const { data: profileData, error: fetchError } = await supabase
-        .from('profiles')
-        .select('totp_secret')
-        .eq('id', user.id)
-        .single();
+        .rpc('get_own_totp_secret');
 
       if (fetchError || !profileData?.totp_secret) {
         setError('Erro ao verificar configuração 2FA');
@@ -196,12 +194,9 @@ export function use2FA() {
     setError(null);
 
     try {
-      // Get the user's TOTP secret
+      // SECURITY: Get TOTP secret via RPC to avoid exposing sensitive data in client
       const { data: profileData, error: fetchError } = await supabase
-        .from('profiles')
-        .select('totp_secret, backup_codes')
-        .eq('id', userId)
-        .single();
+        .rpc('get_totp_secret_for_login', { p_user_id: userId });
 
       if (fetchError || !profileData?.totp_secret) {
         setError('Erro ao verificar 2FA');
