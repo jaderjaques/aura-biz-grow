@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, Lock, User, Mail, Briefcase, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Lock, User, Mail, Briefcase, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,15 +11,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
+import { validatePassword } from "@/lib/password-validation";
+import { PasswordStrengthIndicator } from "@/components/security/PasswordStrengthIndicator";
 
 const passwordSchema = z
   .object({
     password: z
       .string()
-      .min(8, "Senha deve ter no mínimo 8 caracteres")
-      .regex(/[a-zA-Z]/, "Senha deve conter pelo menos uma letra")
-      .regex(/[0-9]/, "Senha deve conter pelo menos um número"),
-    confirmPassword: z.string().min(8, "Confirmação de senha é obrigatória"),
+      .min(12, "Senha deve ter no mínimo 12 caracteres")
+      .regex(/[A-Z]/, "Senha deve conter pelo menos uma letra maiúscula")
+      .regex(/[a-z]/, "Senha deve conter pelo menos uma letra minúscula")
+      .regex(/[0-9]/, "Senha deve conter pelo menos um número")
+      .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/, "Senha deve conter pelo menos um caractere especial")
+      .refine((password) => {
+        const validation = validatePassword(password);
+        return validation.requirements.notCommon;
+      }, "Esta senha é muito comum. Escolha uma senha mais segura"),
+    confirmPassword: z.string().min(1, "Confirmação de senha é obrigatória"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Senhas não conferem",
@@ -46,11 +54,8 @@ export default function AcceptInvite() {
   const [inviteData, setInviteData] = useState<InviteData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [passwordRequirements, setPasswordRequirements] = useState({
-    minLength: false,
-    hasLetter: false,
-    hasNumber: false,
-  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
@@ -58,17 +63,10 @@ export default function AcceptInvite() {
       password: "",
       confirmPassword: "",
     },
+    mode: "onChange",
   });
 
   const watchPassword = form.watch("password");
-
-  useEffect(() => {
-    setPasswordRequirements({
-      minLength: watchPassword.length >= 8,
-      hasLetter: /[a-zA-Z]/.test(watchPassword),
-      hasNumber: /[0-9]/.test(watchPassword),
-    });
-  }, [watchPassword]);
 
   useEffect(() => {
     const fetchInvite = async () => {
@@ -95,8 +93,23 @@ export default function AcceptInvite() {
     fetchInvite();
   }, [token]);
 
+  const handleGeneratePassword = (generatedPassword: string) => {
+    form.setValue("password", generatedPassword, { shouldValidate: true });
+    form.setValue("confirmPassword", generatedPassword, { shouldValidate: true });
+    setShowPassword(true);
+    setShowConfirmPassword(true);
+    toast.success("Senha gerada! Copie e guarde em local seguro.");
+  };
+
   const onSubmit = async (data: PasswordFormData) => {
     if (!inviteData || !token) return;
+
+    // Validação extra de segurança
+    const validation = validatePassword(data.password);
+    if (!validation.isValid) {
+      validation.errors.forEach((err) => toast.error(err));
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -113,7 +126,6 @@ export default function AcceptInvite() {
       });
 
       if (authError) {
-        console.error("Auth error:", authError);
         toast.error(authError.message);
         setIsSubmitting(false);
         return;
@@ -135,7 +147,6 @@ export default function AcceptInvite() {
       );
 
       if (acceptError || !acceptResult) {
-        console.error("Accept invite error:", acceptError);
         toast.error("Erro ao ativar conta. O convite pode ter expirado.");
         setIsSubmitting(false);
         return;
@@ -148,7 +159,6 @@ export default function AcceptInvite() {
       // Redirect to dashboard
       navigate("/dashboard");
     } catch (error) {
-      console.error("Error:", error);
       toast.error("Erro ao ativar conta");
     }
 
@@ -237,11 +247,24 @@ export default function AcceptInvite() {
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                          type="password"
-                          placeholder="••••••••"
-                          className="pl-10"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••••••"
+                          className="pl-10 pr-10"
                           {...field}
                         />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -259,11 +282,24 @@ export default function AcceptInvite() {
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                          type="password"
-                          placeholder="••••••••"
-                          className="pl-10"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••••••"
+                          className="pl-10 pr-10"
                           {...field}
                         />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -271,44 +307,16 @@ export default function AcceptInvite() {
                 )}
               />
 
-              {/* Password requirements */}
-              <div className="rounded-lg border bg-muted/30 p-3 space-y-1.5">
-                <div
-                  className={`flex items-center gap-2 text-xs ${
-                    passwordRequirements.minLength
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Mínimo 8 caracteres
-                </div>
-                <div
-                  className={`flex items-center gap-2 text-xs ${
-                    passwordRequirements.hasLetter
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Pelo menos uma letra
-                </div>
-                <div
-                  className={`flex items-center gap-2 text-xs ${
-                    passwordRequirements.hasNumber
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Pelo menos um número
-                </div>
-              </div>
+              {/* Password strength indicator */}
+              <PasswordStrengthIndicator 
+                password={watchPassword} 
+                onGeneratePassword={handleGeneratePassword}
+              />
 
               <Button
                 type="submit"
                 className="w-full gradient-cta hover:opacity-90 text-white"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !form.formState.isValid}
               >
                 {isSubmitting ? (
                   <>
