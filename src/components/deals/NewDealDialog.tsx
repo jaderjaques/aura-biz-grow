@@ -26,6 +26,7 @@ import { Package, Plus, Trash2 } from "lucide-react";
 import { Product, SelectedProduct } from "@/types/products";
 import { Lead } from "@/types/leads";
 import { useProducts } from "@/hooks/useProducts";
+import { useAuth } from "@/contexts/AuthContext";
 import { ProductSelectorDialog } from "./ProductSelectorDialog";
 
 interface NewDealDialogProps {
@@ -36,6 +37,7 @@ interface NewDealDialogProps {
 }
 
 export function NewDealDialog({ open, onOpenChange, onSubmit, lead }: NewDealDialogProps) {
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showProductSelector, setShowProductSelector] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
@@ -365,14 +367,16 @@ export function NewDealDialog({ open, onOpenChange, onSubmit, lead }: NewDealDia
                                 <Label className="text-xs">Desconto (%)</Label>
                                 <Input
                                   type="number"
-                                  max={Number(item.product.max_discount_percent) || 100}
+                                  max={isAdmin ? 100 : (Number(item.product.max_discount_percent) || 100)}
                                   value={item.discount_percent.toFixed(2)}
                                   onChange={(e) => updateDiscountPercent(index, e.target.value)}
                                   className="h-8"
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Máx: {item.product.max_discount_percent || 20}%
-                                </p>
+                                {!isAdmin && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Máx: {item.product.max_discount_percent || 20}%
+                                  </p>
+                                )}
                               </div>
                               <div>
                                 <Label className="text-xs">ou Valor (R$)</Label>
