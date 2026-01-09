@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { SecuritySection } from "@/components/security/SecuritySection";
 
 const profileSchema = z.object({
   full_name: z.string().min(2, "Nome deve ter no mínimo 2 caracteres"),
@@ -190,6 +191,9 @@ export default function Profile() {
             </Form>
           </CardContent>
         </Card>
+
+        {/* Security Section */}
+        <SecuritySection />
       </div>
     </AppLayout>
   );
