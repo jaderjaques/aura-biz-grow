@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useCustomers, useContracts } from "@/hooks/useCustomers";
 import { CustomersTable } from "@/components/customers/CustomersTable";
+import { CustomerDetailsSidebar } from "@/components/customers/CustomerDetailsSidebar";
 import { CustomerWithDetails } from "@/types/customers";
 
 export default function Customers() {
@@ -37,6 +38,7 @@ export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterManager, setFilterManager] = useState("all");
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithDetails | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -61,13 +63,14 @@ export default function Customers() {
   });
 
   const handleViewCustomer = (customer: CustomerWithDetails) => {
-    // TODO: Open customer details page or sidebar
-    console.log("View customer:", customer);
+    setSelectedCustomer(customer);
   };
 
   const handleViewContracts = (customerId: string) => {
-    // TODO: Navigate to contracts or filter contracts
-    console.log("View contracts for:", customerId);
+    const customer = customers.find((c) => c.id === customerId);
+    if (customer) {
+      setSelectedCustomer(customer);
+    }
   };
 
   // Get unique managers for filter
@@ -202,6 +205,12 @@ export default function Customers() {
             )}
           </CardContent>
         </Card>
+
+        <CustomerDetailsSidebar
+          customer={selectedCustomer}
+          open={!!selectedCustomer}
+          onOpenChange={(open) => !open && setSelectedCustomer(null)}
+        />
       </div>
     </AppLayout>
   );
