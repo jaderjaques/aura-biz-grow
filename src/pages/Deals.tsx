@@ -16,7 +16,7 @@ import { FileText, DollarSign, CheckCircle, TrendingUp, Plus } from "lucide-reac
 import { useDeals } from "@/hooks/useDeals";
 import { DealsTable } from "@/components/deals/DealsTable";
 import { NewDealDialog } from "@/components/deals/NewDealDialog";
-import { ConvertToCustomerDialog } from "@/components/customers/ConvertToCustomerDialog";
+import { DealWonModal } from "@/components/deals/DealWonModal";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DealWithDetails, SelectedProduct } from "@/types/products";
@@ -39,8 +39,8 @@ export default function Deals() {
   const [filterStage, setFilterStage] = useState("all");
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<DealWithDetails | null>(null);
-  const [showConvertDialog, setShowConvertDialog] = useState(false);
-  const [dealToConvert, setDealToConvert] = useState<DealWithDetails | null>(null);
+  const [showWonModal, setShowWonModal] = useState(false);
+  const [dealToWon, setDealToWon] = useState<DealWithDetails | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -313,8 +313,8 @@ export default function Deals() {
                 onMarkAsWon={(dealId) => {
                   const deal = deals.find((d) => d.id === dealId);
                   if (deal) {
-                    setDealToConvert(deal);
-                    setShowConvertDialog(true);
+                    setDealToWon(deal);
+                    setShowWonModal(true);
                   }
                 }}
                 onMarkAsLost={markAsLost}
@@ -330,13 +330,18 @@ export default function Deals() {
         onSubmit={handleCreateDeal}
       />
 
-      <ConvertToCustomerDialog
-        open={showConvertDialog}
-        onOpenChange={setShowConvertDialog}
-        deal={dealToConvert}
-        onSuccess={(customerId) => {
+      <DealWonModal
+        deal={dealToWon}
+        isOpen={showWonModal}
+        onClose={() => {
+          setShowWonModal(false);
+          setDealToWon(null);
+        }}
+        onSuccess={() => {
           fetchDeals();
-          navigate(`/clientes`);
+          setShowWonModal(false);
+          setDealToWon(null);
+          navigate("/financeiro");
         }}
       />
     </AppLayout>
