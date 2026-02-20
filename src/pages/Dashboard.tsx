@@ -295,6 +295,7 @@ export default function Dashboard() {
             growth={metrics.mrrGrowth}
             icon={DollarSign}
             iconClass="text-success"
+            onClick={() => navigate("/financeiro")}
           />
           <KpiCard
             title="Clientes Ativos"
@@ -302,6 +303,7 @@ export default function Dashboard() {
             growth={metrics.customersGrowth}
             icon={Users}
             iconClass="text-primary"
+            onClick={() => navigate("/clientes")}
           />
           <KpiCard
             title="Pipeline"
@@ -309,6 +311,7 @@ export default function Dashboard() {
             subtitle={`${metrics.totalDeals} propostas abertas`}
             icon={Briefcase}
             iconClass="text-info"
+            onClick={() => navigate("/propostas")}
           />
           <KpiCard
             title="Taxa de Conversão"
@@ -316,6 +319,7 @@ export default function Dashboard() {
             subtitle={`${metrics.dealsWon} propostas ganhas`}
             icon={Target}
             iconClass="text-secondary"
+            onClick={() => navigate("/propostas")}
           />
         </div>
 
@@ -468,6 +472,7 @@ function KpiCard({
   subtitle,
   icon: Icon,
   iconClass,
+  onClick,
 }: {
   title: string;
   value: string | number;
@@ -475,9 +480,13 @@ function KpiCard({
   subtitle?: string;
   icon: React.ElementType;
   iconClass?: string;
+  onClick?: () => void;
 }) {
   return (
-    <Card>
+    <Card
+      className={onClick ? "cursor-pointer hover:shadow-lg transition-shadow" : ""}
+      onClick={onClick}
+    >
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
