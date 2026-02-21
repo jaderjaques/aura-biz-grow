@@ -1712,6 +1712,86 @@ export type Database = {
           },
         ]
       }
+      lead_score_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          lead_id: string | null
+          new_grade: string | null
+          new_score: number | null
+          old_grade: string | null
+          old_score: number | null
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          new_grade?: string | null
+          new_score?: number | null
+          old_grade?: string | null
+          old_score?: number | null
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          new_grade?: string | null
+          new_score?: number | null
+          old_grade?: string | null
+          old_score?: number | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_score_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_scoring_rules: {
+        Row: {
+          condition_field: string
+          condition_operator: string
+          condition_value: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          points: number
+          rule_category: string
+          rule_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          condition_field: string
+          condition_operator: string
+          condition_value: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          points: number
+          rule_category: string
+          rule_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          condition_field?: string
+          condition_operator?: string
+          condition_value?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          points?: number
+          rule_category?: string
+          rule_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lead_tags: {
         Row: {
           created_at: string | null
@@ -1763,12 +1843,14 @@ export type Database = {
           id: string
           instagram: string | null
           last_contact_at: string | null
+          last_score_update: string | null
           lead_score: number | null
           needs: string | null
           notes: string | null
           phone: string
           position: string | null
           probability: number | null
+          score_grade: string | null
           segment: string | null
           source: string
           source_details: Json | null
@@ -1796,12 +1878,14 @@ export type Database = {
           id?: string
           instagram?: string | null
           last_contact_at?: string | null
+          last_score_update?: string | null
           lead_score?: number | null
           needs?: string | null
           notes?: string | null
           phone: string
           position?: string | null
           probability?: number | null
+          score_grade?: string | null
           segment?: string | null
           source?: string
           source_details?: Json | null
@@ -1829,12 +1913,14 @@ export type Database = {
           id?: string
           instagram?: string | null
           last_contact_at?: string | null
+          last_score_update?: string | null
           lead_score?: number | null
           needs?: string | null
           notes?: string | null
           phone?: string
           position?: string | null
           probability?: number | null
+          score_grade?: string | null
           segment?: string | null
           source?: string
           source_details?: Json | null
@@ -3398,6 +3484,10 @@ export type Database = {
         Args: { lead_record: Database["public"]["Tables"]["leads"]["Row"] }
         Returns: number
       }
+      calculate_lead_score_rules: {
+        Args: { p_lead_id: string }
+        Returns: number
+      }
       disable_totp_2fa: { Args: { p_user_id: string }; Returns: boolean }
       enable_totp_2fa: {
         Args: { p_secret: string; p_user_id: string }
@@ -3479,6 +3569,10 @@ export type Database = {
       save_backup_codes: {
         Args: { p_codes: string[]; p_user_id: string }
         Returns: boolean
+      }
+      update_lead_score_with_history: {
+        Args: { p_lead_id: string }
+        Returns: undefined
       }
       use_backup_code: {
         Args: { p_code: string; p_user_id: string }

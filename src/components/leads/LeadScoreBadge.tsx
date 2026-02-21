@@ -1,28 +1,79 @@
 import { cn } from "@/lib/utils";
-import { Flame } from "lucide-react";
+import { Flame, Droplets, Snowflake } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface LeadScoreBadgeProps {
   score: number;
+  grade?: "hot" | "warm" | "cold";
+  size?: "sm" | "md" | "lg";
+  showScore?: boolean;
   className?: string;
 }
 
-export function LeadScoreBadge({ score, className }: LeadScoreBadgeProps) {
-  const getScoreColor = () => {
-    if (score >= 70) return "text-green-600 dark:text-green-400";
-    if (score >= 40) return "text-yellow-600 dark:text-yellow-400";
-    return "text-gray-500 dark:text-gray-400";
-  };
+function getGradeFromScore(score: number): "hot" | "warm" | "cold" {
+  if (score >= 70) return "hot";
+  if (score >= 40) return "warm";
+  return "cold";
+}
 
-  const getFlameColor = () => {
-    if (score >= 70) return "text-orange-500";
-    if (score >= 40) return "text-yellow-500";
-    return "text-gray-400";
-  };
+const gradeConfig = {
+  hot: {
+    label: "Quente",
+    icon: Flame,
+    className: "bg-destructive text-destructive-foreground",
+  },
+  warm: {
+    label: "Morno",
+    icon: Droplets,
+    className: "bg-yellow-500 text-white dark:bg-yellow-600",
+  },
+  cold: {
+    label: "Frio",
+    icon: Snowflake,
+    className: "bg-blue-500 text-white dark:bg-blue-600",
+  },
+};
+
+const sizeClasses = {
+  sm: "text-xs py-0.5 px-2",
+  md: "text-sm py-1 px-3",
+  lg: "text-base py-1.5 px-4",
+};
+
+const iconSizes = {
+  sm: "h-3 w-3",
+  md: "h-4 w-4",
+  lg: "h-5 w-5",
+};
+
+export function LeadScoreBadge({
+  score,
+  grade,
+  size = "md",
+  showScore = true,
+  className,
+}: LeadScoreBadgeProps) {
+  const resolvedGrade = grade || getGradeFromScore(score);
+  const config = gradeConfig[resolvedGrade];
+  const Icon = config.icon;
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
-      <Flame className={cn("h-4 w-4", getFlameColor())} />
-      <span className={cn("font-medium", getScoreColor())}>{score}</span>
-    </div>
+    <Badge
+      className={cn(
+        config.className,
+        sizeClasses[size],
+        "flex items-center gap-1.5",
+        className
+      )}
+    >
+      <Icon className={iconSizes[size]} />
+      <span className="font-semibold">{config.label}</span>
+      {showScore && (
+        <>
+          <span className="opacity-75">•</span>
+          <span className="font-bold">{score}</span>
+        </>
+      )}
+    </Badge>
   );
 }
