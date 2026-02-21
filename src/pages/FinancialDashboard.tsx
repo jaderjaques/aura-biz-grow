@@ -77,6 +77,8 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { exportExpensesByCategoryPDF } from "@/lib/export-utils";
+import { ChevronDown, FileText as FileTextIcon } from "lucide-react";
 
 interface CashflowMonth {
   month: string;
@@ -297,6 +299,18 @@ export default function FinancialDashboard() {
     await resolveAlert.mutateAsync({ alertId });
   };
 
+  function handleExportExpensesByCategory() {
+    try {
+      if (categoryChart.length === 0) {
+        return;
+      }
+      const period = format(new Date(selectedMonth + '-01'), 'MMMM yyyy', { locale: ptBR });
+      exportExpensesByCategoryPDF(categoryChart, period);
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+    }
+  }
+
   const invoiceStatusData = [
     { name: "Pagas", value: metrics?.invoicesPaid || 0, color: "#10B981" },
     { name: "Pendentes", value: metrics?.pendingCount || 0, color: "#F59E0B" },
@@ -332,6 +346,22 @@ export default function FinancialDashboard() {
                 })}
               </SelectContent>
             </Select>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportExpensesByCategory}>
+                  <FileTextIcon className="mr-2 h-4 w-4" />
+                  Despesas por Categoria (PDF)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <Button variant="outline" size="icon" onClick={loadCharts}>
               <RefreshCw className="h-4 w-4" />

@@ -39,8 +39,18 @@ import {
   MoreVertical,
   Edit,
   Trash2,
+  Download,
+  ChevronDown,
+  FileSpreadsheet,
+  FileText,
 } from "lucide-react";
 import { TransactionFormDialog } from "./TransactionFormDialog";
+import {
+  exportCashflowToExcel,
+  exportToCSV,
+  exportCashflowToPDF,
+} from "@/lib/export-utils";
+import { ptBR } from "date-fns/locale";
 
 interface Transaction {
   id: string;
@@ -173,6 +183,37 @@ export function CashflowTab() {
     setIsCreateDialogOpen(true);
   }
 
+  function handleExport(exportFormat: 'excel' | 'csv' | 'pdf') {
+    try {
+      if (filteredTransactions.length === 0) {
+        toast.error('Nenhuma transação para exportar');
+        return;
+      }
+      const period = format(new Date(filterMonth + '-01'), 'MMMM-yyyy', { locale: ptBR });
+
+      if (exportFormat === 'excel') {
+        exportCashflowToExcel(filteredTransactions, filterMonth);
+        toast.success('Relatório Excel gerado!');
+      } else if (exportFormat === 'csv') {
+        const data = filteredTransactions.map(t => ({
+          'Data': format(new Date(t.transaction_date), 'dd/MM/yyyy'),
+          'Tipo': t.type === 'revenue' ? 'Receita' : 'Despesa',
+          'Descrição': t.description,
+          'Categoria': t.revenue_category?.name || t.expense_category?.name || '-',
+          'Valor': t.amount,
+        }));
+        exportToCSV(data, `fluxo-caixa-${filterMonth}`);
+        toast.success('Relatório CSV gerado!');
+      } else if (exportFormat === 'pdf') {
+        exportCashflowToPDF(filteredTransactions, stats, period);
+        toast.success('Relatório PDF gerado!');
+      }
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      toast.error('Erro ao gerar relatório');
+    }
+  }
+
   function formatCurrency(value: number) {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -270,6 +311,29 @@ export function CashflowTab() {
             </div>
 
             <div className="flex gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Exportar
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleExport('excel')}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    Excel (.xlsx)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('csv')}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 onClick={() => openCreateDialog("revenue")}
                 className="bg-gradient-to-r from-[#10B981] to-[#059669]"
