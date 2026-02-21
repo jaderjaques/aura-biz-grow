@@ -54,6 +54,7 @@ import {
 import { CashflowTab } from "@/components/financial/CashflowTab";
 import { DRETab } from "@/components/financial/DRETab";
 import { FinancialAlerts } from "@/components/financial/FinancialAlerts";
+import { GoalsTab } from "@/components/financial/GoalsTab";
 import {
   LineChart,
   Line,
@@ -396,6 +397,10 @@ export default function FinancialDashboard() {
             <TabsTrigger value="alerts">
               <AlertTriangle className="mr-2 h-4 w-4" />
               Alertas
+            </TabsTrigger>
+            <TabsTrigger value="goals">
+              <Target className="mr-2 h-4 w-4" />
+              Metas
             </TabsTrigger>
           </TabsList>
 
@@ -816,6 +821,10 @@ export default function FinancialDashboard() {
 
           <TabsContent value="alerts" className="mt-6">
             <FinancialAlerts />
+          </TabsContent>
+
+          <TabsContent value="goals" className="mt-6">
+            <GoalsTab />
           </TabsContent>
         </Tabs>
       </div>
