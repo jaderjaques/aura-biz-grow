@@ -51,6 +51,7 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { InvoiceWithDetails } from "@/types/financial";
 import { NewInvoiceDialog } from "./NewInvoiceDialog";
 import { MarkAsPaidDialog } from "./MarkAsPaidDialog";
+import { InvoiceDetailsSheet } from "./InvoiceDetailsSheet";
 import { cn } from "@/lib/utils";
 
 export function InvoicesTable() {
@@ -64,6 +65,7 @@ export function InvoicesTable() {
   const [showNewInvoice, setShowNewInvoice] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithDetails | null>(null);
   const [showMarkAsPaid, setShowMarkAsPaid] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   const { invoices, isLoading, cancelInvoice } = useInvoices({
     status: filterStatus,
@@ -460,6 +462,10 @@ export function InvoicesTable() {
                     <TableRow
                       key={invoice.id}
                       className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => {
+                        setSelectedInvoice(invoice);
+                        setShowDetails(true);
+                      }}
                     >
                       <TableCell>
                         <Badge variant="outline">{invoice.invoice_number}</Badge>
@@ -533,7 +539,10 @@ export function InvoicesTable() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedInvoice(invoice);
+                              setShowDetails(true);
+                            }}>
                               <Eye className="mr-2 h-4 w-4" />
                               Ver Detalhes
                             </DropdownMenuItem>
@@ -583,6 +592,14 @@ export function InvoicesTable() {
         open={showMarkAsPaid}
         onOpenChange={setShowMarkAsPaid}
         invoice={selectedInvoice}
+      />
+      <InvoiceDetailsSheet
+        open={showDetails}
+        onOpenChange={setShowDetails}
+        invoice={selectedInvoice}
+        onUpdate={() => {
+          // Refetch handled by query invalidation
+        }}
       />
     </>
   );

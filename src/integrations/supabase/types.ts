@@ -1391,6 +1391,51 @@ export type Database = {
           },
         ]
       }
+      invoice_history: {
+        Row: {
+          action: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          invoice_id: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          invoice_id?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_history_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_status_history: {
         Row: {
           changed_at: string | null
@@ -1458,14 +1503,17 @@ export type Database = {
           payment_confirmation: string | null
           payment_date: string | null
           payment_method: string | null
+          payment_proof_url: string | null
           pdf_url: string | null
           pix_code: string | null
           pix_qrcode_url: string | null
           recurrence_id: string | null
+          sent_at: string | null
           status: string | null
           tax_amount: number | null
           total_amount: number | null
           updated_at: string | null
+          viewed_at: string | null
         }
         Insert: {
           amount: number
@@ -1488,14 +1536,17 @@ export type Database = {
           payment_confirmation?: string | null
           payment_date?: string | null
           payment_method?: string | null
+          payment_proof_url?: string | null
           pdf_url?: string | null
           pix_code?: string | null
           pix_qrcode_url?: string | null
           recurrence_id?: string | null
+          sent_at?: string | null
           status?: string | null
           tax_amount?: number | null
           total_amount?: number | null
           updated_at?: string | null
+          viewed_at?: string | null
         }
         Update: {
           amount?: number
@@ -1518,14 +1569,17 @@ export type Database = {
           payment_confirmation?: string | null
           payment_date?: string | null
           payment_method?: string | null
+          payment_proof_url?: string | null
           pdf_url?: string | null
           pix_code?: string | null
           pix_qrcode_url?: string | null
           recurrence_id?: string | null
+          sent_at?: string | null
           status?: string | null
           tax_amount?: number | null
           total_amount?: number | null
           updated_at?: string | null
+          viewed_at?: string | null
         }
         Relationships: [
           {
