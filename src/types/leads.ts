@@ -32,6 +32,21 @@ export interface Lead {
   updated_at: string;
   created_by: string | null;
   deleted_at: string | null;
+  // BANT fields
+  bant_budget: string | null;
+  bant_budget_value: number | null;
+  bant_budget_notes: string | null;
+  bant_authority: string | null;
+  bant_authority_notes: string | null;
+  bant_need: string | null;
+  bant_need_description: string | null;
+  bant_timeline: string | null;
+  bant_timeline_date: string | null;
+  bant_timeline_notes: string | null;
+  bant_score: number | null;
+  bant_qualified: boolean | null;
+  bant_qualified_at: string | null;
+  bant_qualified_by: string | null;
   // Joined data
   assigned_user?: {
     id: string;
