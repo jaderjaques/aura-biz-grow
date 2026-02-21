@@ -76,7 +76,7 @@ export function TransactionFormDialog({
     notes: "",
     transaction_date: new Date().toISOString().split("T")[0],
     category_id: "",
-    customer_id: "",
+    customer_id: "none",
     payment_method: "pix",
     is_recurring: false,
   });
@@ -94,7 +94,7 @@ export function TransactionFormDialog({
           notes: transaction.notes || "",
           transaction_date: transaction.transaction_date || new Date().toISOString().split("T")[0],
           category_id: transaction.revenue_category_id || transaction.expense_category_id || "",
-          customer_id: transaction.customer_id || "",
+          customer_id: transaction.customer_id || "none",
           payment_method: transaction.payment_method || "pix",
           is_recurring: transaction.is_recurring || false,
         });
@@ -106,7 +106,7 @@ export function TransactionFormDialog({
           notes: "",
           transaction_date: new Date().toISOString().split("T")[0],
           category_id: "",
-          customer_id: "",
+          customer_id: "none",
           payment_method: "pix",
           is_recurring: false,
         });
@@ -146,7 +146,7 @@ export function TransactionFormDialog({
           notes: formData.notes || null,
           transaction_date: formData.transaction_date,
           payment_method: formData.payment_method,
-          customer_id: formData.customer_id || null,
+          customer_id: formData.customer_id === "none" ? null : formData.customer_id || null,
           is_recurring: formData.is_recurring,
           revenue_category_id: transactionType === "revenue" ? formData.category_id : null,
           expense_category_id: transactionType === "expense" ? formData.category_id : null,
@@ -163,7 +163,7 @@ export function TransactionFormDialog({
           notes: formData.notes || null,
           transaction_date: formData.transaction_date,
           payment_method: formData.payment_method,
-          customer_id: formData.customer_id || null,
+          customer_id: formData.customer_id === "none" ? null : formData.customer_id || null,
           is_recurring: formData.is_recurring,
           revenue_category_id: transactionType === "revenue" ? formData.category_id : null,
           expense_category_id: transactionType === "expense" ? formData.category_id : null,
@@ -292,14 +292,14 @@ export function TransactionFormDialog({
             <div className="space-y-2">
               <Label htmlFor="customer">Cliente (opcional)</Label>
               <Select
-                value={formData.customer_id}
+                value={formData.customer_id || "none"}
                 onValueChange={(value) => setFormData({ ...formData, customer_id: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um cliente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {customers.map((customer) => (
                     <SelectItem key={customer.id} value={customer.id}>
                       {customer.company_name}
