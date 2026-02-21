@@ -39,6 +39,11 @@ import {
   LayoutGrid,
   List,
   Sparkles,
+  Flame,
+  Droplets,
+  Snowflake,
+  Award,
+  ArrowUpDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -63,6 +68,8 @@ export default function Leads() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [scoreFilter, setScoreFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("created_at");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [showNewLeadDialog, setShowNewLeadDialog] = useState(false);
@@ -71,6 +78,26 @@ export default function Leads() {
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const [showNewDealDialog, setShowNewDealDialog] = useState(false);
   const [dealLead, setDealLead] = useState<Lead | null>(null);
+
+  // Score stats computed from leads
+  const scoreStats = {
+    hot: leads.filter((l) => l.score_grade === "hot").length,
+    warm: leads.filter((l) => l.score_grade === "warm").length,
+    cold: leads.filter((l) => !l.score_grade || l.score_grade === "cold").length,
+    avgScore: leads.length > 0 ? Math.round(leads.reduce((sum, l) => sum + (l.lead_score || 0), 0) / leads.length) : 0,
+  };
+
+  // Filter + sort leads
+  const filteredLeads = leads
+    .filter((lead) => {
+      const matchesScore = scoreFilter === "all" || lead.score_grade === scoreFilter;
+      return matchesScore;
+    })
+    .sort((a, b) => {
+      if (sortBy === "score") return (b.lead_score || 0) - (a.lead_score || 0);
+      if (sortBy === "company_name") return (a.company_name || "").localeCompare(b.company_name || "");
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   const handleSearch = useCallback(() => {
     fetchLeads({
@@ -195,6 +222,62 @@ export default function Leads() {
           </Card>
         </div>
 
+        {/* Score Stats */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card className="cursor-pointer hover:ring-2 hover:ring-destructive/50 transition-all" onClick={() => setScoreFilter(scoreFilter === "hot" ? "all" : "hot")}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-destructive/10">
+                  <Flame className="h-5 w-5 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Quentes</p>
+                  <p className="text-2xl font-bold">{scoreStats.hot}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="cursor-pointer hover:ring-2 hover:ring-yellow-500/50 transition-all" onClick={() => setScoreFilter(scoreFilter === "warm" ? "all" : "warm")}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-yellow-500/10">
+                  <Droplets className="h-5 w-5 text-yellow-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Mornos</p>
+                  <p className="text-2xl font-bold">{scoreStats.warm}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="cursor-pointer hover:ring-2 hover:ring-blue-500/50 transition-all" onClick={() => setScoreFilter(scoreFilter === "cold" ? "all" : "cold")}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <Snowflake className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Frios</p>
+                  <p className="text-2xl font-bold">{scoreStats.cold}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-accent/10">
+                  <Award className="h-5 w-5 text-accent-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Score Médio</p>
+                  <p className="text-2xl font-bold">{scoreStats.avgScore}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Action bar */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
           <div className="flex gap-2">
@@ -213,7 +296,20 @@ export default function Leads() {
             )}
           </div>
 
-          <div className="flex gap-2">
+           <div className="flex gap-2 items-center">
+            {/* Sort dropdown */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[160px]">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Ordenar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at">Mais recente</SelectItem>
+                <SelectItem value="score">Maior score</SelectItem>
+                <SelectItem value="company_name">Empresa (A-Z)</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Tabs
               value={viewMode}
               onValueChange={(v) => setViewMode(v as "table" | "kanban")}
@@ -270,6 +366,18 @@ export default function Leads() {
                   <SelectItem value="whatsapp">WhatsApp</SelectItem>
                   <SelectItem value="csv_import">CSV</SelectItem>
                   <SelectItem value="api">API</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={scoreFilter} onValueChange={setScoreFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Score" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos Scores</SelectItem>
+                  <SelectItem value="hot">🔥 Quentes</SelectItem>
+                  <SelectItem value="warm">💧 Mornos</SelectItem>
+                  <SelectItem value="cold">❄️ Frios</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -331,7 +439,7 @@ export default function Leads() {
           </div>
         ) : viewMode === "table" ? (
           <LeadsTable
-            leads={leads}
+            leads={filteredLeads}
             selectedLeads={selectedLeads}
             onSelectLead={handleSelectLead}
             onSelectAll={handleSelectAll}
@@ -343,7 +451,7 @@ export default function Leads() {
           />
         ) : (
           <LeadsKanban
-            leads={leads}
+            leads={filteredLeads}
             stages={stages}
             onOpenLead={handleOpenLead}
             onMoveStage={handleMoveStage}
