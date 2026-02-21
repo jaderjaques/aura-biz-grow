@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import { CashflowTab } from "@/components/financial/CashflowTab";
 import { DRETab } from "@/components/financial/DRETab";
+import { FinancialAlerts } from "@/components/financial/FinancialAlerts";
 import {
   LineChart,
   Line,
@@ -391,6 +392,10 @@ export default function FinancialDashboard() {
             <TabsTrigger value="dre">
               <BarChart3 className="mr-2 h-4 w-4" />
               DRE
+            </TabsTrigger>
+            <TabsTrigger value="alerts">
+              <AlertTriangle className="mr-2 h-4 w-4" />
+              Alertas
             </TabsTrigger>
           </TabsList>
 
@@ -807,6 +812,10 @@ export default function FinancialDashboard() {
 
           <TabsContent value="dre" className="mt-6">
             <DRETab />
+          </TabsContent>
+
+          <TabsContent value="alerts" className="mt-6">
+            <FinancialAlerts />
           </TabsContent>
         </Tabs>
       </div>
