@@ -27,6 +27,7 @@ import { LeadStatusBadge } from "./LeadStatusBadge";
 import { LeadSourceBadge } from "./LeadSourceBadge";
 import { LeadScoreBadge } from "./LeadScoreBadge";
 import { LeadScoreHistory } from "./LeadScoreHistory";
+import { BANTQualification } from "./BANTQualification";
 import { Lead, Activity, StageHistory } from "@/types/leads";
 import { useLeadActivities } from "@/hooks/useLeads";
 import { supabase } from "@/integrations/supabase/client";
@@ -219,8 +220,9 @@ export function LeadDetailsSidebar({
 
           <ScrollArea className="flex-1 mt-6">
             <Tabs defaultValue="overview" className="h-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                <TabsTrigger value="bant">BANT</TabsTrigger>
                 <TabsTrigger value="activities">Atividades</TabsTrigger>
                 <TabsTrigger value="history">Histórico</TabsTrigger>
               </TabsList>
@@ -439,6 +441,26 @@ export function LeadDetailsSidebar({
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* Tab: BANT */}
+              <TabsContent value="bant" className="mt-4">
+                <BANTQualification
+                  lead={lead}
+                  onUpdate={() => {
+                    // Refetch lead data
+                    const refetch = async () => {
+                      const { data } = await supabase
+                        .from("leads")
+                        .select("*, assigned_user:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)")
+                        .eq("id", lead.id)
+                        .single();
+                      if (data) setLead(data as Lead);
+                    };
+                    refetch();
+                    onRefresh();
+                  }}
+                />
               </TabsContent>
 
               {/* Tab: Atividades */}

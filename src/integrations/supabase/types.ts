@@ -765,6 +765,83 @@ export type Database = {
           },
         ]
       }
+      custom_field_values: {
+        Row: {
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          field_id: string | null
+          field_value: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          field_id?: string | null
+          field_value?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          field_id?: string | null
+          field_value?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_field_values_field_id_fkey"
+            columns: ["field_id"]
+            isOneToOne: false
+            referencedRelation: "custom_fields"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_fields: {
+        Row: {
+          applies_to: string
+          created_at: string | null
+          display_order: number | null
+          field_label: string
+          field_name: string
+          field_options: Json | null
+          field_type: string
+          id: string
+          is_active: boolean | null
+          is_required: boolean | null
+        }
+        Insert: {
+          applies_to?: string
+          created_at?: string | null
+          display_order?: number | null
+          field_label: string
+          field_name: string
+          field_options?: Json | null
+          field_type: string
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+        }
+        Update: {
+          applies_to?: string
+          created_at?: string | null
+          display_order?: number | null
+          field_label?: string
+          field_name?: string
+          field_options?: Json | null
+          field_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_required?: boolean | null
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           account_manager: string | null
@@ -1712,6 +1789,47 @@ export type Database = {
           },
         ]
       }
+      lead_qualification_history: {
+        Row: {
+          changed_by: string | null
+          created_at: string | null
+          field_changed: string
+          id: string
+          lead_id: string | null
+          new_value: string | null
+          notes: string | null
+          old_value: string | null
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string | null
+          field_changed: string
+          id?: string
+          lead_id?: string | null
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string | null
+          field_changed?: string
+          id?: string
+          lead_id?: string | null
+          new_value?: string | null
+          notes?: string | null
+          old_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_qualification_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_score_history: {
         Row: {
           created_at: string | null
@@ -1829,6 +1947,20 @@ export type Database = {
         Row: {
           assigned_at: string | null
           assigned_to: string | null
+          bant_authority: string | null
+          bant_authority_notes: string | null
+          bant_budget: string | null
+          bant_budget_notes: string | null
+          bant_budget_value: number | null
+          bant_need: string | null
+          bant_need_description: string | null
+          bant_qualified: boolean | null
+          bant_qualified_at: string | null
+          bant_qualified_by: string | null
+          bant_score: number | null
+          bant_timeline: string | null
+          bant_timeline_date: string | null
+          bant_timeline_notes: string | null
           cnpj: string | null
           company_name: string
           company_size: string | null
@@ -1864,6 +1996,20 @@ export type Database = {
         Insert: {
           assigned_at?: string | null
           assigned_to?: string | null
+          bant_authority?: string | null
+          bant_authority_notes?: string | null
+          bant_budget?: string | null
+          bant_budget_notes?: string | null
+          bant_budget_value?: number | null
+          bant_need?: string | null
+          bant_need_description?: string | null
+          bant_qualified?: boolean | null
+          bant_qualified_at?: string | null
+          bant_qualified_by?: string | null
+          bant_score?: number | null
+          bant_timeline?: string | null
+          bant_timeline_date?: string | null
+          bant_timeline_notes?: string | null
           cnpj?: string | null
           company_name: string
           company_size?: string | null
@@ -1899,6 +2045,20 @@ export type Database = {
         Update: {
           assigned_at?: string | null
           assigned_to?: string | null
+          bant_authority?: string | null
+          bant_authority_notes?: string | null
+          bant_budget?: string | null
+          bant_budget_notes?: string | null
+          bant_budget_value?: number | null
+          bant_need?: string | null
+          bant_need_description?: string | null
+          bant_qualified?: boolean | null
+          bant_qualified_at?: string | null
+          bant_qualified_by?: string | null
+          bant_score?: number | null
+          bant_timeline?: string | null
+          bant_timeline_date?: string | null
+          bant_timeline_notes?: string | null
           cnpj?: string | null
           company_name?: string
           company_size?: string | null
@@ -3480,6 +3640,7 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      calculate_bant_score: { Args: { p_lead_id: string }; Returns: number }
       calculate_lead_score: {
         Args: { lead_record: Database["public"]["Tables"]["leads"]["Row"] }
         Returns: number
