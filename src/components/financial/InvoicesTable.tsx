@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import { format, differenceInDays, startOfMonth, endOfMonth, subMonths, startOfQuarter, startOfYear } from "date-fns";
 import {
   Table,
@@ -45,6 +46,8 @@ import {
   FileText,
   SlidersHorizontal,
   Copy,
+  ChevronDown,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -53,6 +56,7 @@ import { NewInvoiceDialog } from "./NewInvoiceDialog";
 import { MarkAsPaidDialog } from "./MarkAsPaidDialog";
 import { InvoiceDetailsSheet } from "./InvoiceDetailsSheet";
 import { cn } from "@/lib/utils";
+import { exportInvoicesToExcel, exportInvoicesToPDF } from "@/lib/export-utils";
 
 export function InvoicesTable() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -215,6 +219,47 @@ export function InvoicesTable() {
       await cancelInvoice.mutateAsync(invoiceId);
     }
   };
+
+  function handleExportInvoices(exportFormat: 'excel' | 'pdf') {
+    try {
+      if (filteredInvoices.length === 0) {
+        return;
+      }
+      const now = new Date();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const exportStats = {
+        pending: {
+          count: filteredInvoices.filter(i => i.status === 'pending' || i.status === 'sent').length,
+          value: filteredInvoices.filter(i => i.status === 'pending' || i.status === 'sent').reduce((s, i) => s + (Number(i.total_amount) || 0), 0),
+        },
+        overdue: {
+          count: filteredInvoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled' && new Date(i.due_date) < today).length,
+          value: filteredInvoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled' && new Date(i.due_date) < today).reduce((s, i) => s + (Number(i.total_amount) || 0), 0),
+        },
+        paid: {
+          count: filteredInvoices.filter(i => i.status === 'paid').length,
+          value: filteredInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + (Number(i.total_amount) || 0), 0),
+        },
+        cancelled: {
+          count: filteredInvoices.filter(i => i.status === 'cancelled').length,
+          value: filteredInvoices.filter(i => i.status === 'cancelled').reduce((s, i) => s + (Number(i.total_amount) || 0), 0),
+        },
+      };
+
+      if (exportFormat === 'excel') {
+        exportInvoicesToExcel(filteredInvoices);
+        toast.success('Relatório Excel gerado!');
+      } else {
+        exportInvoicesToPDF(filteredInvoices, exportStats);
+        toast.success('Relatório PDF gerado!');
+      }
+    } catch (error) {
+      console.error('Erro ao exportar:', error);
+      toast.error('Erro ao gerar relatório');
+    }
+  }
 
   const exportToCSV = () => {
     const headers = ["Número", "Cliente", "Tipo", "Valor", "Emissão", "Vencimento", "Status"];
@@ -423,10 +468,29 @@ export function InvoicesTable() {
                   : `${filteredInvoices.length} ${filteredInvoices.length === 1 ? "fatura" : "faturas"}`}
               </CardTitle>
               {filteredInvoices.length > 0 && (
-                <Button variant="outline" size="sm" onClick={exportToCSV}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Download className="mr-2 h-4 w-4" />
+                      Exportar
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleExportInvoices('excel')}>
+                      <FileSpreadsheet className="mr-2 h-4 w-4" />
+                      Excel (.xlsx)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={exportToCSV}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportInvoices('pdf')}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </CardHeader>
