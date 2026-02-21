@@ -117,12 +117,14 @@ export const useInvoices = (filters?: {
       paymentMethod,
       transactionId,
       notes,
+      proofUrl,
     }: {
       invoiceId: string;
       paymentDate: string;
       paymentMethod: string;
       transactionId?: string;
       notes?: string;
+      proofUrl?: string;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -156,6 +158,7 @@ export const useInvoices = (filters?: {
           payment_date: paymentDate,
           payment_method: paymentMethod,
           payment_confirmation: transactionId,
+          payment_proof_url: proofUrl || null,
         })
         .eq("id", invoiceId)
         .select()

@@ -412,6 +412,27 @@ export function InvoiceDetailsSheet({
                           </p>
                         </div>
                       )}
+                      {invoice.payment_proof_url && (
+                        <div className="col-span-2">
+                          <p className="text-muted-foreground mb-2">
+                            Comprovante Anexado
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
+                            <a
+                              href={invoice.payment_proof_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Ver Comprovante
+                            </a>
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
