@@ -17,6 +17,8 @@ export interface Lead {
   status: string;
   stage: string;
   lead_score: number;
+  score_grade: string | null;
+  last_score_update: string | null;
   needs: string | null;
   notes: string | null;
   assigned_to: string | null;

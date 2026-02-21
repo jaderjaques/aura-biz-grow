@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LeadStatusBadge } from "./LeadStatusBadge";
 import { LeadSourceBadge } from "./LeadSourceBadge";
+import { LeadScoreBadge } from "./LeadScoreBadge";
+import { LeadScoreHistory } from "./LeadScoreHistory";
 import { Lead, Activity, StageHistory } from "@/types/leads";
 import { useLeadActivities } from "@/hooks/useLeads";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,13 +194,10 @@ export function LeadDetailsSidebar({
             {/* Status e Score */}
             <div className="flex flex-wrap items-center gap-3">
               <LeadStatusBadge status={lead.status} />
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Score:</span>
-                <Progress value={lead.lead_score} className="w-20 h-2" />
-                <span className="text-sm font-medium">{lead.lead_score}</span>
-              </div>
-
+              <LeadScoreBadge
+                score={lead.lead_score}
+                grade={lead.score_grade as "hot" | "warm" | "cold" | undefined}
+              />
               <LeadSourceBadge source={lead.source} />
             </div>
 
@@ -357,6 +356,13 @@ export function LeadDetailsSidebar({
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Score History */}
+                <LeadScoreHistory
+                  leadId={lead.id}
+                  currentScore={lead.lead_score || 0}
+                  currentGrade={(lead.score_grade as "hot" | "warm" | "cold") || "cold"}
+                />
 
                 {/* Needs */}
                 {lead.needs && (
