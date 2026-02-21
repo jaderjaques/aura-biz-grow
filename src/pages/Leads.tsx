@@ -95,6 +95,7 @@ export default function Leads() {
     })
     .sort((a, b) => {
       if (sortBy === "score") return (b.lead_score || 0) - (a.lead_score || 0);
+      if (sortBy === "bant_score") return (b.bant_score || 0) - (a.bant_score || 0);
       if (sortBy === "company_name") return (a.company_name || "").localeCompare(b.company_name || "");
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
@@ -306,6 +307,7 @@ export default function Leads() {
               <SelectContent>
                 <SelectItem value="created_at">Mais recente</SelectItem>
                 <SelectItem value="score">Maior score</SelectItem>
+                <SelectItem value="bant_score">Maior BANT</SelectItem>
                 <SelectItem value="company_name">Empresa (A-Z)</SelectItem>
               </SelectContent>
             </Select>

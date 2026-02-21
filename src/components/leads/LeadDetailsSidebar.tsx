@@ -28,6 +28,7 @@ import { LeadSourceBadge } from "./LeadSourceBadge";
 import { LeadScoreBadge } from "./LeadScoreBadge";
 import { LeadScoreHistory } from "./LeadScoreHistory";
 import { BANTQualification } from "./BANTQualification";
+import { BANTScoreBadge } from "./BANTScoreBadge";
 import { Lead, Activity, StageHistory } from "@/types/leads";
 import { useLeadActivities } from "@/hooks/useLeads";
 import { supabase } from "@/integrations/supabase/client";
@@ -200,6 +201,13 @@ export function LeadDetailsSidebar({
                 grade={lead.score_grade as "hot" | "warm" | "cold" | undefined}
               />
               <LeadSourceBadge source={lead.source} />
+              {(lead.bant_score != null && lead.bant_score > 0) && (
+                <BANTScoreBadge
+                  score={lead.bant_score}
+                  qualified={lead.bant_qualified || false}
+                  size="sm"
+                />
+              )}
             </div>
 
             {/* Tags */}
