@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, Upload, FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useInvoices } from "@/hooks/useInvoices";
 import { InvoiceWithDetails } from "@/types/financial";
 import { format } from "date-fns";
@@ -69,12 +70,34 @@ export function MarkAsPaidDialog({ open, onOpenChange, invoice }: MarkAsPaidDial
   const onSubmit = async (data: PaymentFormData) => {
     if (!invoice) return;
 
+    let proofUrl: string | undefined;
+
+    // Upload receipt file if provided
+    if (receiptFile) {
+      const fileExt = receiptFile.name.split(".").pop();
+      const fileName = `proofs/${invoice.id}_${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("invoices")
+        .upload(fileName, receiptFile);
+
+      if (uploadError) {
+        console.error("Erro ao fazer upload:", uploadError);
+      } else {
+        const { data: urlData } = supabase.storage
+          .from("invoices")
+          .getPublicUrl(fileName);
+        proofUrl = urlData.publicUrl;
+      }
+    }
+
     await markAsPaid.mutateAsync({
       invoiceId: invoice.id,
       paymentDate: data.payment_date,
       paymentMethod: data.payment_method,
       transactionId: data.transaction_id || undefined,
       notes: data.notes || undefined,
+      proofUrl,
     });
 
     reset();
