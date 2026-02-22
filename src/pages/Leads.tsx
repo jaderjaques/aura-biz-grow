@@ -44,6 +44,7 @@ import {
   Snowflake,
   Award,
   ArrowUpDown,
+  Tag,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -69,6 +70,7 @@ export default function Leads() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [scoreFilter, setScoreFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
   const [sortBy, setSortBy] = useState("created_at");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
@@ -91,7 +93,8 @@ export default function Leads() {
   const filteredLeads = leads
     .filter((lead) => {
       const matchesScore = scoreFilter === "all" || lead.score_grade === scoreFilter;
-      return matchesScore;
+      const matchesTag = tagFilter === "all" || lead.tags?.some(t => t.id === tagFilter);
+      return matchesScore && matchesTag;
     })
     .sort((a, b) => {
       if (sortBy === "score") return (b.lead_score || 0) - (a.lead_score || 0);
@@ -397,6 +400,27 @@ export default function Leads() {
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Select value={tagFilter} onValueChange={setTagFilter}>
+                    <SelectTrigger>
+                      <Tag className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Tag" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as Tags</SelectItem>
+                      {tags.map((tag) => (
+                        <SelectItem key={tag.id} value={tag.id}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: tag.color }}
+                            />
+                            {tag.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
                   <Select>
                     <SelectTrigger>
                       <SelectValue placeholder="Segmento" />
@@ -405,17 +429,6 @@ export default function Leads() {
                       <SelectItem value="clinica">Clínicas</SelectItem>
                       <SelectItem value="escritorio">Escritórios</SelectItem>
                       <SelectItem value="consultoria">Consultorias</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Score" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="high">Alto (70-100)</SelectItem>
-                      <SelectItem value="medium">Médio (40-69)</SelectItem>
-                      <SelectItem value="low">Baixo (0-39)</SelectItem>
                     </SelectContent>
                   </Select>
 
