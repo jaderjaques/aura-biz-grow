@@ -523,6 +523,368 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          caption: string | null
+          chat_id: string | null
+          content: string | null
+          created_at: string | null
+          direction: string
+          error_message: string | null
+          id: string
+          is_deleted: boolean | null
+          is_read: boolean | null
+          is_starred: boolean | null
+          media_filename: string | null
+          media_mimetype: string | null
+          media_size: number | null
+          media_url: string | null
+          message_id: string | null
+          message_type: string | null
+          metadata: Json | null
+          quoted_message_id: string | null
+          sent_by: string | null
+          thumbnail_url: string | null
+        }
+        Insert: {
+          caption?: string | null
+          chat_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          direction: string
+          error_message?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          is_starred?: boolean | null
+          media_filename?: string | null
+          media_mimetype?: string | null
+          media_size?: number | null
+          media_url?: string | null
+          message_id?: string | null
+          message_type?: string | null
+          metadata?: Json | null
+          quoted_message_id?: string | null
+          sent_by?: string | null
+          thumbnail_url?: string | null
+        }
+        Update: {
+          caption?: string | null
+          chat_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          direction?: string
+          error_message?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          is_starred?: boolean | null
+          media_filename?: string | null
+          media_mimetype?: string | null
+          media_size?: number | null
+          media_url?: string | null
+          message_id?: string | null
+          message_type?: string | null
+          metadata?: Json | null
+          quoted_message_id?: string | null
+          sent_by?: string | null
+          thumbnail_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_quoted_message_id_fkey"
+            columns: ["quoted_message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_metrics: {
+        Row: {
+          average_response_time: number | null
+          chat_id: string | null
+          created_at: string | null
+          first_response_time: number | null
+          id: string
+          messages_from_customer: number | null
+          messages_from_team: number | null
+          resolution_time: number | null
+          total_messages: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_response_time?: number | null
+          chat_id?: string | null
+          created_at?: string | null
+          first_response_time?: number | null
+          id?: string
+          messages_from_customer?: number | null
+          messages_from_team?: number | null
+          resolution_time?: number | null
+          total_messages?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_response_time?: number | null
+          chat_id?: string | null
+          created_at?: string | null
+          first_response_time?: number | null
+          id?: string
+          messages_from_customer?: number | null
+          messages_from_team?: number | null
+          resolution_time?: number | null
+          total_messages?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_metrics_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_notes: {
+        Row: {
+          chat_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_pinned: boolean | null
+          note: string
+          updated_at: string | null
+        }
+        Insert: {
+          chat_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          note: string
+          updated_at?: string | null
+        }
+        Update: {
+          chat_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          note?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_notes_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_tags: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          chat_id: string | null
+          id: string
+          tag_id: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          chat_id?: string | null
+          id?: string
+          tag_id?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          chat_id?: string | null
+          id?: string
+          tag_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_tags_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_tags_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_webhook_logs: {
+        Row: {
+          created_at: string | null
+          device_id: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_id?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          device_id?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_webhook_logs_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          archived_at: string | null
+          assigned_to: string | null
+          contact_name: string | null
+          contact_number: string | null
+          created_at: string | null
+          customer_id: string | null
+          device_id: string | null
+          id: string
+          last_message_at: string | null
+          last_message_from_me: boolean | null
+          last_message_preview: string | null
+          lead_id: string | null
+          metadata: Json | null
+          priority: string | null
+          profile_pic_url: string | null
+          remote_jid: string
+          status: string | null
+          unread_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          assigned_to?: string | null
+          contact_name?: string | null
+          contact_number?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          device_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_from_me?: boolean | null
+          last_message_preview?: string | null
+          lead_id?: string | null
+          metadata?: Json | null
+          priority?: string | null
+          profile_pic_url?: string | null
+          remote_jid: string
+          status?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          assigned_to?: string | null
+          contact_name?: string | null
+          contact_number?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          device_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_from_me?: boolean | null
+          last_message_preview?: string | null
+          lead_id?: string | null
+          metadata?: Json | null
+          priority?: string | null
+          profile_pic_url?: string | null
+          remote_jid?: string
+          status?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chats_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_history: {
         Row: {
           action: string
@@ -3671,6 +4033,51 @@ export type Database = {
           },
         ]
       }
+      whatsapp_devices: {
+        Row: {
+          api_token: string
+          api_url: string
+          created_at: string | null
+          device_name: string
+          display_name: string | null
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          phone_number: string | null
+          status: string | null
+          updated_at: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          api_token: string
+          api_url: string
+          created_at?: string | null
+          device_name: string
+          display_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          phone_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          api_token?: string
+          api_url?: string
+          created_at?: string | null
+          device_name?: string
+          display_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          phone_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -3680,6 +4087,7 @@ export type Database = {
         Args: { auth_user_id: string; token_value: string }
         Returns: boolean
       }
+      archive_chat: { Args: { p_chat_id: string }; Returns: undefined }
       calculate_balance: {
         Args: { p_end_date?: string; p_start_date?: string }
         Returns: {
@@ -3696,6 +4104,15 @@ export type Database = {
       calculate_lead_score_rules: {
         Args: { p_lead_id: string }
         Returns: number
+      }
+      cleanup_chat_webhook_logs: { Args: never; Returns: undefined }
+      cleanup_old_messages_balanced: {
+        Args: never
+        Returns: {
+          deleted_audio: number
+          deleted_media: number
+          deleted_texts: number
+        }[]
       }
       disable_totp_2fa: { Args: { p_user_id: string }; Returns: boolean }
       enable_totp_2fa: {
@@ -3718,6 +4135,14 @@ export type Database = {
           role_name: string
           status: string
         }[]
+      }
+      get_or_create_chat: {
+        Args: {
+          p_contact_name?: string
+          p_device_id: string
+          p_remote_jid: string
+        }
+        Returns: string
       }
       get_own_totp_secret: {
         Args: never
@@ -3774,6 +4199,7 @@ export type Database = {
             }
             Returns: string
           }
+      mark_chat_as_read: { Args: { p_chat_id: string }; Returns: undefined }
       reset_failed_login: { Args: { p_user_id: string }; Returns: undefined }
       save_backup_codes: {
         Args: { p_codes: string[]; p_user_id: string }
@@ -3784,6 +4210,10 @@ export type Database = {
         Returns: {
           lead_id: string
         }[]
+      }
+      should_save_media: {
+        Args: { p_chat_id: string; p_message_type: string }
+        Returns: boolean
       }
       update_lead_score_with_history: {
         Args: { p_lead_id: string }
