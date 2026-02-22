@@ -2866,6 +2866,42 @@ export type Database = {
           },
         ]
       }
+      saved_segments: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          filters: Json
+          id: string
+          is_favorite: boolean | null
+          name: string
+          shared_with_team: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          filters: Json
+          id?: string
+          is_favorite?: boolean | null
+          name: string
+          shared_with_team?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          filters?: Json
+          id?: string
+          is_favorite?: boolean | null
+          name?: string
+          shared_with_team?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string | null
@@ -2995,22 +3031,34 @@ export type Database = {
           category: string | null
           color: string | null
           created_at: string | null
+          created_by: string | null
+          description: string | null
           id: string
           name: string
+          updated_at: string | null
+          usage_count: number | null
         }
         Insert: {
           category?: string | null
           color?: string | null
           created_at?: string | null
+          created_by?: string | null
+          description?: string | null
           id?: string
           name: string
+          updated_at?: string | null
+          usage_count?: number | null
         }
         Update: {
           category?: string | null
           color?: string | null
           created_at?: string | null
+          created_by?: string | null
+          description?: string | null
           id?: string
           name?: string
+          updated_at?: string | null
+          usage_count?: number | null
         }
         Relationships: []
       }
@@ -3730,6 +3778,12 @@ export type Database = {
       save_backup_codes: {
         Args: { p_codes: string[]; p_user_id: string }
         Returns: boolean
+      }
+      search_leads_by_tags: {
+        Args: { p_operator?: string; p_tag_ids: string[] }
+        Returns: {
+          lead_id: string
+        }[]
       }
       update_lead_score_with_history: {
         Args: { p_lead_id: string }

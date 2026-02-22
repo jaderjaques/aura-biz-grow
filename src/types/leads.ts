@@ -72,7 +72,11 @@ export interface Tag {
   name: string;
   color: string;
   category: string | null;
+  description: string | null;
+  usage_count: number;
+  created_by: string | null;
   created_at: string;
+  updated_at: string | null;
 }
 
 export interface LeadTag {
