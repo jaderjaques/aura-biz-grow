@@ -67,6 +67,7 @@ export function LeadsTable({
             <TableHead>Origem</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Score</TableHead>
+            <TableHead>Tags</TableHead>
             <TableHead>Responsável</TableHead>
             <TableHead>Criado</TableHead>
             <TableHead className="w-12"></TableHead>
@@ -115,6 +116,24 @@ export function LeadsTable({
               </TableCell>
               <TableCell>
                 <LeadScoreBadge score={lead.lead_score} />
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-1 max-w-[200px]">
+                  {lead.tags?.slice(0, 2).map((tag) => (
+                    <Badge
+                      key={tag.id}
+                      style={{ backgroundColor: tag.color }}
+                      className="text-white text-[10px] px-1.5 py-0"
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                  {(lead.tags?.length || 0) > 2 && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      +{(lead.tags?.length || 0) - 2}
+                    </Badge>
+                  )}
+                </div>
               </TableCell>
               <TableCell>
                 {lead.assigned_user ? (
@@ -174,7 +193,7 @@ export function LeadsTable({
           ))}
           {leads.length === 0 && (
             <TableRow>
-              <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+              <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                 Nenhum lead encontrado
               </TableCell>
             </TableRow>
