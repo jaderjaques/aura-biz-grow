@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +29,9 @@ import { NewDealDialog } from "@/components/deals/NewDealDialog";
 import { Lead } from "@/types/leads";
 import { SelectedProduct } from "@/types/products";
 import { AdvancedTagFilter } from "@/components/leads/AdvancedTagFilter";
+import { BulkActionsBar } from "@/components/leads/BulkActionsBar";
+import { SavedSegments } from "@/components/leads/SavedSegments";
+import { toast } from "sonner";
 import {
   Users,
   UserPlus,
@@ -83,6 +87,19 @@ export default function Leads() {
   const [showLeadDetails, setShowLeadDetails] = useState(false);
   const [showNewDealDialog, setShowNewDealDialog] = useState(false);
   const [dealLead, setDealLead] = useState<Lead | null>(null);
+  const [allUsers, setAllUsers] = useState<{ id: string; full_name: string }[]>([]);
+
+  // Load users for bulk assign
+  useEffect(() => {
+    async function loadUsers() {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .order('full_name');
+      setAllUsers(data || []);
+    }
+    loadUsers();
+  }, []);
 
   // Score stats computed from leads
   const scoreStats = {
@@ -175,6 +192,25 @@ export default function Leads() {
     setShowNewDealDialog(true);
     setShowLeadDetails(false);
   };
+
+  const handleApplySegment = (filters: any) => {
+    if (filters.status) setStatusFilter(filters.status);
+    if (filters.source) setSourceFilter(filters.source);
+    if (filters.scoreGrade) setScoreFilter(filters.scoreGrade);
+    if (filters.tagIds) {
+      setFilterTagIds(filters.tagIds);
+      setFilterTagOperator(filters.tagOperator || 'OR');
+    }
+    toast({ title: 'Segmento aplicado!' });
+  };
+
+  const getCurrentFilters = () => ({
+    status: statusFilter,
+    source: sourceFilter,
+    scoreGrade: scoreFilter,
+    tagIds: filterTagIds,
+    tagOperator: filterTagOperator,
+  });
 
   const handleDealCreated = async (dealData: any, products: SelectedProduct[]) => {
     await createDeal(dealData, products);
@@ -410,6 +446,11 @@ export default function Leads() {
                 }}
               />
 
+              <SavedSegments
+                currentFilters={getCurrentFilters()}
+                onApplySegment={handleApplySegment}
+              />
+
               <Button variant="outline" onClick={handleSearch}>
                 Buscar
               </Button>
@@ -533,6 +574,17 @@ export default function Leads() {
         onOpenChange={setShowNewDealDialog}
         onSubmit={handleDealCreated}
         lead={dealLead}
+      />
+
+      <BulkActionsBar
+        selectedLeads={leads.filter(l => selectedLeads.includes(l.id))}
+        onClearSelection={() => setSelectedLeads([])}
+        onComplete={() => {
+          fetchLeads();
+          fetchMetrics();
+        }}
+        allTags={tags}
+        allUsers={allUsers}
       />
     </AppLayout>
   );
