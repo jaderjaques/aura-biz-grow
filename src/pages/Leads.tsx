@@ -27,6 +27,7 @@ import { LeadDetailsSidebar } from "@/components/leads/LeadDetailsSidebar";
 import { NewDealDialog } from "@/components/deals/NewDealDialog";
 import { Lead } from "@/types/leads";
 import { SelectedProduct } from "@/types/products";
+import { AdvancedTagFilter } from "@/components/leads/AdvancedTagFilter";
 import {
   Users,
   UserPlus,
@@ -71,6 +72,8 @@ export default function Leads() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [scoreFilter, setScoreFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
+  const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
+  const [filterTagOperator, setFilterTagOperator] = useState<'AND' | 'OR'>('OR');
   const [sortBy, setSortBy] = useState("created_at");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
@@ -94,7 +97,19 @@ export default function Leads() {
     .filter((lead) => {
       const matchesScore = scoreFilter === "all" || lead.score_grade === scoreFilter;
       const matchesTag = tagFilter === "all" || lead.tags?.some(t => t.id === tagFilter);
-      return matchesScore && matchesTag;
+      
+      // Advanced tag filter
+      let matchesAdvancedTags = true;
+      if (filterTagIds.length > 0) {
+        const leadTagIds = lead.tags?.map(t => t.id) || [];
+        if (filterTagOperator === 'AND') {
+          matchesAdvancedTags = filterTagIds.every(tagId => leadTagIds.includes(tagId));
+        } else {
+          matchesAdvancedTags = filterTagIds.some(tagId => leadTagIds.includes(tagId));
+        }
+      }
+      
+      return matchesScore && matchesTag && matchesAdvancedTags;
     })
     .sort((a, b) => {
       if (sortBy === "score") return (b.lead_score || 0) - (a.lead_score || 0);
@@ -385,6 +400,15 @@ export default function Leads() {
                   <SelectItem value="cold">❄️ Frios</SelectItem>
                 </SelectContent>
               </Select>
+
+              <AdvancedTagFilter
+                selectedTags={filterTagIds}
+                operator={filterTagOperator}
+                onFilterChange={(tagIds, op) => {
+                  setFilterTagIds(tagIds);
+                  setFilterTagOperator(op);
+                }}
+              />
 
               <Button variant="outline" onClick={handleSearch}>
                 Buscar

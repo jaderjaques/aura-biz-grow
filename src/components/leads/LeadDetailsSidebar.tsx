@@ -49,6 +49,7 @@ import {
   Video,
 } from "lucide-react";
 import { AddActivityDialog } from "./AddActivityDialog";
+import { LeadTagSelector } from "./LeadTagSelector";
 
 interface LeadDetailsSidebarProps {
   leadId: string | null;
@@ -211,19 +212,15 @@ export function LeadDetailsSidebar({
             </div>
 
             {/* Tags */}
-            {lead.tags && lead.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {lead.tags.map((tag) => (
-                  <Badge
-                    key={tag.id}
-                    style={{ backgroundColor: tag.color }}
-                    className="text-white"
-                  >
-                    {tag.name}
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <div className="flex flex-wrap gap-2">
+              <LeadTagSelector
+                leadId={lead.id}
+                currentTags={lead.tags || []}
+                onUpdate={() => {
+                  onRefresh();
+                }}
+              />
+            </div>
           </SheetHeader>
 
           <ScrollArea className="flex-1 mt-6">
