@@ -166,6 +166,286 @@ export type Database = {
           },
         ]
       }
+      appointment_history: {
+        Row: {
+          action: string
+          appointment_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          appointment_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          appointment_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_history_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_history_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_slots: {
+        Row: {
+          blocked_dates: string[] | null
+          created_at: string | null
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean | null
+          max_appointments_per_slot: number | null
+          slot_duration_minutes: number | null
+          start_time: string
+          user_id: string | null
+        }
+        Insert: {
+          blocked_dates?: string[] | null
+          created_at?: string | null
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          max_appointments_per_slot?: number | null
+          slot_duration_minutes?: number | null
+          start_time: string
+          user_id?: string | null
+        }
+        Update: {
+          blocked_dates?: string[] | null
+          created_at?: string | null
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          max_appointments_per_slot?: number | null
+          slot_duration_minutes?: number | null
+          start_time?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_slots_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_templates: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          subject: string | null
+          template_name: string
+          template_type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          subject?: string | null
+          template_name: string
+          template_type: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          subject?: string | null
+          template_name?: string
+          template_type?: string
+        }
+        Relationships: []
+      }
+      appointments: {
+        Row: {
+          ai_conversation_summary: string | null
+          appointment_type: string | null
+          assigned_to: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          chat_id: string | null
+          client_address: string | null
+          client_email: string | null
+          client_name: string
+          client_notes: string | null
+          client_phone: string | null
+          company_name: string | null
+          company_niche: string | null
+          created_at: string | null
+          created_by_ai: boolean | null
+          customer_id: string | null
+          description: string | null
+          duration_minutes: number | null
+          email_confirmed: boolean | null
+          email_confirmed_at: string | null
+          id: string
+          internal_notes: string | null
+          lead_id: string | null
+          location_type: string | null
+          meeting_link: string | null
+          metadata: Json | null
+          needs: string | null
+          outcome: string | null
+          outcome_notes: string | null
+          physical_address: string | null
+          reminder_1h_sent: boolean | null
+          reminder_24h_sent: boolean | null
+          scheduled_date: string | null
+          scheduled_for: string
+          status: string | null
+          timezone: string | null
+          title: string
+          updated_at: string | null
+          whatsapp_confirmed: boolean | null
+          whatsapp_confirmed_at: string | null
+        }
+        Insert: {
+          ai_conversation_summary?: string | null
+          appointment_type?: string | null
+          assigned_to?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          chat_id?: string | null
+          client_address?: string | null
+          client_email?: string | null
+          client_name: string
+          client_notes?: string | null
+          client_phone?: string | null
+          company_name?: string | null
+          company_niche?: string | null
+          created_at?: string | null
+          created_by_ai?: boolean | null
+          customer_id?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          email_confirmed?: boolean | null
+          email_confirmed_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          lead_id?: string | null
+          location_type?: string | null
+          meeting_link?: string | null
+          metadata?: Json | null
+          needs?: string | null
+          outcome?: string | null
+          outcome_notes?: string | null
+          physical_address?: string | null
+          reminder_1h_sent?: boolean | null
+          reminder_24h_sent?: boolean | null
+          scheduled_date?: string | null
+          scheduled_for: string
+          status?: string | null
+          timezone?: string | null
+          title: string
+          updated_at?: string | null
+          whatsapp_confirmed?: boolean | null
+          whatsapp_confirmed_at?: string | null
+        }
+        Update: {
+          ai_conversation_summary?: string | null
+          appointment_type?: string | null
+          assigned_to?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          chat_id?: string | null
+          client_address?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_notes?: string | null
+          client_phone?: string | null
+          company_name?: string | null
+          company_niche?: string | null
+          created_at?: string | null
+          created_by_ai?: boolean | null
+          customer_id?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          email_confirmed?: boolean | null
+          email_confirmed_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          lead_id?: string | null
+          location_type?: string | null
+          meeting_link?: string | null
+          metadata?: Json | null
+          needs?: string | null
+          outcome?: string | null
+          outcome_notes?: string | null
+          physical_address?: string | null
+          reminder_1h_sent?: boolean | null
+          reminder_24h_sent?: boolean | null
+          scheduled_date?: string | null
+          scheduled_for?: string
+          status?: string | null
+          timezone?: string | null
+          title?: string
+          updated_at?: string | null
+          whatsapp_confirmed?: boolean | null
+          whatsapp_confirmed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -4125,6 +4405,13 @@ export type Database = {
       generate_invoice_number: { Args: never; Returns: string }
       generate_quote_number: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
+      get_available_slots: {
+        Args: { p_date: string; p_duration_minutes?: number; p_user_id: string }
+        Returns: {
+          is_available: boolean
+          slot_time: string
+        }[]
+      }
       get_invite_by_token: {
         Args: { token_value: string }
         Returns: {
@@ -4214,6 +4501,10 @@ export type Database = {
       should_save_media: {
         Args: { p_chat_id: string; p_message_type: string }
         Returns: boolean
+      }
+      sync_appointment_to_lead: {
+        Args: { p_appointment_id: string }
+        Returns: string
       }
       update_lead_score_with_history: {
         Args: { p_lead_id: string }
