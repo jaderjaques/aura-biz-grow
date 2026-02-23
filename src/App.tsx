@@ -25,6 +25,7 @@ import AuditLogs from "./pages/AuditLogs";
 import AcceptInvite from "./pages/AcceptInvite";
 import MavieChat from "./pages/MavieChat";
 import Inbox from "./pages/Inbox";
+import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -184,6 +185,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Inbox />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agenda"
+              element={
+                <ProtectedRoute>
+                  <Agenda />
                 </ProtectedRoute>
               }
             />
