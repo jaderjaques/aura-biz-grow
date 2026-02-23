@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const redirectUri = `${crmUrl}/configuracoes/integracoes/google-callback`;
+    const redirectUri = `${crmUrl}/google-calendar/callback`;
 
     // Action: generate auth URL
     if (action === "get_auth_url") {

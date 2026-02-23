@@ -64,6 +64,7 @@ const navItems: NavItem[] = [
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
   { title: "WhatsApp", href: "/configuracoes/whatsapp", icon: Smartphone, adminOnly: true },
   { title: "Integrações", href: "/configuracoes/integracoes", icon: Plug, adminOnly: true },
+  { title: "Google Calendar", href: "/google-calendar", icon: CalendarDays },
   { title: "Configurações", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
 

@@ -18,14 +18,14 @@ export default function GoogleCallbackPage() {
       if (error) {
         setStatus("error");
         toast.error("Autorização cancelada");
-        setTimeout(() => navigate("/configuracoes/integracoes"), 2000);
+        setTimeout(() => navigate("/google-calendar"), 2000);
         return;
       }
 
       if (!code || !state) {
         setStatus("error");
         toast.error("Erro na autorização");
-        setTimeout(() => navigate("/configuracoes/integracoes"), 2000);
+        setTimeout(() => navigate("/google-calendar"), 2000);
         return;
       }
 
@@ -38,12 +38,12 @@ export default function GoogleCallbackPage() {
 
         setStatus("success");
         toast.success("Google Calendar conectado com sucesso!");
-        setTimeout(() => navigate("/configuracoes/integracoes"), 1500);
+        setTimeout(() => navigate("/google-calendar"), 1500);
       } catch (err) {
         console.error("Callback error:", err);
         setStatus("error");
         toast.error("Erro ao conectar Google Calendar");
-        setTimeout(() => navigate("/configuracoes/integracoes"), 2000);
+        setTimeout(() => navigate("/google-calendar"), 2000);
       }
     };
 
