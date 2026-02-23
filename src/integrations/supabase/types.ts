@@ -87,6 +87,13 @@ export type Database = {
             foreignKeyName: "activities_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "activities_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -96,6 +103,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "deals"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
           },
           {
             foreignKeyName: "activities_lead_id_fkey"
@@ -470,8 +484,22 @@ export type Database = {
             foreignKeyName: "appointments_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "appointments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
           },
           {
             foreignKeyName: "appointments_lead_id_fkey"
@@ -684,6 +712,13 @@ export type Database = {
             foreignKeyName: "billing_settings_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: true
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "billing_settings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -760,6 +795,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "cash_transactions_customer_id_fkey"
@@ -1108,19 +1150,27 @@ export type Database = {
       }
       chats: {
         Row: {
+          ai_message_count: number | null
+          ai_mode: string | null
           archived_at: string | null
           assigned_to: string | null
+          assumed_at: string | null
+          assumed_by: string | null
           contact_name: string | null
           contact_number: string | null
           created_at: string | null
           customer_id: string | null
           device_id: string | null
+          escalated_at: string | null
+          escalation_reason: string | null
+          human_message_count: number | null
           id: string
           last_message_at: string | null
           last_message_from_me: boolean | null
           last_message_preview: string | null
           lead_id: string | null
           metadata: Json | null
+          needs_human: boolean | null
           priority: string | null
           profile_pic_url: string | null
           remote_jid: string
@@ -1129,19 +1179,27 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          ai_message_count?: number | null
+          ai_mode?: string | null
           archived_at?: string | null
           assigned_to?: string | null
+          assumed_at?: string | null
+          assumed_by?: string | null
           contact_name?: string | null
           contact_number?: string | null
           created_at?: string | null
           customer_id?: string | null
           device_id?: string | null
+          escalated_at?: string | null
+          escalation_reason?: string | null
+          human_message_count?: number | null
           id?: string
           last_message_at?: string | null
           last_message_from_me?: boolean | null
           last_message_preview?: string | null
           lead_id?: string | null
           metadata?: Json | null
+          needs_human?: boolean | null
           priority?: string | null
           profile_pic_url?: string | null
           remote_jid: string
@@ -1150,19 +1208,27 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          ai_message_count?: number | null
+          ai_mode?: string | null
           archived_at?: string | null
           assigned_to?: string | null
+          assumed_at?: string | null
+          assumed_by?: string | null
           contact_name?: string | null
           contact_number?: string | null
           created_at?: string | null
           customer_id?: string | null
           device_id?: string | null
+          escalated_at?: string | null
+          escalation_reason?: string | null
+          human_message_count?: number | null
           id?: string
           last_message_at?: string | null
           last_message_from_me?: boolean | null
           last_message_preview?: string | null
           lead_id?: string | null
           metadata?: Json | null
+          needs_human?: boolean | null
           priority?: string | null
           profile_pic_url?: string | null
           remote_jid?: string
@@ -1179,6 +1245,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "chats_assumed_by_fkey"
+            columns: ["assumed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
+          },
+          {
             foreignKeyName: "chats_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -1191,6 +1271,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "whatsapp_devices"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
           },
           {
             foreignKeyName: "chats_lead_id_fkey"
@@ -1419,6 +1506,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "contracts_customer_id_fkey"
@@ -1682,6 +1776,13 @@ export type Database = {
             foreignKeyName: "customers_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
+          },
+          {
+            foreignKeyName: "customers_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
@@ -1898,6 +1999,13 @@ export type Database = {
             foreignKeyName: "deals_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
+          },
+          {
+            foreignKeyName: "deals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
@@ -2039,6 +2147,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_alerts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "financial_alerts_customer_id_fkey"
@@ -2402,6 +2517,13 @@ export type Database = {
             foreignKeyName: "invoices_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -2503,6 +2625,13 @@ export type Database = {
             foreignKeyName: "lead_qualification_history_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
+          },
+          {
+            foreignKeyName: "lead_qualification_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
@@ -2540,6 +2669,13 @@ export type Database = {
           reason?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "lead_score_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
+          },
           {
             foreignKeyName: "lead_score_history_lead_id_fkey"
             columns: ["lead_id"]
@@ -2605,6 +2741,13 @@ export type Database = {
           tag_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "lead_tags_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
+          },
           {
             foreignKeyName: "lead_tags_lead_id_fkey"
             columns: ["lead_id"]
@@ -3012,6 +3155,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "payments_customer_id_fkey"
@@ -3699,6 +3849,13 @@ export type Database = {
             foreignKeyName: "stage_history_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
+          },
+          {
+            foreignKeyName: "stage_history_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
           },
@@ -3955,6 +4112,13 @@ export type Database = {
             foreignKeyName: "tasks_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
+          },
+          {
+            foreignKeyName: "tasks_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
@@ -3964,6 +4128,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "deals"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["lead_id"]
           },
           {
             foreignKeyName: "tasks_lead_id_fkey"
@@ -4156,6 +4327,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_360_view"
+            referencedColumns: ["customer_id"]
           },
           {
             foreignKeyName: "tickets_customer_id_fkey"
@@ -4396,7 +4574,34 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      customer_360_view: {
+        Row: {
+          city: string | null
+          cnpj: string | null
+          company_name: string | null
+          complement: string | null
+          contact_name: string | null
+          cpf: string | null
+          customer_id: string | null
+          email: string | null
+          lead_id: string | null
+          lead_status: string | null
+          neighborhood: string | null
+          next_appointment: string | null
+          number: string | null
+          overdue_invoices: number | null
+          pending_invoices: number | null
+          phone: string | null
+          segment: string | null
+          state: string | null
+          status: string | null
+          street: string | null
+          total_invoices: number | null
+          total_spent: number | null
+          zip_code: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_invite: {
@@ -4430,6 +4635,19 @@ export type Database = {
           deleted_texts: number
         }[]
       }
+      create_task_from_ai: {
+        Args: {
+          p_assigned_to?: string
+          p_customer_id?: string
+          p_deal_id?: string
+          p_description: string
+          p_due_date?: string
+          p_lead_id?: string
+          p_priority?: string
+          p_title: string
+        }
+        Returns: Json
+      }
       disable_totp_2fa: { Args: { p_user_id: string }; Returns: boolean }
       enable_totp_2fa: {
         Args: { p_secret: string; p_user_id: string }
@@ -4448,6 +4666,8 @@ export type Database = {
           slot_time: string
         }[]
       }
+      get_current_chat_email: { Args: never; Returns: string }
+      get_current_chat_phone: { Args: never; Returns: string }
       get_invite_by_token: {
         Args: { token_value: string }
         Returns: {
@@ -4523,6 +4743,37 @@ export type Database = {
             Returns: string
           }
       mark_chat_as_read: { Args: { p_chat_id: string }; Returns: undefined }
+      query_appointments: {
+        Args: {
+          p_customer_id?: string
+          p_customer_phone?: string
+          p_future_only?: boolean
+          p_status?: string
+        }
+        Returns: Json
+      }
+      query_customer: {
+        Args: { p_customer_id?: string; p_email?: string; p_phone?: string }
+        Returns: Json
+      }
+      query_invoices: {
+        Args: {
+          p_customer_id?: string
+          p_customer_phone?: string
+          p_limit?: number
+          p_status?: string
+        }
+        Returns: Json
+      }
+      query_products: {
+        Args: {
+          p_category?: string
+          p_is_active?: boolean
+          p_limit?: number
+          p_search?: string
+        }
+        Returns: Json
+      }
       reset_failed_login: { Args: { p_user_id: string }; Returns: undefined }
       save_backup_codes: {
         Args: { p_codes: string[]; p_user_id: string }
@@ -4541,6 +4792,10 @@ export type Database = {
       sync_appointment_to_lead: {
         Args: { p_appointment_id: string }
         Returns: string
+      }
+      update_customer_from_ai: {
+        Args: { p_customer_id: string; p_data: Json }
+        Returns: Json
       }
       update_lead_score_with_history: {
         Args: { p_lead_id: string }
