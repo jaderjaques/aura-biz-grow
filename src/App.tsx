@@ -23,6 +23,7 @@ import Reports from "./pages/Reports";
 import Roles from "./pages/Roles";
 import AuditLogs from "./pages/AuditLogs";
 import AcceptInvite from "./pages/AcceptInvite";
+import MavieChat from "./pages/MavieChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mavie"
+              element={
+                <ProtectedRoute>
+                  <MavieChat />
                 </ProtectedRoute>
               }
             />

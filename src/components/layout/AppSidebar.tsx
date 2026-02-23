@@ -17,7 +17,8 @@ import {
   Package,
   DollarSign,
   Receipt,
-  Headphones
+  Headphones,
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -44,6 +45,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: Home },
+  { title: "Mavie IA", href: "/mavie", icon: Sparkles },
   { title: "Leads", href: "/leads", icon: Users },
   { title: "Propostas", href: "/propostas", icon: FileText },
   { title: "Clientes", href: "/clientes", icon: Briefcase },
