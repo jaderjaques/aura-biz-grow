@@ -12,6 +12,8 @@ import {
   Send,
   Wifi,
   WifiOff,
+  Link,
+  Link2Off,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ConnectionStatus } from "./ConnectionStatus";
@@ -156,9 +158,26 @@ export function DeviceCard({ device, chatCount, onEdit }: DeviceCardProps) {
             </div>
           </div>
 
-          <div className="text-xs text-muted-foreground">
-            <span className="font-medium">API URL:</span>{" "}
-            <span className="font-mono">{device.api_url}</span>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div>
+              <span className="font-medium">API URL:</span>{" "}
+              <span className="font-mono">{device.api_url}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground font-medium">Webhook:</span>
+            {device.webhook_url ? (
+              <span className="flex items-center gap-1 text-green-600">
+                <Link className="h-3 w-3" />
+                Configurado
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <Link2Off className="h-3 w-3" />
+                Não configurado
+              </span>
+            )}
           </div>
         </CardContent>
       </Card>
