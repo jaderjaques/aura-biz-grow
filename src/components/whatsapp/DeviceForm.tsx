@@ -4,7 +4,8 @@ import * as z from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { X, Smartphone } from "lucide-react";
+import { Smartphone, Copy, Check } from "lucide-react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,10 @@ interface DeviceFormProps {
 export function DeviceForm({ device, open, onOpenChange }: DeviceFormProps) {
   const queryClient = useQueryClient();
   const isEdit = !!device;
+  const [copied, setCopied] = useState(false);
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+  const webhookUrl = `${supabaseUrl}/functions/v1/whatsapp-webhook`;
 
   const {
     register,
@@ -48,30 +53,33 @@ export function DeviceForm({ device, open, onOpenChange }: DeviceFormProps) {
     },
   });
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(webhookUrl);
+    setCopied(true);
+    toast.success("URL copiada!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
+      const payload = {
+        device_name: values.device_name,
+        phone_number: values.phone_number || null,
+        api_url: values.api_url,
+        api_token: values.api_token,
+        webhook_url: webhookUrl,
+        status: "connected" as const,
+      };
       if (isEdit) {
         const { error } = await supabase
           .from("whatsapp_devices")
-          .update({
-            device_name: values.device_name,
-            phone_number: values.phone_number || null,
-            api_url: values.api_url,
-            api_token: values.api_token,
-            status: "connected",
-          })
+          .update(payload)
           .eq("id", device.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("whatsapp_devices")
-          .insert({
-            device_name: values.device_name,
-            phone_number: values.phone_number || null,
-            api_url: values.api_url,
-            api_token: values.api_token,
-            status: "connected",
-          });
+          .insert(payload);
         if (error) throw error;
       }
     },
@@ -87,7 +95,7 @@ export function DeviceForm({ device, open, onOpenChange }: DeviceFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Smartphone className="h-5 w-5" />
@@ -129,6 +137,42 @@ export function DeviceForm({ device, open, onOpenChange }: DeviceFormProps) {
             <p className="text-xs text-muted-foreground">
               💡 Obtenha seu token no painel da AvisaAPI
             </p>
+          </div>
+
+          {/* Webhook URL - Read Only */}
+          <div className="space-y-2">
+            <Label>Webhook URL</Label>
+            <div className="flex gap-2">
+              <Input
+                readOnly
+                value={webhookUrl}
+                className="font-mono text-xs bg-muted"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={handleCopy}
+              >
+                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              💡 Cole esta URL nas configurações de webhook da AvisaAPI
+            </p>
+          </div>
+
+          {/* Instruções */}
+          <div className="rounded-lg border bg-muted/50 p-3 space-y-1">
+            <p className="text-xs font-medium">📋 Como configurar o webhook:</p>
+            <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-0.5">
+              <li>Copie a URL do webhook acima</li>
+              <li>Acesse o painel da AvisaAPI</li>
+              <li>Vá em Configurações → Webhooks</li>
+              <li>Cole a URL e ative "Mensagem Recebida"</li>
+              <li>Salve as configurações</li>
+            </ol>
           </div>
 
           <div className="flex gap-3 pt-2">
