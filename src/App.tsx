@@ -175,48 +175,15 @@ const App = () => (
               }
             />
             <Route
-              path="/relatorios"
+              path="/google-calendar"
               element={
                 <ProtectedRoute>
-                  <Reports />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/inbox"
-              element={
-                <ProtectedRoute>
-                  <Inbox />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/agenda"
-              element={
-                <ProtectedRoute>
-                  <Agenda />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/configuracoes/whatsapp"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <WhatsAppConfig />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/configuracoes/integracoes"
-              element={
-                <ProtectedRoute requireAdmin>
                   <IntegracoesPage />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/configuracoes/integracoes/google-callback"
+              path="/google-calendar/callback"
               element={<GoogleCallbackPage />}
             />
             
