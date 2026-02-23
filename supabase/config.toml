@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.send-invoice]
 verify_jwt = false
+
+[functions.knowledge-search]
+verify_jwt = false
+
+[functions.escalate-chat]
+verify_jwt = false
