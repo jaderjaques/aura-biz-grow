@@ -27,6 +27,8 @@ import MavieChat from "./pages/MavieChat";
 import Inbox from "./pages/Inbox";
 import Agenda from "./pages/Agenda";
 import WhatsAppConfig from "./pages/WhatsAppConfig";
+import IntegracoesPage from "./pages/Integracoes";
+import GoogleCallbackPage from "./pages/GoogleCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -204,6 +206,18 @@ const App = () => (
                   <WhatsAppConfig />
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/configuracoes/integracoes"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <IntegracoesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/integracoes/google-callback"
+              element={<GoogleCallbackPage />}
             />
             
             {/* Redirect root to dashboard */}
