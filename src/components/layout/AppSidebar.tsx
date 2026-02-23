@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { 
-  Home, 
-  Users, 
-  Briefcase, 
-  BarChart3, 
-  ClipboardList, 
-  FileBarChart, 
-  Settings, 
+import {
+  Home,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -17,12 +11,16 @@ import {
   Package,
   DollarSign,
   Receipt,
-  Headphones,
   Sparkles,
   MessageCircle,
   CalendarDays,
   Smartphone,
-  Plug
+  Plug,
+  ClipboardList,
+  Users,
+  FileBarChart,
+  Briefcase,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -37,6 +35,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SidebarSection } from "./SidebarSection";
 
 interface NavItem {
   title: string;
@@ -44,28 +43,38 @@ interface NavItem {
   icon: React.ElementType;
   badge?: number;
   adminOnly?: boolean;
-  comingSoon?: boolean;
 }
 
-const navItems: NavItem[] = [
+const topLevelItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: Home },
   { title: "Mavie IA", href: "/mavie", icon: Sparkles },
   { title: "Inbox", href: "/inbox", icon: MessageCircle },
+];
+
+const financeiroItems: NavItem[] = [
+  { title: "Visão Geral", href: "/financeiro", icon: DollarSign },
+  { title: "Faturas", href: "/faturas", icon: Receipt },
+  { title: "Clientes", href: "/clientes", icon: Briefcase },
+  { title: "Relatórios", href: "/relatorios", icon: FileBarChart },
+];
+
+const vendasItems: NavItem[] = [
   { title: "Leads", href: "/leads", icon: Users },
   { title: "Propostas", href: "/propostas", icon: FileText },
-  { title: "Clientes", href: "/clientes", icon: Briefcase },
-  { title: "Financeiro", href: "/financeiro", icon: DollarSign },
-  { title: "Faturas", href: "/faturas", icon: Receipt },
-  { title: "Tarefas", href: "/tarefas", icon: ClipboardList },
   { title: "Agenda", href: "/agenda", icon: CalendarDays },
-  { title: "Suporte", href: "/suporte", icon: Headphones },
-  { title: "Relatórios", href: "/relatorios", icon: FileBarChart },
-  { title: "Produtos", href: "/configuracoes/produtos", icon: Package, adminOnly: true },
+  { title: "Tarefas", href: "/tarefas", icon: ClipboardList },
+];
+
+const configItems: NavItem[] = [
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
+  { title: "Produtos/Serviços", href: "/configuracoes/produtos", icon: Package, adminOnly: true },
+  { title: "Geral", href: "/configuracoes", icon: Settings, adminOnly: true },
+];
+
+const integracoesItems: NavItem[] = [
   { title: "WhatsApp", href: "/configuracoes/whatsapp", icon: Smartphone, adminOnly: true },
-  { title: "Integrações", href: "/configuracoes/integracoes", icon: Plug, adminOnly: true },
   { title: "Google Calendar", href: "/google-calendar", icon: CalendarDays },
-  { title: "Configurações", href: "/configuracoes", icon: Settings, adminOnly: true },
+  { title: "API Keys", href: "/configuracoes/integracoes", icon: Plug, adminOnly: true },
 ];
 
 interface SidebarContentProps {
@@ -74,8 +83,99 @@ interface SidebarContentProps {
   isMobile?: boolean;
 }
 
-function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarContentProps) {
+function NavItemLink({
+  item,
+  collapsed,
+  isMobile,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  isMobile: boolean;
+}) {
   const location = useLocation();
+  const isActive =
+    location.pathname === item.href ||
+    (item.href !== "/dashboard" &&
+      item.href !== "/financeiro" &&
+      item.href !== "/configuracoes" &&
+      location.pathname.startsWith(item.href));
+
+  const linkContent = (
+    <NavLink
+      to={item.href}
+      className={cn(
+        "sidebar-item group relative",
+        isActive && "sidebar-item-active"
+      )}
+    >
+      <item.icon className="h-5 w-5 shrink-0" />
+      {(!collapsed || isMobile) && (
+        <>
+          <span className="flex-1 truncate">{item.title}</span>
+          {item.badge !== undefined && item.badge > 0 && (
+            <Badge variant="secondary" className="ml-auto">
+              {item.badge}
+            </Badge>
+          )}
+        </>
+      )}
+    </NavLink>
+  );
+
+  if (collapsed && !isMobile) {
+    return (
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+        <TooltipContent side="right">{item.title}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return linkContent;
+}
+
+function renderSection(
+  icon: React.ElementType,
+  label: string,
+  items: NavItem[],
+  isAdmin: boolean,
+  collapsed: boolean,
+  isMobile: boolean
+) {
+  const filtered = items.filter((i) => !i.adminOnly || isAdmin);
+  if (filtered.length === 0) return null;
+
+  if (collapsed && !isMobile) {
+    return filtered.map((item) => (
+      <NavItemLink
+        key={item.href}
+        item={item}
+        collapsed={collapsed}
+        isMobile={isMobile}
+      />
+    ));
+  }
+
+  return (
+    <SidebarSection
+      icon={icon}
+      label={label}
+      collapsed={collapsed}
+      isMobile={isMobile}
+    >
+      {filtered.map((item) => (
+        <NavItemLink
+          key={item.href}
+          item={item}
+          collapsed={collapsed}
+          isMobile={isMobile}
+        />
+      ))}
+    </SidebarSection>
+  );
+}
+
+function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarContentProps) {
   const { profile, isAdmin, signOut } = useAuth();
 
   const getInitials = (name: string) => {
@@ -86,10 +186,6 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
       .toUpperCase()
       .slice(0, 2);
   };
-
-  const filteredNavItems = navItems.filter(
-    (item) => !item.adminOnly || (item.adminOnly && isAdmin)
-  );
 
   return (
     <div className="flex flex-col h-full">
@@ -114,57 +210,31 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-hide">
-        {filteredNavItems.map((item) => {
-          const isActive = location.pathname === item.href || 
-            (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
-          
-          const linkContent = (
-            <NavLink
-              to={item.comingSoon ? "#" : item.href}
-              className={cn(
-                "sidebar-item group relative",
-                isActive && "sidebar-item-active",
-                item.comingSoon && "opacity-60 cursor-not-allowed"
-              )}
-              onClick={(e) => item.comingSoon && e.preventDefault()}
-            >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {(!collapsed || isMobile) && (
-                <>
-                  <span className="flex-1 truncate">{item.title}</span>
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <Badge variant="secondary" className="ml-auto">
-                      {item.badge}
-                    </Badge>
-                  )}
-                  {item.comingSoon && (
-                    <Badge variant="outline" className="ml-auto text-[10px] px-1.5">
-                      Em breve
-                    </Badge>
-                  )}
-                </>
-              )}
-            </NavLink>
-          );
+        {/* Top-level items */}
+        {topLevelItems.map((item) => (
+          <NavItemLink
+            key={item.href}
+            item={item}
+            collapsed={collapsed && !isMobile}
+            isMobile={!!isMobile}
+          />
+        ))}
 
-          if (collapsed && !isMobile) {
-            return (
-              <Tooltip key={item.href} delayDuration={0}>
-                <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                <TooltipContent side="right" className="flex items-center gap-2">
-                  {item.title}
-                  {item.comingSoon && (
-                    <Badge variant="outline" className="text-[10px] px-1.5">
-                      Em breve
-                    </Badge>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            );
-          }
+        <Separator className="my-2" />
 
-          return <div key={item.href}>{linkContent}</div>;
-        })}
+        {/* Financeiro */}
+        {renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+
+        {/* Vendas */}
+        {renderSection(FileText, "Vendas", vendasItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+
+        <Separator className="my-2" />
+
+        {/* Configurações */}
+        {renderSection(Settings, "Configurações", configItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+
+        {/* Integrações */}
+        {renderSection(Plug, "Integrações", integracoesItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
       </nav>
 
       <Separator />
