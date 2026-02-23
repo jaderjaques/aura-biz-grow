@@ -19,7 +19,8 @@ import {
   Receipt,
   Headphones,
   Sparkles,
-  MessageCircle
+  MessageCircle,
+  CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -54,6 +55,7 @@ const navItems: NavItem[] = [
   { title: "Financeiro", href: "/financeiro", icon: DollarSign },
   { title: "Faturas", href: "/faturas", icon: Receipt },
   { title: "Tarefas", href: "/tarefas", icon: ClipboardList },
+  { title: "Agenda", href: "/agenda", icon: CalendarDays },
   { title: "Suporte", href: "/suporte", icon: Headphones },
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart },
   { title: "Produtos", href: "/configuracoes/produtos", icon: Package, adminOnly: true },
