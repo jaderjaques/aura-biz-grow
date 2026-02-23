@@ -360,6 +360,7 @@ export type Database = {
           duration_minutes: number | null
           email_confirmed: boolean | null
           email_confirmed_at: string | null
+          google_calendar_synced: boolean | null
           google_event_id: string | null
           id: string
           internal_notes: string | null
@@ -403,6 +404,7 @@ export type Database = {
           duration_minutes?: number | null
           email_confirmed?: boolean | null
           email_confirmed_at?: string | null
+          google_calendar_synced?: boolean | null
           google_event_id?: string | null
           id?: string
           internal_notes?: string | null
@@ -446,6 +448,7 @@ export type Database = {
           duration_minutes?: number | null
           email_confirmed?: boolean | null
           email_confirmed_at?: string | null
+          google_calendar_synced?: boolean | null
           google_event_id?: string | null
           id?: string
           internal_notes?: string | null
