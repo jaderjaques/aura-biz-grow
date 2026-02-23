@@ -2,3 +2,6 @@ project_id = "duhnpobrykwdhiqtoupo"
 
 [functions.mavie-chat]
 verify_jwt = false
+
+[functions.send-invoice]
+verify_jwt = false
