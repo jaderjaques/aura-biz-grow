@@ -243,9 +243,25 @@ const tools = [
         properties: {
           reason: { type: "string", enum: ["customer_request", "negative_sentiment", "low_confidence", "complex_negotiation", "overdue_invoices", "vip_customer"] },
           trigger: { type: "string", description: "O que disparou o escalonamento" },
+          sentiment_score: { type: "number", description: "Score de sentimento se aplicável" },
           conversation_summary: { type: "string", description: "Resumo da conversa" },
         },
         required: ["reason", "trigger"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "send_invoice",
+      description: "Enviar fatura por email ou WhatsApp para o cliente.",
+      parameters: {
+        type: "object",
+        properties: {
+          invoice_id: { type: "string", description: "UUID da fatura" },
+          method: { type: "string", enum: ["email", "whatsapp", "both"], description: "Canal de envio" },
+        },
+        required: ["invoice_id", "method"],
       },
     },
   },
@@ -390,14 +406,59 @@ async function executeTool(
       }
 
       case "escalate_to_human": {
-        // Create a task for the team
+        // Log na tabela escalation_logs
+        const { error: escError } = await supabase.from("escalation_logs").insert({
+          chat_id: args.chat_id || null,
+          reason: args.reason,
+          trigger_type: args.trigger || null,
+          trigger_value: args.sentiment_score != null ? { sentiment_score: args.sentiment_score } : null,
+          conversation_summary: args.conversation_summary || null,
+        });
+        if (escError) console.error("Escalation log error:", escError.message);
+
+        // Também cria tarefa urgente para visibilidade no CRM
         await supabase.from("tasks").insert({
           title: `🚨 Escalonamento: ${args.reason}`,
           description: `Motivo: ${args.trigger}\n\nResumo: ${args.conversation_summary || "N/A"}`,
           priority: "urgent",
           status: "todo",
         });
+
+        // Notificar gestor via WhatsApp (fire and forget)
+        const gestorPhone = Deno.env.get("GESTOR_WHATSAPP_NUMBER");
+        const avisaUrl = Deno.env.get("AVISAAPI_URL");
+        const avisaToken = Deno.env.get("AVISAAPI_TOKEN");
+        if (gestorPhone && avisaUrl && avisaToken) {
+          try {
+            await fetch(`${avisaUrl}/message/sendText`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", apikey: avisaToken },
+              body: JSON.stringify({
+                number: gestorPhone.replace(/\D/g, ""),
+                text: `🚨 *ESCALONAMENTO*\nMotivo: ${args.reason}\n${args.conversation_summary || ""}`,
+              }),
+            });
+          } catch (e) {
+            console.error("WhatsApp notification error:", e);
+          }
+        }
+
         return JSON.stringify({ success: true, message: "Conversa escalada para equipe humana" });
+      }
+
+      case "send_invoice": {
+        // Chamar a edge function send-invoice
+        const invokeUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-invoice`;
+        const res = await fetch(invokeUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ invoice_id: args.invoice_id, method: args.method }),
+        });
+        const result = await res.json();
+        return JSON.stringify(result);
       }
 
       default:
