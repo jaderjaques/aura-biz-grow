@@ -24,6 +24,7 @@ import Roles from "./pages/Roles";
 import AuditLogs from "./pages/AuditLogs";
 import AcceptInvite from "./pages/AcceptInvite";
 import MavieChat from "./pages/MavieChat";
+import Inbox from "./pages/Inbox";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -174,6 +175,15 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Reports />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/inbox"
+              element={
+                <ProtectedRoute>
+                  <Inbox />
                 </ProtectedRoute>
               }
             />
