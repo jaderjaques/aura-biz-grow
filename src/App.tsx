@@ -26,6 +26,7 @@ import AcceptInvite from "./pages/AcceptInvite";
 import MavieChat from "./pages/MavieChat";
 import Inbox from "./pages/Inbox";
 import Agenda from "./pages/Agenda";
+import WhatsAppConfig from "./pages/WhatsAppConfig";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -193,6 +194,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Agenda />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/whatsapp"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <WhatsAppConfig />
                 </ProtectedRoute>
               }
             />
