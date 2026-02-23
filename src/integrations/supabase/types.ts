@@ -113,6 +113,42 @@ export type Database = {
           },
         ]
       }
+      ai_knowledge_documents: {
+        Row: {
+          chunks: Json | null
+          content_text: string | null
+          created_at: string | null
+          document_name: string
+          document_url: string
+          id: string
+          is_active: boolean | null
+          last_processed_at: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          chunks?: Json | null
+          content_text?: string | null
+          created_at?: string | null
+          document_name: string
+          document_url: string
+          id?: string
+          is_active?: boolean | null
+          last_processed_at?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          chunks?: Json | null
+          content_text?: string | null
+          created_at?: string | null
+          document_name?: string
+          document_url?: string
+          id?: string
+          is_active?: boolean | null
+          last_processed_at?: string | null
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           active: boolean | null
