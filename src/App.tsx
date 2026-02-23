@@ -29,6 +29,7 @@ import Agenda from "./pages/Agenda";
 import WhatsAppConfig from "./pages/WhatsAppConfig";
 import IntegracoesPage from "./pages/Integracoes";
 import GoogleCallbackPage from "./pages/GoogleCallback";
+import Relatorios from "./pages/Relatorios";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -163,6 +164,38 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Tickets />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inbox"
+              element={
+                <ProtectedRoute>
+                  <Inbox />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/agenda"
+              element={
+                <ProtectedRoute>
+                  <Agenda />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/relatorios"
+              element={
+                <ProtectedRoute>
+                  <Relatorios />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/whatsapp"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <WhatsAppConfig />
                 </ProtectedRoute>
               }
             />
