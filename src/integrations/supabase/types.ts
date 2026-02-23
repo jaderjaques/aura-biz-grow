@@ -2011,6 +2011,69 @@ export type Database = {
           },
         ]
       }
+      escalation_logs: {
+        Row: {
+          ai_last_message: string | null
+          chat_id: string | null
+          conversation_summary: string | null
+          created_at: string | null
+          id: string
+          notification_sent: boolean | null
+          notifications_sent_to: string[] | null
+          reason: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          trigger_type: string | null
+          trigger_value: Json | null
+        }
+        Insert: {
+          ai_last_message?: string | null
+          chat_id?: string | null
+          conversation_summary?: string | null
+          created_at?: string | null
+          id?: string
+          notification_sent?: boolean | null
+          notifications_sent_to?: string[] | null
+          reason: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          trigger_type?: string | null
+          trigger_value?: Json | null
+        }
+        Update: {
+          ai_last_message?: string | null
+          chat_id?: string | null
+          conversation_summary?: string | null
+          created_at?: string | null
+          id?: string
+          notification_sent?: boolean | null
+          notifications_sent_to?: string[] | null
+          reason?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          trigger_type?: string | null
+          trigger_value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_logs_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_logs_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense_categories: {
         Row: {
           active: boolean | null
