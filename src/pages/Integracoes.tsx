@@ -50,7 +50,7 @@ export default function IntegracoesPage() {
   });
 
   const handleConnect = () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const clientId = "1075042757758-4v85dipv2a5ledandiu3ap6ks31vq0cf.apps.googleusercontent.com";
 
     console.log('🔍 DEBUG - Client ID:', clientId);
     console.log('🔍 DEBUG - Client ID length:', clientId?.length);
