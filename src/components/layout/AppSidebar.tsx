@@ -21,7 +21,8 @@ import {
   Sparkles,
   MessageCircle,
   CalendarDays,
-  Smartphone
+  Smartphone,
+  Plug
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -62,6 +63,7 @@ const navItems: NavItem[] = [
   { title: "Produtos", href: "/configuracoes/produtos", icon: Package, adminOnly: true },
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
   { title: "WhatsApp", href: "/configuracoes/whatsapp", icon: Smartphone, adminOnly: true },
+  { title: "Integrações", href: "/configuracoes/integracoes", icon: Plug, adminOnly: true },
   { title: "Configurações", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
 

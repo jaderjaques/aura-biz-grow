@@ -360,6 +360,7 @@ export type Database = {
           duration_minutes: number | null
           email_confirmed: boolean | null
           email_confirmed_at: string | null
+          google_event_id: string | null
           id: string
           internal_notes: string | null
           lead_id: string | null
@@ -402,6 +403,7 @@ export type Database = {
           duration_minutes?: number | null
           email_confirmed?: boolean | null
           email_confirmed_at?: string | null
+          google_event_id?: string | null
           id?: string
           internal_notes?: string | null
           lead_id?: string | null
@@ -444,6 +446,7 @@ export type Database = {
           duration_minutes?: number | null
           email_confirmed?: boolean | null
           email_confirmed_at?: string | null
+          google_event_id?: string | null
           id?: string
           internal_notes?: string | null
           lead_id?: string | null
@@ -3389,6 +3392,10 @@ export type Database = {
           email: string
           failed_login_attempts: number | null
           full_name: string
+          google_access_token: string | null
+          google_calendar_connected: boolean | null
+          google_refresh_token: string | null
+          google_token_expires_at: string | null
           id: string
           invite_accepted_at: string | null
           invite_expires_at: string | null
@@ -3416,6 +3423,10 @@ export type Database = {
           email: string
           failed_login_attempts?: number | null
           full_name: string
+          google_access_token?: string | null
+          google_calendar_connected?: boolean | null
+          google_refresh_token?: string | null
+          google_token_expires_at?: string | null
           id: string
           invite_accepted_at?: string | null
           invite_expires_at?: string | null
@@ -3443,6 +3454,10 @@ export type Database = {
           email?: string
           failed_login_attempts?: number | null
           full_name?: string
+          google_access_token?: string | null
+          google_calendar_connected?: boolean | null
+          google_refresh_token?: string | null
+          google_token_expires_at?: string | null
           id?: string
           invite_accepted_at?: string | null
           invite_expires_at?: string | null

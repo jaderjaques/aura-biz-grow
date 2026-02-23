@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { X, Calendar, Clock, User, MapPin, FileText } from "lucide-react";
@@ -51,6 +52,7 @@ interface AgendamentoFormProps {
 
 export function AgendamentoForm({ appointment, onClose }: AgendamentoFormProps) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const isEdit = !!appointment;
 
   const {
@@ -113,22 +115,62 @@ export function AgendamentoForm({ appointment, onClose }: AgendamentoFormProps) 
         title: values.title || `${values.appointment_type} - ${values.client_name}`,
       };
 
+      let appointmentId: string;
+
       if (isEdit) {
         const { error } = await supabase
           .from("appointments")
           .update(payload)
           .eq("id", appointment.id);
         if (error) throw error;
+        appointmentId = appointment.id;
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("appointments")
-          .insert([payload as any]);
+          .insert([payload as any])
+          .select("id")
+          .single();
         if (error) throw error;
+        appointmentId = data.id;
       }
+
+      return appointmentId;
     },
-    onSuccess: () => {
+    onSuccess: async (appointmentId) => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toast.success(isEdit ? "Agendamento atualizado!" : "Agendamento criado!");
+
+      // Check if user has Google Calendar connected and sync
+      if (user?.id) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("google_calendar_connected")
+          .eq("id", user.id)
+          .single();
+
+        if (profileData?.google_calendar_connected) {
+          try {
+            await supabase.functions.invoke("google-calendar-sync", {
+              body: {
+                appointment_id: appointmentId,
+                operation: isEdit ? "update" : "create",
+                user_id: user.id,
+              },
+            });
+            toast.success(
+              isEdit
+                ? "Agendamento atualizado e sincronizado com Google Calendar!"
+                : "Agendamento criado e sincronizado com Google Calendar!"
+            );
+          } catch {
+            toast.warning("Agendamento salvo, mas erro ao sincronizar com Google Calendar");
+          }
+        } else {
+          toast.success(isEdit ? "Agendamento atualizado!" : "Agendamento criado!");
+        }
+      } else {
+        toast.success(isEdit ? "Agendamento atualizado!" : "Agendamento criado!");
+      }
+
       onClose();
     },
     onError: () => {
@@ -138,6 +180,29 @@ export function AgendamentoForm({ appointment, onClose }: AgendamentoFormProps) 
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      // Sync deletion to Google Calendar if connected
+      if (user?.id) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("google_calendar_connected")
+          .eq("id", user.id)
+          .single();
+
+        if (profileData?.google_calendar_connected && appointment.google_event_id) {
+          try {
+            await supabase.functions.invoke("google-calendar-sync", {
+              body: {
+                appointment_id: appointment.id,
+                operation: "delete",
+                user_id: user.id,
+              },
+            });
+          } catch (err) {
+            console.error("Delete sync error:", err);
+          }
+        }
+      }
+
       const { error } = await supabase
         .from("appointments")
         .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
