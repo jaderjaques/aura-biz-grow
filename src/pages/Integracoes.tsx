@@ -49,20 +49,28 @@ export default function IntegracoesPage() {
     },
   });
 
-  const handleConnect = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke("google-oauth-callback", {
-        body: { action: "get_auth_url", user_id: user!.id },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        toast.error("Erro ao gerar URL de autorização");
-      }
-    } catch {
-      toast.error("Erro ao iniciar conexão com Google Calendar");
-    }
+  const handleConnect = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    console.log('🔍 DEBUG - Client ID:', clientId);
+    console.log('🔍 DEBUG - Client ID length:', clientId?.length);
+    console.log('🔍 DEBUG - Client ID type:', typeof clientId);
+
+    const redirectUri = `${window.location.origin}/google-calendar/callback`;
+    const scope = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events';
+
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=code&` +
+      `scope=${encodeURIComponent(scope)}&` +
+      `access_type=offline&` +
+      `prompt=consent&` +
+      `state=${user?.id}`;
+
+    console.log('🔍 DEBUG - Auth URL:', authUrl);
+
+    window.location.href = authUrl;
   };
 
   const isConnected = profileData?.google_calendar_connected;
