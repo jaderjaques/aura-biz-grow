@@ -14,6 +14,27 @@ Deno.serve(async (req) => {
   try {
     const { action, code, user_id } = await req.json();
 
+    // Validate authentication for exchange_code action
+    if (action === "exchange_code") {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "Não autorizado" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const authClient = createClient(supabaseUrl, supabaseAnonKey);
+      const { data: { user }, error: authError } = await authClient.auth.getUser(authHeader.replace("Bearer ", ""));
+      if (authError || !user || user.id !== user_id) {
+        return new Response(
+          JSON.stringify({ error: "Acesso negado" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
     const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
     const crmUrl = Deno.env.get("CRM_URL") || "https://aura-biz-grow.lovable.app";

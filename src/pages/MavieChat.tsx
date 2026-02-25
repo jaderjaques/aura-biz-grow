@@ -97,19 +97,21 @@ export default function MavieChat() {
   };
 
   const formatContent = (content: string) => {
-    // Simple markdown-like rendering
+    // Simple markdown-like rendering using React JSX (no dangerouslySetInnerHTML)
     return content
       .split("\n")
       .map((line, i) => {
-        // Bold
-        let formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        // Emoji-prefixed lines get slight indent feel
+        if (!line.trim()) {
+          return <p key={i} className="h-2" />;
+        }
+        // Split by bold markers and render safely
+        const parts = line.split(/\*\*(.*?)\*\*/g);
         return (
-          <p
-            key={i}
-            className={cn("mb-1 last:mb-0", !line.trim() && "h-2")}
-            dangerouslySetInnerHTML={{ __html: formatted || "&nbsp;" }}
-          />
+          <p key={i} className={cn("mb-1 last:mb-0")}>
+            {parts.map((part, idx) =>
+              idx % 2 === 1 ? <strong key={idx}>{part}</strong> : part
+            )}
+          </p>
         );
       });
   };
