@@ -1152,6 +1152,13 @@ export type Database = {
             referencedRelation: "whatsapp_devices"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "chat_webhook_logs_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_devices_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       chats: {
@@ -1276,6 +1283,13 @@ export type Database = {
             columns: ["device_id"]
             isOneToOne: false
             referencedRelation: "whatsapp_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_devices_safe"
             referencedColumns: ["id"]
           },
           {
@@ -4680,6 +4694,48 @@ export type Database = {
           total_invoices: number | null
           total_spent: number | null
           zip_code: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_devices_safe: {
+        Row: {
+          api_url: string | null
+          created_at: string | null
+          device_name: string | null
+          display_name: string | null
+          id: string | null
+          is_active: boolean | null
+          last_sync_at: string | null
+          phone_number: string | null
+          status: string | null
+          updated_at: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          api_url?: string | null
+          created_at?: string | null
+          device_name?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          phone_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          api_url?: string | null
+          created_at?: string | null
+          device_name?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          phone_number?: string | null
+          status?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
         }
         Relationships: []
       }
