@@ -70,11 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("id", userId)
       .single();
 
-    // ADICIONAR ESTAS LINHAS
-    console.log("fetchProfile userId:", userId);
-    console.log("fetchProfile data:", JSON.stringify(data));
-    console.log("fetchProfile error:", JSON.stringify(error));
-
     if (error) {
       console.error("Error fetching profile:", error);
       return null;
