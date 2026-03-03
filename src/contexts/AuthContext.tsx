@@ -47,10 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchProfile = async (userId: string) => {
-    // SECURITY: Only select safe columns, never expose totp_secret, backup_codes, etc.
     const { data, error } = await supabase
       .from("profiles")
-      .select(`
+      .select(
+        `
         id,
         full_name,
         email,
@@ -65,9 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         failed_login_attempts,
         locked_until,
         role:roles(id, name, description)
-      `)
+      `,
+      )
       .eq("id", userId)
       .single();
+
+    // ADICIONAR ESTAS LINHAS
+    console.log("fetchProfile userId:", userId);
+    console.log("fetchProfile data:", JSON.stringify(data));
+    console.log("fetchProfile error:", JSON.stringify(error));
 
     if (error) {
       console.error("Error fetching profile:", error);
@@ -89,29 +95,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
 
-        // Defer profile fetch with setTimeout to prevent deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id).then((profileData) => {
-              if (profileData) {
-                setProfile(profileData);
-                setIsAdmin(profileData.role?.name === "Administrador");
-              }
-              setLoading(false);
-            });
-          }, 0);
-        } else {
-          setProfile(null);
-          setIsAdmin(false);
-          setLoading(false);
-        }
+      // Defer profile fetch with setTimeout to prevent deadlock
+      if (session?.user) {
+        setTimeout(() => {
+          fetchProfile(session.user.id).then((profileData) => {
+            if (profileData) {
+              setProfile(profileData);
+              setIsAdmin(profileData.role?.name === "Administrador");
+            }
+            setLoading(false);
+          });
+        }, 0);
+      } else {
+        setProfile(null);
+        setIsAdmin(false);
+        setLoading(false);
       }
-    );
+    });
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -144,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -169,10 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateProfile = async (data: Partial<Profile>) => {
     if (!user) return { error: new Error("No user logged in") };
 
-    const { error } = await supabase
-      .from("profiles")
-      .update(data)
-      .eq("id", user.id);
+    const { error } = await supabase.from("profiles").update(data).eq("id", user.id);
 
     if (!error) {
       await refreshProfile();
