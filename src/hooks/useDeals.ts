@@ -15,14 +15,35 @@ export function useDeals() {
         .from("deals")
         .select(`
           *,
-          lead:leads(id, company_name, trading_name, cnpj, segment, contact_name, position, phone, email),
           assigned_user:profiles!deals_assigned_to_fkey(id, full_name, avatar_url),
           deal_products(*, product:products(*))
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setDeals(data as DealWithDetails[] || []);
+
+      // Fetch lead data separately since FK was removed
+      const dealsData = data || [];
+      const leadIds = [...new Set(dealsData.map(d => d.lead_id).filter(Boolean))] as string[];
+      
+      let leadsMap: Record<string, any> = {};
+      if (leadIds.length > 0) {
+        const { data: leadsData } = await supabase
+          .from("leads")
+          .select("id, company_name, trading_name, cnpj, segment, contact_name, position, phone, email")
+          .in("id", leadIds);
+        
+        if (leadsData) {
+          leadsMap = Object.fromEntries(leadsData.map(l => [l.id, l]));
+        }
+      }
+
+      const dealsWithLeads = dealsData.map(deal => ({
+        ...deal,
+        lead: deal.lead_id ? leadsMap[deal.lead_id] || null : null,
+      }));
+
+      setDeals(dealsWithLeads as DealWithDetails[] || []);
     } catch (error: any) {
       console.error("Error fetching deals:", error);
       toast({
