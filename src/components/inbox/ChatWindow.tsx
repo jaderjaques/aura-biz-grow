@@ -49,11 +49,15 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           table: "chat_messages",
           filter: `chat_id=eq.${chatId}`,
         },
-        () => {
+        (payload) => {
+          console.log("New message received via realtime:", payload.new);
           queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+          queryClient.refetchQueries({ queryKey: ["messages", chatId] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Realtime messages subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
