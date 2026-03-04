@@ -53,21 +53,23 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
-          filter: `chat_id=eq.${chatId}`,
         },
         (payload) => {
           console.log("🔥 REALTIME CALLBACK EXECUTOU", payload.new);
-          console.log("📦 Query cache keys:", 
-            queryClient.getQueryCache().getAll().map(q => q.queryKey)
-          );
+          const newMsg = payload.new as any;
+          if (newMsg.chat_id !== chatId) return;
           queryClient.setQueryData(["messages", chatId], (old: any) => {
             console.log("📝 setQueryData executou, old length:", old?.length);
-            if (!old) return [payload.new];
-            const exists = old.some((m: any) => m.id === (payload.new as any).id);
+            if (!old) return [newMsg];
+            const exists = old.some((m: any) => m.id === newMsg.id);
             if (exists) return old;
-            return [...old, payload.new];
+            return [...old, newMsg];
           });
         }
+      )
+      .subscribe((status) => {
+        console.log("📡 Realtime status:", status, "chatId:", chatId);
+      });
       )
       .subscribe((status) => {
         console.log("📡 Realtime status:", status, "chatId:", chatId);
