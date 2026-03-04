@@ -4746,6 +4746,7 @@ export type Database = {
         Returns: boolean
       }
       archive_chat: { Args: { p_chat_id: string }; Returns: undefined }
+      assume_chat: { Args: { p_chat_id: string }; Returns: undefined }
       calculate_balance: {
         Args: { p_end_date?: string; p_start_date?: string }
         Returns: {
@@ -4912,6 +4913,7 @@ export type Database = {
         Returns: Json
       }
       reset_failed_login: { Args: { p_user_id: string }; Returns: undefined }
+      return_chat_to_ai: { Args: { p_chat_id: string }; Returns: undefined }
       save_backup_codes: {
         Args: { p_codes: string[]; p_user_id: string }
         Returns: boolean

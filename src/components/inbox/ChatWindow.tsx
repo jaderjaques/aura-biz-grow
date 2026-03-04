@@ -60,6 +60,31 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
     };
   }, [chatId, queryClient]);
 
+  // Realtime chat status (ai_mode, assumed_by)
+  useEffect(() => {
+    const channel = supabase
+      .channel(`chat-status-${chatId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "chats",
+          filter: `id=eq.${chatId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["chat-input-status", chatId] });
+          queryClient.invalidateQueries({ queryKey: ["chat-header", chatId] });
+          queryClient.invalidateQueries({ queryKey: ["chat-sidebar", chatId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chatId, queryClient]);
+
   // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

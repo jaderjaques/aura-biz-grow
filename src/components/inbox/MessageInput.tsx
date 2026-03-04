@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { sendWhatsAppMessage } from "@/lib/whatsapp-helpers";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2, Bot, AlertTriangle } from "lucide-react";
+import { Send, Loader2, Bot, User } from "lucide-react";
 import { toast } from "sonner";
 
 interface MessageInputProps {
@@ -31,8 +31,24 @@ export function MessageInput({ chatId }: MessageInputProps) {
     },
   });
 
-  const isAIActive = chat?.ai_mode === "auto" && !chat?.assumed_by;
-  const needsHumanNotAssumed = chat?.needs_human && !chat?.assumed_by;
+  const { data: assumedProfile } = useQuery({
+    queryKey: ["assumed-profile-input", chat?.assumed_by],
+    queryFn: async () => {
+      if (!chat?.assumed_by) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", chat.assumed_by)
+        .single();
+      return data;
+    },
+    enabled: !!chat?.assumed_by && chat?.assumed_by !== user?.id,
+  });
+
+  const isAuto = chat?.ai_mode === "auto";
+  const isManual = chat?.ai_mode === "manual";
+  const isAssumedByMe = chat?.assumed_by === user?.id;
+  const isAssumedByOther = isManual && chat?.assumed_by && !isAssumedByMe;
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -69,7 +85,7 @@ export function MessageInput({ chatId }: MessageInputProps) {
     }
   }
 
-  if (isAIActive) {
+  if (isAuto) {
     return (
       <div className="border-t p-4 bg-green-50 dark:bg-green-950/30">
         <div className="flex items-center gap-3 text-sm text-green-700 dark:text-green-400">
@@ -83,14 +99,14 @@ export function MessageInput({ chatId }: MessageInputProps) {
     );
   }
 
-  if (needsHumanNotAssumed) {
+  if (isAssumedByOther) {
     return (
-      <div className="border-t p-4 bg-destructive/10">
-        <div className="flex items-center gap-3 text-sm text-destructive">
-          <AlertTriangle className="h-6 w-6 shrink-0" />
+      <div className="border-t p-4 bg-blue-50 dark:bg-blue-950/30">
+        <div className="flex items-center gap-3 text-sm text-blue-700 dark:text-blue-400">
+          <User className="h-6 w-6 shrink-0" />
           <div>
-            <p className="font-semibold">IA escalou esta conversa</p>
-            <p className="text-xs opacity-80">Clique em "Assumir Conversa" na sidebar para responder</p>
+            <p className="font-semibold">Atendido por {assumedProfile?.full_name || "outro atendente"}</p>
+            <p className="text-xs opacity-80">Apenas o atendente responsável pode enviar mensagens</p>
           </div>
         </div>
       </div>
