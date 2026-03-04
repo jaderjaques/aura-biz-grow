@@ -60,26 +60,57 @@ export function MessageInput({ chatId }: MessageInputProps) {
   async function handleSend() {
     if (!message.trim() || sending) return;
     setSending(true);
+    const trimmed = message.trim();
     try {
+      const optimisticMsg = {
+        id: crypto.randomUUID(),
+        chat_id: chatId,
+        direction: "outgoing" as const,
+        message_type: "text",
+        content: trimmed,
+        sent_by: user?.id || null,
+        created_at: new Date().toISOString(),
+        is_read: true,
+        caption: null,
+        error_message: null,
+        is_deleted: false,
+        is_starred: false,
+        media_filename: null,
+        media_mimetype: null,
+        media_size: null,
+        media_url: null,
+        message_id: null,
+        metadata: null,
+        quoted_message_id: null,
+        thumbnail_url: null,
+      };
+
+      // Optimistic update
+      queryClient.setQueryData(["messages", chatId], (old: any[] | undefined) =>
+        [...(old || []), optimisticMsg]
+      );
+
+      setMessage("");
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
+
       await supabase.from("chat_messages").insert({
         chat_id: chatId,
         direction: "outgoing",
         message_type: "text",
-        content: message.trim(),
+        content: trimmed,
         sent_by: user?.id || null,
       });
 
       try {
-        await sendWhatsAppMessage({ chatId, message: message.trim() });
+        await sendWhatsAppMessage({ chatId, message: trimmed });
       } catch {
         toast.warning("Mensagem salva, mas não foi possível enviar via WhatsApp");
       }
 
-      setMessage("");
-      if (textareaRef.current) textareaRef.current.style.height = "auto";
       queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
     } catch {
       toast.error("Erro ao enviar mensagem");
+      queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
     } finally {
       setSending(false);
     }
