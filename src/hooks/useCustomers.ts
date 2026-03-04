@@ -17,8 +17,7 @@ export function useCustomers() {
         .select(`
           *,
           account_manager_user:profiles!customers_account_manager_fkey(id, full_name, avatar_url),
-          lead:leads(id, company_name),
-          deal:deals!customers_deal_id_fkey(id, deal_number, total_value)
+          lead:leads(id, company_name)
         `)
         .order("created_at", { ascending: false });
 
