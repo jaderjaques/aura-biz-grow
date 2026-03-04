@@ -27,16 +27,16 @@ export async function sendWhatsAppMessage({
 
   const phoneNumber = (chat.contact_number || chat.remote_jid || "").replace(/\D/g, "");
 
-  // Evolution API format: POST {api_url}/message/sendText/{instance_name}
-  const response = await fetch(`${device.api_url}/message/sendText/${device.device_name}`, {
+  // AvisaAPI format
+  const response = await fetch("https://www.avisaapi.com.br/api/actions/sendMessage", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "apikey": device.api_token,
+      "Authorization": `Bearer ${device.api_token}`,
     },
     body: JSON.stringify({
       number: phoneNumber,
-      text: message,
+      message: message,
     }),
   });
 
