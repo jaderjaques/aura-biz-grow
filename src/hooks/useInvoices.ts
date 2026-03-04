@@ -18,8 +18,8 @@ export const useInvoices = (filters?: {
         .from("invoices")
         .select(`
           *,
-          customer:customers(id, company_name, contact_name, email),
-          contract:contracts(id, contract_number, title)
+          customer:customers!invoices_customer_id_fkey(id, company_name, contact_name, email),
+          contract:contracts!invoices_contract_id_fkey(id, contract_number, title)
         `)
         .order("created_at", { ascending: false });
 
