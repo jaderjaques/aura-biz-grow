@@ -49,18 +49,22 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           table: "chat_messages",
           filter: `chat_id=eq.${chatId}`,
         },
-        () => {
+        (payload) => {
+          console.log("New message received via realtime:", payload.new);
           queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+          queryClient.refetchQueries({ queryKey: ["messages", chatId] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Realtime messages subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [chatId, queryClient]);
 
-  // Realtime chat status (ai_mode, assumed_by)
+  // Realtime chat status (ai_mode, assumed_by, last_message_preview)
   useEffect(() => {
     const channel = supabase
       .channel(`chat-status-${chatId}`)
@@ -76,6 +80,7 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           queryClient.invalidateQueries({ queryKey: ["chat-input-status", chatId] });
           queryClient.invalidateQueries({ queryKey: ["chat-header", chatId] });
           queryClient.invalidateQueries({ queryKey: ["chat-sidebar", chatId] });
+          queryClient.invalidateQueries({ queryKey: ["inbox-chats"] });
         }
       )
       .subscribe();
