@@ -107,10 +107,12 @@ export function MessageInput({ chatId }: MessageInputProps) {
         toast.warning("Mensagem salva, mas não foi possível enviar via WhatsApp");
       }
 
-      queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+      await queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+      await queryClient.refetchQueries({ queryKey: ["messages", chatId] });
     } catch {
       toast.error("Erro ao enviar mensagem");
-      queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+      await queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+      await queryClient.refetchQueries({ queryKey: ["messages", chatId] });
     } finally {
       setSending(false);
     }
