@@ -16,10 +16,10 @@ export async function sendWhatsAppMessage({
 
   if (error || !chat) throw new Error("Chat não encontrado");
 
-  // Get the device
+  // Get the device with instance name
   const { data: device } = await supabase
     .from("whatsapp_devices")
-    .select("api_url, api_token")
+    .select("api_url, api_token, device_name")
     .eq("id", chat.device_id!)
     .single();
 
@@ -27,9 +27,13 @@ export async function sendWhatsAppMessage({
 
   const phoneNumber = (chat.contact_number || chat.remote_jid || "").replace(/\D/g, "");
 
-  const response = await fetch(`${device.api_url}/message/sendText/${device.api_token}`, {
+  // Evolution API format: POST {api_url}/message/sendText/{instance_name}
+  const response = await fetch(`${device.api_url}/message/sendText/${device.device_name}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": device.api_token,
+    },
     body: JSON.stringify({
       number: phoneNumber,
       text: message,
