@@ -98,7 +98,7 @@ export function MessageInput({ chatId }: MessageInputProps) {
         direction: "outgoing",
         message_type: "text",
         content: trimmed,
-        sent_by: user?.id || null,
+        sender_id: user?.id || null,
       });
 
       try {
