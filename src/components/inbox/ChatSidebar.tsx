@@ -4,10 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Bot, User, AlertTriangle, Phone, Mail, Building2, Tag, StickyNote } from "lucide-react";
+import { Bot, User, AlertTriangle, Phone, Mail, Building2, Tag, StickyNote, UserCheck, Loader2 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/whatsapp-helpers";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface ChatSidebarProps {
   chatId: string;
@@ -16,6 +17,7 @@ interface ChatSidebarProps {
 export function ChatSidebar({ chatId }: ChatSidebarProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
 
   const { data: chat } = useQuery({
     queryKey: ["chat-sidebar", chatId],
@@ -27,6 +29,20 @@ export function ChatSidebar({ chatId }: ChatSidebarProps) {
         .single();
       return data;
     },
+  });
+
+  const { data: assumedProfile } = useQuery({
+    queryKey: ["assumed-profile", chat?.assumed_by],
+    queryFn: async () => {
+      if (!chat?.assumed_by) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", chat.assumed_by)
+        .single();
+      return data;
+    },
+    enabled: !!chat?.assumed_by,
   });
 
   const { data: tags } = useQuery({
@@ -53,41 +69,46 @@ export function ChatSidebar({ chatId }: ChatSidebarProps) {
     },
   });
 
-  async function handleAssume() {
-    await supabase
-      .from("chats")
-      .update({
-        assumed_by: user?.id || null,
-        assumed_at: new Date().toISOString(),
-        ai_mode: "paused",
-      })
-      .eq("id", chatId);
-    toast.success("Conversa assumida!");
+  function invalidateAll() {
     queryClient.invalidateQueries({ queryKey: ["chat-sidebar", chatId] });
     queryClient.invalidateQueries({ queryKey: ["chat-input-status", chatId] });
     queryClient.invalidateQueries({ queryKey: ["chat-header", chatId] });
     queryClient.invalidateQueries({ queryKey: ["inbox-chats"] });
   }
 
+  async function handleAssume() {
+    setLoading(true);
+    try {
+      const { error } = await supabase.rpc("assume_chat", { p_chat_id: chatId });
+      if (error) throw error;
+      toast.success("Conversa assumida!");
+      invalidateAll();
+    } catch {
+      toast.error("Erro ao assumir conversa");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleReturnToAI() {
-    await supabase
-      .from("chats")
-      .update({
-        assumed_by: null,
-        assumed_at: null,
-        ai_mode: "auto",
-        needs_human: false,
-      })
-      .eq("id", chatId);
-    toast.success("Conversa devolvida para IA");
-    queryClient.invalidateQueries({ queryKey: ["chat-sidebar", chatId] });
-    queryClient.invalidateQueries({ queryKey: ["chat-input-status", chatId] });
-    queryClient.invalidateQueries({ queryKey: ["chat-header", chatId] });
-    queryClient.invalidateQueries({ queryKey: ["inbox-chats"] });
+    setLoading(true);
+    try {
+      const { error } = await supabase.rpc("return_chat_to_ai", { p_chat_id: chatId });
+      if (error) throw error;
+      toast.success("Conversa devolvida para IA");
+      invalidateAll();
+    } catch {
+      toast.error("Erro ao devolver conversa");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const customer = chat?.customer as any;
   const metadata = chat?.metadata as Record<string, unknown> | null;
+  const isAuto = chat?.ai_mode === "auto";
+  const isManual = chat?.ai_mode === "manual";
+  const isAssumedByMe = chat?.assumed_by === user?.id;
 
   return (
     <div className="p-4 space-y-5">
@@ -95,15 +116,21 @@ export function ChatSidebar({ chatId }: ChatSidebarProps) {
       <div>
         <h3 className="text-sm font-semibold mb-2">Status</h3>
 
-        {chat?.ai_mode === "auto" && !chat?.assumed_by && (
-          <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
-            <div className="flex items-center gap-2 text-green-700 dark:text-green-400 mb-1">
-              <Bot className="h-4 w-4" />
-              <span className="font-semibold text-sm">IA Ativa</span>
+        {isAuto && !chat?.assumed_by && (
+          <div className="space-y-2">
+            <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+              <div className="flex items-center gap-2 text-green-700 dark:text-green-400 mb-1">
+                <Bot className="h-4 w-4" />
+                <span className="font-semibold text-sm">IA Ativa</span>
+              </div>
+              <p className="text-xs text-green-600 dark:text-green-500">
+                Mavie está respondendo automaticamente
+              </p>
             </div>
-            <p className="text-xs text-green-600 dark:text-green-500">
-              Mavie está respondendo automaticamente
-            </p>
+            <Button onClick={handleAssume} disabled={loading} className="w-full bg-primary hover:bg-primary/90">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
+              Assumir Conversa
+            </Button>
           </div>
         )}
 
@@ -123,27 +150,32 @@ export function ChatSidebar({ chatId }: ChatSidebarProps) {
                 Escalado {formatRelativeTime(chat.escalated_at)}
               </p>
             </div>
-            <Button onClick={handleAssume} variant="destructive" className="w-full">
+            <Button onClick={handleAssume} disabled={loading} variant="destructive" className="w-full">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserCheck className="h-4 w-4 mr-2" />}
               Assumir Conversa
             </Button>
           </div>
         )}
 
-        {chat?.assumed_by && (
+        {isManual && chat?.assumed_by && (
           <div className="space-y-2">
             <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
               <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 mb-1">
                 <User className="h-4 w-4" />
                 <span className="font-semibold text-sm">Atendimento Humano</span>
               </div>
+              <p className="text-xs text-blue-600 dark:text-blue-500">
+                Atendido por {assumedProfile?.full_name || "..."}
+              </p>
               {chat.assumed_at && (
                 <p className="text-xs text-blue-600 dark:text-blue-500">
                   Desde: {format(new Date(chat.assumed_at), "dd/MM HH:mm")}
                 </p>
               )}
             </div>
-            {chat.assumed_by === user?.id && (
-              <Button onClick={handleReturnToAI} variant="outline" className="w-full border-green-400 text-green-600 hover:bg-green-50">
+            {isAssumedByMe && (
+              <Button onClick={handleReturnToAI} disabled={loading} variant="outline" className="w-full border-green-400 text-green-600 hover:bg-green-50">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Bot className="h-4 w-4 mr-2" />}
                 Devolver para IA
               </Button>
             )}
