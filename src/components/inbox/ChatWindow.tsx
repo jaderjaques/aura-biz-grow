@@ -56,13 +56,16 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           filter: `chat_id=eq.${chatId}`,
         },
         (payload) => {
-          console.log("✅ New message received via realtime:", payload.new);
-          const newMessage = payload.new;
+          console.log("🔥 REALTIME CALLBACK EXECUTOU", payload.new);
+          console.log("📦 Query cache keys:", 
+            queryClient.getQueryCache().getAll().map(q => q.queryKey)
+          );
           queryClient.setQueryData(["messages", chatId], (old: any) => {
-            if (!old) return [newMessage];
-            const exists = old.some((m: any) => m.id === newMessage.id);
+            console.log("📝 setQueryData executou, old length:", old?.length);
+            if (!old) return [payload.new];
+            const exists = old.some((m: any) => m.id === (payload.new as any).id);
             if (exists) return old;
-            return [...old, newMessage];
+            return [...old, payload.new];
           });
         }
       )
