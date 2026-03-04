@@ -57,8 +57,13 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
         },
         (payload) => {
           console.log("✅ New message received via realtime:", payload.new);
-          queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
-          queryClient.refetchQueries({ queryKey: ["messages", chatId] });
+          const newMessage = payload.new;
+          queryClient.setQueryData(["messages", chatId], (old: any) => {
+            if (!old) return [newMessage];
+            const exists = old.some((m: any) => m.id === newMessage.id);
+            if (exists) return old;
+            return [...old, newMessage];
+          });
         }
       )
       .subscribe((status) => {
