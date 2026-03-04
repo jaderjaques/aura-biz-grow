@@ -136,7 +136,9 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
                 onClick={() => onSelectChat(chat.id)}
                 className={cn(
                   "flex items-start gap-3 p-3 cursor-pointer border-b transition-colors hover:bg-accent/50",
-                  selectedChatId === chat.id && "bg-accent border-l-2 border-l-primary"
+                  selectedChatId === chat.id
+                    ? "bg-primary/10 border-l-2 border-l-primary"
+                    : ""
                 )}
               >
                 <Avatar className="h-10 w-10 shrink-0">
