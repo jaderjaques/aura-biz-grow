@@ -11,8 +11,8 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isIncoming = message.direction === "incoming";
-  const metadata = message.metadata as Record<string, unknown> | null;
-  const sentByAI = metadata?.sent_by_ai === true;
+  const sentByAI = (message as any).ai_generated === true ||
+    (message.metadata as Record<string, unknown> | null)?.sent_by_ai === true;
 
   return (
     <div className={cn("flex", isIncoming ? "justify-start" : "justify-end")}>
