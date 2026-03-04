@@ -50,18 +50,31 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           filter: `chat_id=eq.${chatId}`,
         },
         (payload) => {
-          console.log("New message received via realtime:", payload.new);
+          console.log("✅ New message received via realtime:", payload.new);
           queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
           queryClient.refetchQueries({ queryKey: ["messages", chatId] });
         }
       )
       .subscribe((status) => {
-        console.log("Realtime messages subscription status:", status);
+        if (status === "SUBSCRIBED") {
+          console.log("✅ Realtime ativo para chat:", chatId);
+        } else {
+          console.log("❌ Realtime status:", status, "chat:", chatId);
+        }
       });
 
     return () => {
       supabase.removeChannel(channel);
     };
+  }, [chatId, queryClient]);
+
+  // Polling fallback — refetch a cada 5s caso Realtime falhe
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.refetchQueries({ queryKey: ["messages", chatId] });
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [chatId, queryClient]);
 
   // Realtime chat status (ai_mode, assumed_by, last_message_preview)
