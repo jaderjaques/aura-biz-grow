@@ -39,6 +39,12 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
 
   // Realtime messages
   useEffect(() => {
+    console.log("🔄 Criando subscription para chatId:", chatId);
+    if (!chatId) {
+      console.log("❌ chatId undefined, subscription não criada");
+      return;
+    }
+
     const channel = supabase
       .channel(`messages-${chatId}`)
       .on(
@@ -56,14 +62,11 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
         }
       )
       .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          console.log("✅ Realtime ativo para chat:", chatId);
-        } else {
-          console.log("❌ Realtime status:", status, "chat:", chatId);
-        }
+        console.log("📡 Realtime status:", status, "chatId:", chatId);
       });
 
     return () => {
+      console.log("🔴 Removendo subscription para chatId:", chatId);
       supabase.removeChannel(channel);
     };
   }, [chatId, queryClient]);
