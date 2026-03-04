@@ -62,43 +62,11 @@ export function MessageInput({ chatId }: MessageInputProps) {
     setSending(true);
     const trimmed = message.trim();
     try {
-      const optimisticMsg = {
-        id: crypto.randomUUID(),
-        chat_id: chatId,
-        direction: "outgoing" as const,
-        message_type: "text",
-        content: trimmed,
-        sender_id: user?.id || null,
-        created_at: new Date().toISOString(),
-        is_read: true,
-        read_at: null,
-        ai_generated: false,
-        ai_model: null,
-        ai_tokens_used: null,
-        ai_provider: null,
-        tenant_id: null,
-        caption: null,
-        file_name: null,
-        file_size: null,
-        mime_type: null,
-        media_url: null,
-        message_id: null,
-        metadata: null,
-        quoted_message_id: null,
-        thumbnail_url: null,
-        status: "sent",
-        updated_at: new Date().toISOString(),
-      };
-
-      // Optimistic update
-      queryClient.setQueryData(["messages", chatId], (old: any[] | undefined) =>
-        [...(old || []), optimisticMsg]
-      );
-
       setMessage("");
       if (textareaRef.current) textareaRef.current.style.height = "auto";
 
-      await supabase.from("chat_messages").insert({
+      // 1. Salvar no banco PRIMEIRO
+      const { error } = await supabase.from("chat_messages").insert({
         chat_id: chatId,
         direction: "outgoing",
         message_type: "text",
@@ -106,18 +74,22 @@ export function MessageInput({ chatId }: MessageInputProps) {
         sender_id: user?.id || null,
       });
 
+      if (error) {
+        toast.error("Erro ao salvar mensagem");
+        return;
+      }
+
+      // 2. Enviar via WhatsApp
       try {
         await sendWhatsAppMessage({ chatId, message: trimmed });
       } catch {
         toast.warning("Mensagem salva, mas não foi possível enviar via WhatsApp");
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+      // 3. Refetch APÓS confirmação do INSERT
       await queryClient.refetchQueries({ queryKey: ["messages", chatId] });
     } catch {
       toast.error("Erro ao enviar mensagem");
-      await queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
-      await queryClient.refetchQueries({ queryKey: ["messages", chatId] });
     } finally {
       setSending(false);
     }
