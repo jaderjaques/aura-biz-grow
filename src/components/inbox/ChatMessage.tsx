@@ -54,7 +54,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
               isIncoming ? "text-primary" : "text-primary-foreground"
             )}
           >
-            📎 {message.media_filename || "Documento"}
+            📎 {message.file_name || message.media_filename || "Documento"}
           </a>
         )}
 
