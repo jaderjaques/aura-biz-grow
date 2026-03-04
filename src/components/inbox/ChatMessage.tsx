@@ -1,12 +1,9 @@
 import { format } from "date-fns";
 import { Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Message = Tables<"chat_messages">;
 
 interface ChatMessageProps {
-  message: Message;
+  message: Record<string, any>;
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
@@ -57,7 +54,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
               isIncoming ? "text-primary" : "text-primary-foreground"
             )}
           >
-            📎 {message.media_filename || "Documento"}
+            📎 {message.file_name || message.media_filename || "Documento"}
           </a>
         )}
 
