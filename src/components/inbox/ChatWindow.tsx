@@ -70,10 +70,6 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
       .subscribe((status) => {
         console.log("📡 Realtime status:", status, "chatId:", chatId);
       });
-      )
-      .subscribe((status) => {
-        console.log("📡 Realtime status:", status, "chatId:", chatId);
-      });
 
     return () => {
       console.log("🔴 Removendo subscription para chatId:", chatId);
