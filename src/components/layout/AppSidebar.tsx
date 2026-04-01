@@ -54,13 +54,13 @@ const topLevelItems: NavItem[] = [
 const financeiroItems: NavItem[] = [
   { title: "Visão Geral", href: "/financeiro", icon: DollarSign },
   { title: "Faturas", href: "/faturas", icon: Receipt },
-  { title: "Clientes", href: "/clientes", icon: Briefcase },
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart },
 ];
 
 const vendasItems: NavItem[] = [
   { title: "Leads", href: "/leads", icon: Users },
   { title: "Propostas", href: "/propostas", icon: FileText },
+  { title: "Clientes", href: "/clientes", icon: Briefcase },
   { title: "Agenda", href: "/agenda", icon: CalendarDays },
   { title: "Tarefas", href: "/tarefas", icon: ClipboardList },
 ];
