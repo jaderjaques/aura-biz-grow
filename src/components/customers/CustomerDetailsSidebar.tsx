@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
@@ -7,6 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -21,7 +23,9 @@ import {
   Calendar,
   Receipt,
   FileText,
+  MessageCircle,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { CustomerWithDetails, CustomerStatus } from "@/types/customers";
 import { CustomerInvoicesTab } from "./CustomerInvoicesTab";
 import { CustomerContractsTab } from "./CustomerContractsTab";
