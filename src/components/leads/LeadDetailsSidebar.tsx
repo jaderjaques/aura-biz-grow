@@ -365,114 +365,174 @@ export function LeadDetailsSidebar({
                 </div>
 
                 {/* Info Cards */}
-                <Card>
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm">Informações</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    {lead.contact_name && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Contato:</span>
-                        <span className="font-medium">{lead.contact_name}</span>
-                      </div>
-                    )}
-                    {lead.position && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Cargo:</span>
-                        <span className="font-medium">{lead.position}</span>
-                      </div>
-                    )}
-                    {lead.email && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Email:</span>
-                        <a href={`mailto:${lead.email}`} className="text-primary hover:underline">
-                          {lead.email}
-                        </a>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Telefone:</span>
-                      <a href={`tel:${lead.phone}`} className="text-primary hover:underline">
-                        {lead.phone}
-                      </a>
-                    </div>
-                    {lead.cnpj && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">CNPJ:</span>
-                        <span className="font-medium">{lead.cnpj}</span>
-                      </div>
-                    )}
-                    {lead.segment && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Segmento:</span>
-                        <Badge variant="outline">{lead.segment}</Badge>
-                      </div>
-                    )}
-                    {lead.website && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Website:</span>
-                        <a
-                          href={lead.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline flex items-center gap-1"
-                        >
-                          {lead.website.replace(/^https?:\/\//, "")}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    )}
-                    {lead.instagram && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Instagram:</span>
-                        <a
-                          href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          {lead.instagram}
-                        </a>
-                      </div>
-                    )}
-                    {lead.estimated_value && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Valor Estimado:</span>
-                        <span className="font-medium text-green-600">
-                          {formatCurrency(lead.estimated_value)}
-                        </span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Score History */}
-                <LeadScoreHistory
-                  leadId={lead.id}
-                  currentScore={lead.lead_score || 0}
-                  currentGrade={(lead.score_grade as "hot" | "warm" | "cold") || "cold"}
-                />
-
-                {/* Needs */}
-                {lead.needs && (
+                {isEditing ? (
                   <Card>
                     <CardHeader className="py-3">
-                      <CardTitle className="text-sm">Necessidades / Dores</CardTitle>
+                      <CardTitle className="text-sm">Editar Informações</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{lead.needs}</p>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Empresa</label>
+                        <Input value={editForm.company_name} onChange={(e) => updateField("company_name", e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Contato</label>
+                        <Input value={editForm.contact_name} onChange={(e) => updateField("contact_name", e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Email</label>
+                        <Input value={editForm.email} onChange={(e) => updateField("email", e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Telefone</label>
+                        <Input value={editForm.phone} onChange={(e) => updateField("phone", e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Origem</label>
+                        <Select value={editForm.source} onValueChange={(v) => updateField("source", v)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="manual">Manual</SelectItem>
+                            <SelectItem value="website">Website</SelectItem>
+                            <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                            <SelectItem value="instagram">Instagram</SelectItem>
+                            <SelectItem value="indicacao">Indicação</SelectItem>
+                            <SelectItem value="csv_import">CSV Import</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Status</label>
+                        <Select value={editForm.status} onValueChange={(v) => updateField("status", v)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="novo">Novo</SelectItem>
+                            <SelectItem value="contatado">Contatado</SelectItem>
+                            <SelectItem value="qualificado">Qualificado</SelectItem>
+                            <SelectItem value="proposta">Proposta</SelectItem>
+                            <SelectItem value="negociacao">Negociação</SelectItem>
+                            <SelectItem value="ganho">Ganho</SelectItem>
+                            <SelectItem value="perdido">Perdido</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Valor Estimado</label>
+                        <Input type="number" value={editForm.estimated_value} onChange={(e) => updateField("estimated_value", e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Observações</label>
+                        <Textarea value={editForm.notes} onChange={(e) => updateField("notes", e.target.value)} rows={3} />
+                      </div>
+                      <Separator />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={cancelEditing} disabled={saving}>
+                          <X className="h-4 w-4 mr-1" />
+                          Cancelar
+                        </Button>
+                        <Button onClick={handleSaveEdit} disabled={saving}>
+                          <Save className="h-4 w-4 mr-1" />
+                          {saving ? "Salvando..." : "Salvar"}
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
-                )}
+                ) : (
+                  <>
+                    <Card>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-sm">Informações</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 text-sm">
+                        {lead.contact_name && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Contato:</span>
+                            <span className="font-medium">{lead.contact_name}</span>
+                          </div>
+                        )}
+                        {lead.position && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Cargo:</span>
+                            <span className="font-medium">{lead.position}</span>
+                          </div>
+                        )}
+                        {lead.email && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Email:</span>
+                            <a href={`mailto:${lead.email}`} className="text-primary hover:underline">
+                              {lead.email}
+                            </a>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Telefone:</span>
+                          <a href={`tel:${lead.phone}`} className="text-primary hover:underline">
+                            {lead.phone}
+                          </a>
+                        </div>
+                        {lead.cnpj && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">CNPJ:</span>
+                            <span className="font-medium">{lead.cnpj}</span>
+                          </div>
+                        )}
+                        {lead.segment && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Segmento:</span>
+                            <Badge variant="outline">{lead.segment}</Badge>
+                          </div>
+                        )}
+                        {lead.website && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Website:</span>
+                            <a
+                              href={lead.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-1"
+                            >
+                              {lead.website.replace(/^https?:\/\//, "")}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        )}
+                        {lead.instagram && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Instagram:</span>
+                            <a
+                              href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              {lead.instagram}
+                            </a>
+                          </div>
+                        )}
+                        {lead.estimated_value && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Valor Estimado:</span>
+                            <span className="font-medium text-green-600">
+                              {formatCurrency(lead.estimated_value)}
+                            </span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
 
-                {/* Notes */}
-                {lead.notes && (
-                  <Card>
-                    <CardHeader className="py-3">
-                      <CardTitle className="text-sm">Notas</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{lead.notes}</p>
+                    {/* Notes */}
+                    {lead.notes && (
+                      <Card>
+                        <CardHeader className="py-3">
+                          <CardTitle className="text-sm">Notas</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground">{lead.notes}</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
+                )}
                     </CardContent>
                   </Card>
                 )}
