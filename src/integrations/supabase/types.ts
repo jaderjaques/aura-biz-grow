@@ -3339,6 +3339,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          image_url: string | null
           is_recurring: boolean | null
           max_discount_percent: number | null
           min_price: number | null
@@ -3360,6 +3361,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_recurring?: boolean | null
           max_discount_percent?: number | null
           min_price?: number | null
@@ -3381,6 +3383,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_recurring?: boolean | null
           max_discount_percent?: number | null
           min_price?: number | null
