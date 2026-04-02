@@ -121,6 +121,13 @@ const App = () => (
               }
             />
             <Route
+              path="/configuracoes/pipeline"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <PipelineConfig />
+                </ProtectedRoute>
+              }
+            />
               path="/propostas"
               element={
                 <ProtectedRoute>

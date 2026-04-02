@@ -69,6 +69,7 @@ const vendasItems: NavItem[] = [
 const configItems: NavItem[] = [
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
   { title: "Produtos/Serviços", href: "/configuracoes/produtos", icon: Package, adminOnly: true },
+  { title: "Pipeline", href: "/configuracoes/pipeline", icon: GitBranch, adminOnly: true },
   { title: "Geral", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
 
