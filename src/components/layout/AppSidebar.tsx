@@ -21,6 +21,7 @@ import {
   FileBarChart,
   Briefcase,
   Settings,
+  GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
