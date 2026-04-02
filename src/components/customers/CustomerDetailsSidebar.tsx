@@ -165,6 +165,15 @@ export function CustomerDetailsSidebar({
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-muted-foreground" />
                   <span>{customer.phone}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 ml-1"
+                    onClick={handleStartChat}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                    Iniciar Conversa
+                  </Button>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm">
