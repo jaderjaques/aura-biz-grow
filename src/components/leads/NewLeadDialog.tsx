@@ -56,6 +56,8 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<{ id: string; full_name: string }[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [pipelineStages, setPipelineStages] = useState<{ id: string; name: string }[]>([]);
+  const [selectedStage, setSelectedStage] = useState<string>("");
 
   const {
     register,
@@ -72,15 +74,20 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
   });
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .eq("status", "active")
-        .order("full_name");
-      if (data) setUsers(data);
+    const fetchData = async () => {
+      const [usersRes, stagesRes] = await Promise.all([
+        supabase.from("profiles").select("id, full_name").eq("status", "active").order("full_name"),
+        supabase.from("pipeline_stages").select("id, name").order("stage_order"),
+      ]);
+      if (usersRes.data) setUsers(usersRes.data);
+      if (stagesRes.data) {
+        setPipelineStages(stagesRes.data);
+        if (stagesRes.data.length > 0 && !selectedStage) {
+          setSelectedStage(stagesRes.data[0].name);
+        }
+      }
     };
-    fetchUsers();
+    fetchData();
   }, []);
 
   const toggleTag = (tagId: string) => {
@@ -112,7 +119,7 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
           assigned_at: data.assigned_to ? new Date().toISOString() : null,
           source: "manual",
           status: "novo",
-          stage: "Contato Inicial",
+          stage: selectedStage || "Contato Inicial",
           created_by: authUser.user?.id || null,
         })
         .select()
@@ -296,6 +303,21 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
+                    <Label>Etapa do Pipeline</Label>
+                    <Select value={selectedStage} onValueChange={setSelectedStage}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma etapa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pipelineStages.map((s) => (
+                          <SelectItem key={s.id} value={s.name}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="estimated_value">Valor Estimado (R$)</Label>
                     <Input
                       id="estimated_value"
@@ -305,6 +327,8 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
                       placeholder="0,00"
                     />
                   </div>
+                 </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Atribuir a</Label>
                     <Select onValueChange={(value) => setValue("assigned_to", value)}>
