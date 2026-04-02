@@ -22,6 +22,7 @@ import {
 import { useCustomers, useContracts } from "@/hooks/useCustomers";
 import { CustomersTable } from "@/components/customers/CustomersTable";
 import { CustomerDetailsSidebar } from "@/components/customers/CustomerDetailsSidebar";
+import { NewCustomerDialog } from "@/components/customers/NewCustomerDialog";
 import { CustomerWithDetails } from "@/types/customers";
 
 export default function Customers() {
