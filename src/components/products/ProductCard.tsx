@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit, Copy, EyeOff, Eye, Tag, Settings, TrendingUp, Megaphone, Bot, Users, Puzzle } from "lucide-react";
+import { MoreVertical, Edit, Copy, EyeOff, Eye, Tag, Settings, TrendingUp, Megaphone, Bot, Users, Puzzle, Package } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
