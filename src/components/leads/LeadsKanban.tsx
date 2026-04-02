@@ -262,6 +262,15 @@ export function LeadsKanban({ leads, stages, onOpenLead, onMoveStage }: LeadsKan
 
   const activeLead = activeId ? leads.find((l) => l.id === activeId) : null;
 
+  // If no stages loaded, show empty state
+  if (stages.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        Carregando funil...
+      </div>
+    );
+  }
+
   return (
     <DndContext
       sensors={sensors}
