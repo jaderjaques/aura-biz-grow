@@ -57,6 +57,9 @@ import {
   PhoneCall,
   FileText,
   Video,
+  Pencil,
+  Save,
+  X,
 } from "lucide-react";
 import { AddActivityDialog } from "./AddActivityDialog";
 import { LeadTagSelector } from "./LeadTagSelector";
