@@ -535,7 +535,13 @@ export function LeadDetailsSidebar({
                   </>
                 )}
 
-                {/* Tracking */}
+                {/* Score History */}
+                <LeadScoreHistory
+                  leadId={lead.id}
+                  currentScore={lead.lead_score || 0}
+                  currentGrade={(lead.score_grade as "hot" | "warm" | "cold") || "cold"}
+                />
+
                 <Card>
                   <CardHeader className="py-3">
                     <CardTitle className="text-sm">Rastreamento</CardTitle>
