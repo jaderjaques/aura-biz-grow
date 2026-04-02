@@ -75,11 +75,20 @@ export function ProductCard({ product, onEdit, onDuplicate, onToggleActive }: Pr
     <Card className={`hover:shadow-lg transition-shadow ${!product.active ? "opacity-60" : ""}`}>
       <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg">{product.name}</CardTitle>
-            <CardDescription className="mt-1">
-              {product.description}
-            </CardDescription>
+          <div className="flex gap-3 items-start">
+            <div className="w-10 h-10 rounded-md border border-border overflow-hidden shrink-0 flex items-center justify-center bg-muted/50">
+              {(product as any).image_url ? (
+                <img src={(product as any).image_url} alt={product.name} className="w-full h-full object-cover" />
+              ) : (
+                <Package className="h-5 w-5 text-muted-foreground/50" />
+              )}
+            </div>
+            <div>
+              <CardTitle className="text-lg">{product.name}</CardTitle>
+              <CardDescription className="mt-1">
+                {product.description}
+              </CardDescription>
+            </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

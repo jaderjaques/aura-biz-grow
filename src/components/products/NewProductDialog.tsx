@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Product } from "@/types/products";
+import { Camera, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface NewProductDialogProps {
   open: boolean;
@@ -27,6 +30,9 @@ interface NewProductDialogProps {
   editingProduct?: Product | null;
 }
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 export function NewProductDialog({
   open,
   onOpenChange,
@@ -34,6 +40,9 @@ export function NewProductDialog({
   editingProduct,
 }: NewProductDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -65,6 +74,8 @@ export function NewProductDialog({
         requires_setup: editingProduct.requires_setup || false,
         available_for_upsell: editingProduct.available_for_upsell || false,
       });
+      setImagePreview((editingProduct as any).image_url || null);
+      setImageFile(null);
     } else {
       setFormData({
         name: "",
@@ -80,14 +91,62 @@ export function NewProductDialog({
         requires_setup: false,
         available_for_upsell: false,
       });
+      setImagePreview(null);
+      setImageFile(null);
     }
   }, [editingProduct, open]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast.error("Formato inválido. Use JPG, PNG ou WebP.");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("Arquivo muito grande. Máximo 2MB.");
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return imagePreview; // keep existing URL if no new file
+
+    const ext = imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${crypto.randomUUID()}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from("products")
+      .upload(path, imageFile, { contentType: imageFile.type });
+
+    if (error) {
+      toast.error("Erro ao enviar imagem: " + error.message);
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from("products").getPublicUrl(path);
+    return urlData.publicUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const imageUrl = await uploadImage();
+
       await onSubmit({
         name: formData.name,
         description: formData.description || null,
@@ -101,7 +160,8 @@ export function NewProductDialog({
         billing_cycle: formData.is_recurring ? formData.billing_cycle : null,
         requires_setup: formData.requires_setup,
         available_for_upsell: formData.available_for_upsell,
-      });
+        ...(imageUrl !== undefined && { image_url: imageUrl }),
+      } as any);
       onOpenChange(false);
     } catch (error) {
       // Error handled in hook
@@ -120,6 +180,46 @@ export function NewProductDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Imagem */}
+          <div className="flex flex-col items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <div
+              className="relative w-[120px] h-[120px] rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center cursor-pointer overflow-hidden hover:border-primary/50 transition-colors bg-muted/30"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Camera className="h-8 w-8 text-muted-foreground/50" />
+              )}
+            </div>
+            {imagePreview && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs text-destructive hover:text-destructive"
+                onClick={removeImage}
+              >
+                <X className="h-3 w-3 mr-1" />
+                Remover imagem
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">
+              JPG, PNG ou WebP • Máx. 2MB
+            </p>
+          </div>
+
           {/* Básico */}
           <div className="space-y-4">
             <div>
