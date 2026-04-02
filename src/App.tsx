@@ -128,6 +128,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
               path="/propostas"
               element={
                 <ProtectedRoute>
