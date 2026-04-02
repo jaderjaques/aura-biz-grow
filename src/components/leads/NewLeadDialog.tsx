@@ -327,7 +327,8 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
                       placeholder="0,00"
                     />
                   </div>
-                </div>
+                 </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Atribuir a</Label>
                     <Select onValueChange={(value) => setValue("assigned_to", value)}>
