@@ -229,7 +229,11 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
         {renderSection(FileText, "Vendas", vendasItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
 
         {/* Produtos */}
-        {renderSection(Package, "Produtos", produtosItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+        <NavItemLink
+          item={produtosItem}
+          collapsed={collapsed && !isMobile}
+          isMobile={!!isMobile}
+        />
 
         {/* Financeiro */}
         {renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
