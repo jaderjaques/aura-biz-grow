@@ -30,6 +30,7 @@ export default function Customers() {
   const {
     customers,
     loading,
+    createCustomer,
     getActiveCustomers,
     getTotalMRR,
     getAvgLTV,
