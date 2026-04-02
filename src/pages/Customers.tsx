@@ -40,6 +40,7 @@ export default function Customers() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterManager, setFilterManager] = useState("all");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithDetails | null>(null);
+  const [newCustomerOpen, setNewCustomerOpen] = useState(false);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
