@@ -87,6 +87,13 @@ export default function Customers() {
   return (
     <AppLayout>
       <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Clientes</h1>
+          <Button onClick={() => setNewCustomerOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Cliente
+          </Button>
+        </div>
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
