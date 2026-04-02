@@ -230,6 +230,12 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
         {/* Vendas */}
         {renderSection(FileText, "Vendas", vendasItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
 
+        {/* Produtos */}
+        {renderSection(Package, "Produtos", produtosItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+
+        {/* Financeiro */}
+        {renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+
         <Separator className="my-2" />
 
         {/* Configurações */}
