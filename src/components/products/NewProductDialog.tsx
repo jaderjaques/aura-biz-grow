@@ -147,7 +147,7 @@ export function NewProductDialog({
     try {
       const imageUrl = await uploadImage();
 
-      await onSubmit({
+      const productData: any = {
         name: formData.name,
         description: formData.description || null,
         category: formData.category,
@@ -160,8 +160,14 @@ export function NewProductDialog({
         billing_cycle: formData.is_recurring ? formData.billing_cycle : null,
         requires_setup: formData.requires_setup,
         available_for_upsell: formData.available_for_upsell,
-        ...(imageUrl !== undefined && { image_url: imageUrl }),
-      } as any);
+      };
+
+      // Only include image_url if a new image was uploaded or an existing one is set
+      if (imageUrl) {
+        productData.image_url = imageUrl;
+      }
+
+      await onSubmit(productData);
       onOpenChange(false);
     } catch (error) {
       // Error handled in hook
