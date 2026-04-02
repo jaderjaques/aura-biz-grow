@@ -221,7 +221,9 @@ export function LeadsKanban({ leads, stages, onOpenLead, onMoveStage }: LeadsKan
   );
 
   const getLeadsByStage = (stageName: string) => {
-    return leads.filter((lead) => lead.stage === stageName);
+    return leads.filter((lead) => 
+      lead.stage?.trim().toLowerCase() === stageName.trim().toLowerCase()
+    );
   };
 
   const handleDragStart = (event: DragStartEvent) => {
