@@ -31,6 +31,7 @@ export default function Customers() {
     customers,
     loading,
     createCustomer,
+    updateCustomer,
     getActiveCustomers,
     getTotalMRR,
     getAvgLTV,
