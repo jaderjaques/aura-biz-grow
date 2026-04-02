@@ -179,11 +179,62 @@ export function LeadDetailsSidebar({
     setShowActivityDialog(false);
   };
 
+  const startEditing = () => {
+    if (!lead) return;
+    setEditForm({
+      company_name: lead.company_name || "",
+      contact_name: lead.contact_name || "",
+      email: lead.email || "",
+      phone: lead.phone || "",
+      source: lead.source || "manual",
+      status: lead.status || "novo",
+      estimated_value: lead.estimated_value ? String(lead.estimated_value) : "",
+      notes: lead.notes || "",
+    });
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => setIsEditing(false);
+
+  const handleSaveEdit = async () => {
+    if (!lead || !onUpdateLead) return;
+    setSaving(true);
+    try {
+      const updates: Record<string, unknown> = {
+        company_name: editForm.company_name,
+        contact_name: editForm.contact_name || null,
+        email: editForm.email || null,
+        phone: editForm.phone,
+        source: editForm.source,
+        status: editForm.status,
+        estimated_value: editForm.estimated_value ? Number(editForm.estimated_value) : null,
+        notes: editForm.notes || null,
+      };
+      await onUpdateLead(lead.id, updates);
+      // Refetch lead
+      const { data } = await supabase
+        .from("leads")
+        .select("*, assigned_user:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)")
+        .eq("id", lead.id)
+        .single();
+      if (data) setLead(data as Lead);
+      setIsEditing(false);
+      onRefresh();
+    } catch {
+      // toast handled by hook
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateField = (field: string, value: string) =>
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+
   if (!lead) return null;
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet open={open} onOpenChange={(o) => { if (!o) setIsEditing(false); onOpenChange(o); }}>
         <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col">
           <SheetHeader className="space-y-4">
             <div className="flex items-start justify-between">
@@ -192,32 +243,35 @@ export function LeadDetailsSidebar({
                 <SheetDescription>{lead.phone}</SheetDescription>
               </div>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEdit(lead.id)}>
-                    <Edit className="mr-2 h-4 w-4" />
+              <div className="flex items-center gap-2">
+                {!isEditing && (
+                  <Button variant="outline" size="sm" onClick={startEditing}>
+                    <Pencil className="h-3.5 w-3.5 mr-1" />
                     Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Converter em Cliente
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      onDelete(lead.id);
-                      onOpenChange(false);
-                    }}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Excluir
-                  </DropdownMenuItem>
+                  </Button>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      Converter em Cliente
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        onDelete(lead.id);
+                        onOpenChange(false);
+                      }}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
