@@ -30,6 +30,7 @@ import WhatsAppConfig from "./pages/WhatsAppConfig";
 import IntegracoesPage from "./pages/Integracoes";
 import GoogleCallbackPage from "./pages/GoogleCallback";
 import Relatorios from "./pages/Relatorios";
+import PipelineConfig from "./pages/PipelineConfig";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
