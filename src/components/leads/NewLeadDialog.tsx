@@ -303,6 +303,21 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
+                    <Label>Etapa do Pipeline</Label>
+                    <Select value={selectedStage} onValueChange={setSelectedStage}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma etapa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {pipelineStages.map((s) => (
+                          <SelectItem key={s.id} value={s.name}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="estimated_value">Valor Estimado (R$)</Label>
                     <Input
                       id="estimated_value"
@@ -312,6 +327,7 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
                       placeholder="0,00"
                     />
                   </div>
+                </div>
                   <div className="space-y-2">
                     <Label>Atribuir a</Label>
                     <Select onValueChange={(value) => setValue("assigned_to", value)}>
