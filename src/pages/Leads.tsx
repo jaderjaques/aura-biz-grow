@@ -567,6 +567,7 @@ export default function Leads() {
           fetchMetrics();
         }}
         onCreateDeal={handleCreateDealFromLead}
+        onUpdateLead={updateLead}
       />
 
       <NewDealDialog
