@@ -41,7 +41,30 @@ export function CustomerDetailsSidebar({
   open,
   onOpenChange,
 }: CustomerDetailsSidebarProps) {
+  const navigate = useNavigate();
+
   if (!customer) return null;
+
+  const handleStartChat = async () => {
+    const phone = customer.phone?.replace(/\D/g, "");
+    if (!phone) return;
+
+    const jid = phone.includes("@") ? phone : `${phone}@s.whatsapp.net`;
+
+    const { data: existingChat } = await supabase
+      .from("chats")
+      .select("id")
+      .eq("remote_jid", jid)
+      .maybeSingle();
+
+    onOpenChange(false);
+
+    if (existingChat) {
+      navigate(`/inbox?chat=${existingChat.id}`);
+    } else {
+      navigate(`/inbox?newChat=${phone}`);
+    }
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
