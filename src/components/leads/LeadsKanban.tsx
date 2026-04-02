@@ -221,7 +221,9 @@ export function LeadsKanban({ leads, stages, onOpenLead, onMoveStage }: LeadsKan
   );
 
   const getLeadsByStage = (stageName: string) => {
-    return leads.filter((lead) => lead.stage === stageName);
+    return leads.filter((lead) => 
+      lead.stage?.trim().toLowerCase() === stageName.trim().toLowerCase()
+    );
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -259,6 +261,15 @@ export function LeadsKanban({ leads, stages, onOpenLead, onMoveStage }: LeadsKan
   };
 
   const activeLead = activeId ? leads.find((l) => l.id === activeId) : null;
+
+  // If no stages loaded, show empty state
+  if (stages.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        Carregando funil...
+      </div>
+    );
+  }
 
   return (
     <DndContext
