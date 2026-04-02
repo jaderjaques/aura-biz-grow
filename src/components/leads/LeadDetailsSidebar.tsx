@@ -533,9 +533,6 @@ export function LeadDetailsSidebar({
                     )}
                   </>
                 )}
-                    </CardContent>
-                  </Card>
-                )}
 
                 {/* Tracking */}
                 <Card>
