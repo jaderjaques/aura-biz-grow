@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,8 +10,17 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Building2,
   User,
@@ -20,10 +30,12 @@ import {
   MapPin,
   DollarSign,
   TrendingUp,
-  Calendar,
   Receipt,
   FileText,
   MessageCircle,
+  Pencil,
+  X,
+  Save,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerWithDetails, CustomerStatus } from "@/types/customers";
@@ -34,31 +46,76 @@ interface CustomerDetailsSidebarProps {
   customer: CustomerWithDetails | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUpdate?: (id: string, data: any) => Promise<void>;
 }
 
 export function CustomerDetailsSidebar({
   customer,
   open,
   onOpenChange,
+  onUpdate,
 }: CustomerDetailsSidebarProps) {
   const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    company_name: "",
+    contact_name: "",
+    email: "",
+    phone: "",
+    cnpj: "",
+    segment: "",
+    city: "",
+    state: "",
+    status: "",
+    notes: "",
+  });
 
   if (!customer) return null;
+
+  const startEditing = () => {
+    setForm({
+      company_name: customer.company_name || "",
+      contact_name: customer.contact_name || "",
+      email: customer.email || "",
+      phone: customer.phone || "",
+      cnpj: customer.cnpj || "",
+      segment: customer.segment || "",
+      city: customer.city || "",
+      state: customer.state || "",
+      status: customer.status || "active",
+      notes: customer.notes || "",
+    });
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+  };
+
+  const handleSave = async () => {
+    if (!onUpdate) return;
+    setSaving(true);
+    try {
+      await onUpdate(customer.id, form);
+      setIsEditing(false);
+    } catch {
+      // toast handled by hook
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleStartChat = async () => {
     const phone = customer.phone?.replace(/\D/g, "");
     if (!phone) return;
-
     const jid = phone.includes("@") ? phone : `${phone}@s.whatsapp.net`;
-
     const { data: existingChat } = await supabase
       .from("chats")
       .select("id")
       .eq("remote_jid", jid)
       .maybeSingle();
-
     onOpenChange(false);
-
     if (existingChat) {
       navigate(`/inbox?chat=${existingChat.id}`);
     } else {
@@ -66,12 +123,8 @@ export function CustomerDetailsSidebar({
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
   const getStatusBadge = (status: CustomerStatus) => {
     const statusConfig: Record<CustomerStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -80,20 +133,40 @@ export function CustomerDetailsSidebar({
       suspended: { label: "Suspenso", variant: "outline" },
       cancelled: { label: "Cancelado", variant: "destructive" },
     };
-
     const config = statusConfig[status] || statusConfig.inactive;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  const updateField = (field: string, value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={(o) => { if (!o) setIsEditing(false); onOpenChange(o); }}>
       <SheetContent className="w-full sm:max-w-[700px] overflow-y-auto">
         <SheetHeader>
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-xl">{customer.company_name}</SheetTitle>
-            {getStatusBadge(customer.status as CustomerStatus)}
+          <div className="flex items-center justify-between gap-2">
+            <SheetTitle className="text-xl">
+              {isEditing ? (
+                <Input
+                  value={form.company_name}
+                  onChange={(e) => updateField("company_name", e.target.value)}
+                  className="text-xl font-semibold h-auto py-1"
+                />
+              ) : (
+                customer.company_name
+              )}
+            </SheetTitle>
+            <div className="flex items-center gap-2">
+              {getStatusBadge((isEditing ? form.status : customer.status) as CustomerStatus)}
+              {!isEditing && (
+                <Button variant="outline" size="sm" onClick={startEditing}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                  Editar
+                </Button>
+              )}
+            </div>
           </div>
-          {customer.trading_name && (
+          {!isEditing && customer.trading_name && (
             <p className="text-sm text-muted-foreground">{customer.trading_name}</p>
           )}
         </SheetHeader>
@@ -114,7 +187,6 @@ export function CustomerDetailsSidebar({
             </TabsTrigger>
           </TabsList>
 
-          {/* Informações Tab */}
           <TabsContent value="info" className="space-y-4 mt-4">
             {/* Métricas Financeiras */}
             <div className="grid grid-cols-2 gap-3">
@@ -131,7 +203,6 @@ export function CustomerDetailsSidebar({
                   </div>
                 </CardContent>
               </Card>
-
               <Card>
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-center gap-2">
@@ -152,47 +223,52 @@ export function CustomerDetailsSidebar({
             {/* Contato */}
             <div className="space-y-3">
               <h4 className="font-semibold">Contato Principal</h4>
-              
               <div className="grid gap-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span>{customer.contact_name}</span>
-                  {customer.position && (
-                    <Badge variant="outline" className="ml-2">{customer.position}</Badge>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{customer.phone}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 ml-1"
-                    onClick={handleStartChat}
-                  >
-                    <MessageCircle className="h-3.5 w-3.5 mr-1" />
-                    Iniciar Conversa
-                  </Button>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{customer.email}</span>
-                </div>
-
-                {customer.website && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <a
-                      href={customer.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {customer.website}
-                    </a>
-                  </div>
+                {isEditing ? (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Nome do Contato</label>
+                      <Input value={form.contact_name} onChange={(e) => updateField("contact_name", e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Telefone</label>
+                      <Input value={form.phone} onChange={(e) => updateField("phone", e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Email</label>
+                      <Input value={form.email} onChange={(e) => updateField("email", e.target.value)} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span>{customer.contact_name}</span>
+                      {customer.position && (
+                        <Badge variant="outline" className="ml-2">{customer.position}</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span>{customer.phone}</span>
+                      <Button variant="outline" size="sm" className="h-7 px-2 ml-1" onClick={handleStartChat}>
+                        <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                        Iniciar Conversa
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span>{customer.email}</span>
+                    </div>
+                    {customer.website && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <a href={customer.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          {customer.website}
+                        </a>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -202,47 +278,79 @@ export function CustomerDetailsSidebar({
             {/* Dados da Empresa */}
             <div className="space-y-3">
               <h4 className="font-semibold">Dados da Empresa</h4>
-              
-              <div className="grid gap-2 text-sm">
-                {customer.cnpj && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">CNPJ:</span>
-                    <span>{customer.cnpj}</span>
+              {isEditing ? (
+                <div className="grid gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">CNPJ</label>
+                    <Input value={form.cnpj} onChange={(e) => updateField("cnpj", e.target.value)} />
                   </div>
-                )}
-                
-                {customer.segment && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Segmento:</span>
-                    <Badge variant="outline">{customer.segment}</Badge>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Segmento</label>
+                    <Input value={form.segment} onChange={(e) => updateField("segment", e.target.value)} />
                   </div>
-                )}
-
-                {customer.company_size && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Porte:</span>
-                    <span>{customer.company_size}</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Cidade</label>
+                      <Input value={form.city} onChange={(e) => updateField("city", e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Estado</label>
+                      <Input value={form.state} onChange={(e) => updateField("state", e.target.value)} />
+                    </div>
                   </div>
-                )}
-
-                {customer.employee_count && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Funcionários:</span>
-                    <span>{customer.employee_count}</span>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Status</label>
+                    <Select value={form.status} onValueChange={(v) => updateField("status", v)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Ativo</SelectItem>
+                        <SelectItem value="inactive">Inativo</SelectItem>
+                        <SelectItem value="suspended">Suspenso</SelectItem>
+                        <SelectItem value="cancelled">Cancelado</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-
-                {customer.customer_since && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cliente desde:</span>
-                    <span>{format(new Date(customer.customer_since), "dd/MM/yyyy")}</span>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="grid gap-2 text-sm">
+                  {customer.cnpj && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">CNPJ:</span>
+                      <span>{customer.cnpj}</span>
+                    </div>
+                  )}
+                  {customer.segment && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Segmento:</span>
+                      <Badge variant="outline">{customer.segment}</Badge>
+                    </div>
+                  )}
+                  {customer.company_size && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Porte:</span>
+                      <span>{customer.company_size}</span>
+                    </div>
+                  )}
+                  {customer.employee_count && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Funcionários:</span>
+                      <span>{customer.employee_count}</span>
+                    </div>
+                  )}
+                  {customer.customer_since && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Cliente desde:</span>
+                      <span>{format(new Date(customer.customer_since), "dd/MM/yyyy")}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Endereço */}
-            {(customer.street || customer.city) && (
+            {!isEditing && (customer.street || customer.city) && (
               <>
                 <Separator />
                 <div className="space-y-3">
@@ -251,15 +359,7 @@ export function CustomerDetailsSidebar({
                     Endereço
                   </h4>
                   <p className="text-sm">
-                    {[
-                      customer.street,
-                      customer.number,
-                      customer.complement,
-                      customer.neighborhood,
-                      customer.city,
-                      customer.state,
-                      customer.zip_code,
-                    ]
+                    {[customer.street, customer.number, customer.complement, customer.neighborhood, customer.city, customer.state, customer.zip_code]
                       .filter(Boolean)
                       .join(", ")}
                   </p>
@@ -268,7 +368,7 @@ export function CustomerDetailsSidebar({
             )}
 
             {/* Responsável */}
-            {customer.account_manager_user && (
+            {!isEditing && customer.account_manager_user && (
               <>
                 <Separator />
                 <div className="space-y-3">
@@ -279,28 +379,50 @@ export function CustomerDetailsSidebar({
             )}
 
             {/* Notas */}
-            {customer.notes && (
+            {isEditing ? (
               <>
                 <Separator />
-                <div className="space-y-3">
-                  <h4 className="font-semibold">Observações</h4>
-                  <p className="text-sm text-muted-foreground">{customer.notes}</p>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Observações</label>
+                  <Textarea value={form.notes} onChange={(e) => updateField("notes", e.target.value)} rows={3} />
+                </div>
+              </>
+            ) : (
+              customer.notes && (
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <h4 className="font-semibold">Observações</h4>
+                    <p className="text-sm text-muted-foreground">{customer.notes}</p>
+                  </div>
+                </>
+              )
+            )}
+
+            {/* Edit Footer */}
+            {isEditing && (
+              <>
+                <Separator />
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={cancelEditing} disabled={saving}>
+                    <X className="h-4 w-4 mr-1" />
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save className="h-4 w-4 mr-1" />
+                    {saving ? "Salvando..." : "Salvar"}
+                  </Button>
                 </div>
               </>
             )}
           </TabsContent>
 
-          {/* Faturas Tab */}
           <TabsContent value="invoices" className="mt-4">
             <CustomerInvoicesTab customerId={customer.id} />
           </TabsContent>
 
-          {/* Contratos Tab */}
           <TabsContent value="contracts" className="mt-4">
-            <CustomerContractsTab
-              customerId={customer.id}
-              customerName={customer.company_name}
-            />
+            <CustomerContractsTab customerId={customer.id} customerName={customer.company_name} />
           </TabsContent>
         </Tabs>
       </SheetContent>

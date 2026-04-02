@@ -62,6 +62,7 @@ export default function Leads() {
     metrics,
     fetchLeads,
     fetchMetrics,
+    updateLead,
     updateLeadStage,
     deleteLead,
     importLeads,
@@ -567,6 +568,7 @@ export default function Leads() {
           fetchMetrics();
         }}
         onCreateDeal={handleCreateDealFromLead}
+        onUpdateLead={updateLead}
       />
 
       <NewDealDialog

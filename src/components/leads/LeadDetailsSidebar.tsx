@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format, formatDistanceToNow } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import { ptBR } from "date-fns/locale";
 import {
   Sheet,
@@ -10,6 +11,15 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,6 +57,9 @@ import {
   PhoneCall,
   FileText,
   Video,
+  Pencil,
+  Save,
+  X,
 } from "lucide-react";
 import { AddActivityDialog } from "./AddActivityDialog";
 import { LeadTagSelector } from "./LeadTagSelector";
@@ -59,6 +72,7 @@ interface LeadDetailsSidebarProps {
   onDelete: (id: string) => void;
   onRefresh: () => void;
   onCreateDeal?: (lead: Lead) => void;
+  onUpdateLead?: (id: string, data: Record<string, unknown>) => Promise<any>;
 }
 
 export function LeadDetailsSidebar({
@@ -69,10 +83,24 @@ export function LeadDetailsSidebar({
   onDelete,
   onRefresh,
   onCreateDeal,
+  onUpdateLead,
 }: LeadDetailsSidebarProps) {
+  const navigate = useNavigate();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(false);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    company_name: "",
+    contact_name: "",
+    email: "",
+    phone: "",
+    source: "",
+    status: "",
+    estimated_value: "",
+    notes: "",
+  });
   const { activities, history, createActivity, fetchActivities, fetchHistory } = useLeadActivities(leadId);
 
   useEffect(() => {
@@ -151,11 +179,62 @@ export function LeadDetailsSidebar({
     setShowActivityDialog(false);
   };
 
+  const startEditing = () => {
+    if (!lead) return;
+    setEditForm({
+      company_name: lead.company_name || "",
+      contact_name: lead.contact_name || "",
+      email: lead.email || "",
+      phone: lead.phone || "",
+      source: lead.source || "manual",
+      status: lead.status || "novo",
+      estimated_value: lead.estimated_value ? String(lead.estimated_value) : "",
+      notes: lead.notes || "",
+    });
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => setIsEditing(false);
+
+  const handleSaveEdit = async () => {
+    if (!lead || !onUpdateLead) return;
+    setSaving(true);
+    try {
+      const updates: Record<string, unknown> = {
+        company_name: editForm.company_name,
+        contact_name: editForm.contact_name || null,
+        email: editForm.email || null,
+        phone: editForm.phone,
+        source: editForm.source,
+        status: editForm.status,
+        estimated_value: editForm.estimated_value ? Number(editForm.estimated_value) : null,
+        notes: editForm.notes || null,
+      };
+      await onUpdateLead(lead.id, updates);
+      // Refetch lead
+      const { data } = await supabase
+        .from("leads")
+        .select("*, assigned_user:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)")
+        .eq("id", lead.id)
+        .single();
+      if (data) setLead(data as Lead);
+      setIsEditing(false);
+      onRefresh();
+    } catch {
+      // toast handled by hook
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateField = (field: string, value: string) =>
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+
   if (!lead) return null;
 
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet open={open} onOpenChange={(o) => { if (!o) setIsEditing(false); onOpenChange(o); }}>
         <SheetContent className="w-full sm:max-w-2xl overflow-hidden flex flex-col">
           <SheetHeader className="space-y-4">
             <div className="flex items-start justify-between">
@@ -164,34 +243,38 @@ export function LeadDetailsSidebar({
                 <SheetDescription>{lead.phone}</SheetDescription>
               </div>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEdit(lead.id)}>
-                    <Edit className="mr-2 h-4 w-4" />
+              <div className="flex items-center gap-2">
+                {!isEditing && (
+                  <Button variant="outline" size="sm" onClick={startEditing}>
+                    <Pencil className="h-3.5 w-3.5 mr-1" />
                     Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Converter em Cliente
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      onDelete(lead.id);
-                      onOpenChange(false);
-                    }}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Excluir
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </Button>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>
+                      <UserCheck className="mr-2 h-4 w-4" />
+                      Converter em Cliente
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        onDelete(lead.id);
+                        onOpenChange(false);
+                      }}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
 
             {/* Status e Score */}
@@ -283,86 +366,174 @@ export function LeadDetailsSidebar({
                 </div>
 
                 {/* Info Cards */}
-                <Card>
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm">Informações</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    {lead.contact_name && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Contato:</span>
-                        <span className="font-medium">{lead.contact_name}</span>
+                {isEditing ? (
+                  <Card>
+                    <CardHeader className="py-3">
+                      <CardTitle className="text-sm">Editar Informações</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Empresa</label>
+                        <Input value={editForm.company_name} onChange={(e) => updateField("company_name", e.target.value)} />
                       </div>
-                    )}
-                    {lead.position && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Cargo:</span>
-                        <span className="font-medium">{lead.position}</span>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Contato</label>
+                        <Input value={editForm.contact_name} onChange={(e) => updateField("contact_name", e.target.value)} />
                       </div>
-                    )}
-                    {lead.email && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Email:</span>
-                        <a href={`mailto:${lead.email}`} className="text-primary hover:underline">
-                          {lead.email}
-                        </a>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Email</label>
+                        <Input value={editForm.email} onChange={(e) => updateField("email", e.target.value)} />
                       </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Telefone:</span>
-                      <a href={`tel:${lead.phone}`} className="text-primary hover:underline">
-                        {lead.phone}
-                      </a>
-                    </div>
-                    {lead.cnpj && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">CNPJ:</span>
-                        <span className="font-medium">{lead.cnpj}</span>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Telefone</label>
+                        <Input value={editForm.phone} onChange={(e) => updateField("phone", e.target.value)} />
                       </div>
-                    )}
-                    {lead.segment && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Segmento:</span>
-                        <Badge variant="outline">{lead.segment}</Badge>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Origem</label>
+                        <Select value={editForm.source} onValueChange={(v) => updateField("source", v)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="manual">Manual</SelectItem>
+                            <SelectItem value="website">Website</SelectItem>
+                            <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                            <SelectItem value="instagram">Instagram</SelectItem>
+                            <SelectItem value="indicacao">Indicação</SelectItem>
+                            <SelectItem value="csv_import">CSV Import</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )}
-                    {lead.website && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Website:</span>
-                        <a
-                          href={lead.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline flex items-center gap-1"
-                        >
-                          {lead.website.replace(/^https?:\/\//, "")}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Status</label>
+                        <Select value={editForm.status} onValueChange={(v) => updateField("status", v)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="novo">Novo</SelectItem>
+                            <SelectItem value="contatado">Contatado</SelectItem>
+                            <SelectItem value="qualificado">Qualificado</SelectItem>
+                            <SelectItem value="proposta">Proposta</SelectItem>
+                            <SelectItem value="negociacao">Negociação</SelectItem>
+                            <SelectItem value="ganho">Ganho</SelectItem>
+                            <SelectItem value="perdido">Perdido</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )}
-                    {lead.instagram && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Instagram:</span>
-                        <a
-                          href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          {lead.instagram}
-                        </a>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Valor Estimado</label>
+                        <Input type="number" value={editForm.estimated_value} onChange={(e) => updateField("estimated_value", e.target.value)} />
                       </div>
-                    )}
-                    {lead.estimated_value && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Valor Estimado:</span>
-                        <span className="font-medium text-green-600">
-                          {formatCurrency(lead.estimated_value)}
-                        </span>
+                      <div className="space-y-1">
+                        <label className="text-xs text-muted-foreground">Observações</label>
+                        <Textarea value={editForm.notes} onChange={(e) => updateField("notes", e.target.value)} rows={3} />
                       </div>
+                      <Separator />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={cancelEditing} disabled={saving}>
+                          <X className="h-4 w-4 mr-1" />
+                          Cancelar
+                        </Button>
+                        <Button onClick={handleSaveEdit} disabled={saving}>
+                          <Save className="h-4 w-4 mr-1" />
+                          {saving ? "Salvando..." : "Salvar"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    <Card>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-sm">Informações</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 text-sm">
+                        {lead.contact_name && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Contato:</span>
+                            <span className="font-medium">{lead.contact_name}</span>
+                          </div>
+                        )}
+                        {lead.position && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Cargo:</span>
+                            <span className="font-medium">{lead.position}</span>
+                          </div>
+                        )}
+                        {lead.email && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Email:</span>
+                            <a href={`mailto:${lead.email}`} className="text-primary hover:underline">
+                              {lead.email}
+                            </a>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Telefone:</span>
+                          <a href={`tel:${lead.phone}`} className="text-primary hover:underline">
+                            {lead.phone}
+                          </a>
+                        </div>
+                        {lead.cnpj && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">CNPJ:</span>
+                            <span className="font-medium">{lead.cnpj}</span>
+                          </div>
+                        )}
+                        {lead.segment && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Segmento:</span>
+                            <Badge variant="outline">{lead.segment}</Badge>
+                          </div>
+                        )}
+                        {lead.website && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Website:</span>
+                            <a
+                              href={lead.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-1"
+                            >
+                              {lead.website.replace(/^https?:\/\//, "")}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        )}
+                        {lead.instagram && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Instagram:</span>
+                            <a
+                              href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              {lead.instagram}
+                            </a>
+                          </div>
+                        )}
+                        {lead.estimated_value && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Valor Estimado:</span>
+                            <span className="font-medium text-green-600">
+                              {formatCurrency(lead.estimated_value)}
+                            </span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Notes */}
+                    {lead.notes && (
+                      <Card>
+                        <CardHeader className="py-3">
+                          <CardTitle className="text-sm">Notas</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground">{lead.notes}</p>
+                        </CardContent>
+                      </Card>
                     )}
-                  </CardContent>
-                </Card>
+                  </>
+                )}
 
                 {/* Score History */}
                 <LeadScoreHistory
@@ -371,31 +542,6 @@ export function LeadDetailsSidebar({
                   currentGrade={(lead.score_grade as "hot" | "warm" | "cold") || "cold"}
                 />
 
-                {/* Needs */}
-                {lead.needs && (
-                  <Card>
-                    <CardHeader className="py-3">
-                      <CardTitle className="text-sm">Necessidades / Dores</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{lead.needs}</p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Notes */}
-                {lead.notes && (
-                  <Card>
-                    <CardHeader className="py-3">
-                      <CardTitle className="text-sm">Notas</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{lead.notes}</p>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Tracking */}
                 <Card>
                   <CardHeader className="py-3">
                     <CardTitle className="text-sm">Rastreamento</CardTitle>

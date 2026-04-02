@@ -31,6 +31,7 @@ export default function Customers() {
     customers,
     loading,
     createCustomer,
+    updateCustomer,
     getActiveCustomers,
     getTotalMRR,
     getAvgLTV,
@@ -226,6 +227,7 @@ export default function Customers() {
           customer={selectedCustomer}
           open={!!selectedCustomer}
           onOpenChange={(open) => !open && setSelectedCustomer(null)}
+          onUpdate={updateCustomer}
         />
       </div>
     </AppLayout>
