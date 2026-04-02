@@ -113,7 +113,8 @@ export default function Leads() {
   // Filter + sort leads
   const filteredLeads = leads
     .filter((lead) => {
-      const matchesScore = scoreFilter === "all" || lead.score_grade === scoreFilter;
+      const matchesScore = scoreFilter === "all" || 
+        (scoreFilter === "cold" ? (!lead.score_grade || lead.score_grade === "cold") : lead.score_grade === scoreFilter);
       const matchesTag = tagFilter === "all" || lead.tags?.some(t => t.id === tagFilter);
       
       // Advanced tag filter
