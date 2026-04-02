@@ -62,6 +62,7 @@ export default function Leads() {
     metrics,
     fetchLeads,
     fetchMetrics,
+    updateLead,
     updateLeadStage,
     deleteLead,
     importLeads,
