@@ -58,9 +58,7 @@ const financeiroItems: NavItem[] = [
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart },
 ];
 
-const produtosItems: NavItem[] = [
-  { title: "Produtos", href: "/produtos", icon: Package },
-];
+const produtosItem: NavItem = { title: "Produtos", href: "/produtos", icon: Package };
 
 const vendasItems: NavItem[] = [
   { title: "Leads", href: "/leads", icon: Users },
@@ -231,7 +229,11 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
         {renderSection(FileText, "Vendas", vendasItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
 
         {/* Produtos */}
-        {renderSection(Package, "Produtos", produtosItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+        <NavItemLink
+          item={produtosItem}
+          collapsed={collapsed && !isMobile}
+          isMobile={!!isMobile}
+        />
 
         {/* Financeiro */}
         {renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
