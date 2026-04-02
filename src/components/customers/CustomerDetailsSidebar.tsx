@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
@@ -7,6 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -21,7 +23,9 @@ import {
   Calendar,
   Receipt,
   FileText,
+  MessageCircle,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { CustomerWithDetails, CustomerStatus } from "@/types/customers";
 import { CustomerInvoicesTab } from "./CustomerInvoicesTab";
 import { CustomerContractsTab } from "./CustomerContractsTab";
@@ -37,7 +41,30 @@ export function CustomerDetailsSidebar({
   open,
   onOpenChange,
 }: CustomerDetailsSidebarProps) {
+  const navigate = useNavigate();
+
   if (!customer) return null;
+
+  const handleStartChat = async () => {
+    const phone = customer.phone?.replace(/\D/g, "");
+    if (!phone) return;
+
+    const jid = phone.includes("@") ? phone : `${phone}@s.whatsapp.net`;
+
+    const { data: existingChat } = await supabase
+      .from("chats")
+      .select("id")
+      .eq("remote_jid", jid)
+      .maybeSingle();
+
+    onOpenChange(false);
+
+    if (existingChat) {
+      navigate(`/inbox?chat=${existingChat.id}`);
+    } else {
+      navigate(`/inbox?newChat=${phone}`);
+    }
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -138,6 +165,15 @@ export function CustomerDetailsSidebar({
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-muted-foreground" />
                   <span>{customer.phone}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 ml-1"
+                    onClick={handleStartChat}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                    Iniciar Conversa
+                  </Button>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm">
