@@ -72,6 +72,7 @@ interface LeadDetailsSidebarProps {
   onDelete: (id: string) => void;
   onRefresh: () => void;
   onCreateDeal?: (lead: Lead) => void;
+  onUpdateLead?: (id: string, data: Record<string, unknown>) => Promise<any>;
 }
 
 export function LeadDetailsSidebar({
@@ -82,10 +83,24 @@ export function LeadDetailsSidebar({
   onDelete,
   onRefresh,
   onCreateDeal,
+  onUpdateLead,
 }: LeadDetailsSidebarProps) {
+  const navigate = useNavigate();
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(false);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    company_name: "",
+    contact_name: "",
+    email: "",
+    phone: "",
+    source: "",
+    status: "",
+    estimated_value: "",
+    notes: "",
+  });
   const { activities, history, createActivity, fetchActivities, fetchHistory } = useLeadActivities(leadId);
 
   useEffect(() => {
