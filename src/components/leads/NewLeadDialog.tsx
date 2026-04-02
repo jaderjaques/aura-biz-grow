@@ -119,7 +119,7 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
           assigned_at: data.assigned_to ? new Date().toISOString() : null,
           source: "manual",
           status: "novo",
-          stage: "Contato Inicial",
+          stage: selectedStage || "Contato Inicial",
           created_by: authUser.user?.id || null,
         })
         .select()
