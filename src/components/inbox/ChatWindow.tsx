@@ -5,6 +5,8 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatMessage } from "./ChatMessage";
 import { MessageInput } from "./MessageInput";
 import { Loader2 } from "lucide-react";
+import { format, isToday, isYesterday, isSameDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface ChatWindowProps {
   chatId: string;
@@ -128,9 +130,33 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           </div>
         ) : messages && messages.length > 0 ? (
           <>
-            {messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} />
-            ))}
+            {messages.map((msg, index) => {
+              const msgDate = new Date(msg.created_at);
+              const prevDate = index > 0 ? new Date(messages[index - 1].created_at) : null;
+              const showSeparator = !prevDate || !isSameDay(msgDate, prevDate);
+
+              let dateLabel = "";
+              if (showSeparator) {
+                if (isToday(msgDate)) dateLabel = "Hoje";
+                else if (isYesterday(msgDate)) dateLabel = "Ontem";
+                else dateLabel = format(msgDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+              }
+
+              return (
+                <div key={msg.id}>
+                  {showSeparator && (
+                    <div className="flex items-center gap-3 my-4">
+                      <div className="flex-1 h-px bg-border" />
+                      <span className="text-xs text-muted-foreground font-medium px-2 whitespace-nowrap">
+                        {dateLabel}
+                      </span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                  )}
+                  <ChatMessage message={msg} />
+                </div>
+              );
+            })}
             <div ref={messagesEndRef} />
           </>
         ) : (
