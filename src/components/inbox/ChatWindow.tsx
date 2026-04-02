@@ -5,6 +5,8 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatMessage } from "./ChatMessage";
 import { MessageInput } from "./MessageInput";
 import { Loader2 } from "lucide-react";
+import { format, isToday, isYesterday, isSameDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface ChatWindowProps {
   chatId: string;
