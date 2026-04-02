@@ -227,6 +227,7 @@ export default function Customers() {
           customer={selectedCustomer}
           open={!!selectedCustomer}
           onOpenChange={(open) => !open && setSelectedCustomer(null)}
+          onUpdate={updateCustomer}
         />
       </div>
     </AppLayout>
