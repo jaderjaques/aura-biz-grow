@@ -113,9 +113,9 @@ const App = () => (
               }
             />
             <Route
-              path="/configuracoes/produtos"
+              path="/produtos"
               element={
-                <ProtectedRoute requireAdmin>
+                <ProtectedRoute>
                   <Products />
                 </ProtectedRoute>
               }

@@ -58,6 +58,10 @@ const financeiroItems: NavItem[] = [
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart },
 ];
 
+const produtosItems: NavItem[] = [
+  { title: "Produtos", href: "/produtos", icon: Package },
+];
+
 const vendasItems: NavItem[] = [
   { title: "Leads", href: "/leads", icon: Users },
   { title: "Propostas", href: "/propostas", icon: FileText },
@@ -68,7 +72,6 @@ const vendasItems: NavItem[] = [
 
 const configItems: NavItem[] = [
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
-  { title: "Produtos/Serviços", href: "/configuracoes/produtos", icon: Package, adminOnly: true },
   { title: "Pipeline", href: "/configuracoes/pipeline", icon: GitBranch, adminOnly: true },
   { title: "Geral", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
@@ -224,11 +227,14 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
 
         <Separator className="my-2" />
 
-        {/* Financeiro */}
-        {renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
-
         {/* Vendas */}
         {renderSection(FileText, "Vendas", vendasItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+
+        {/* Produtos */}
+        {renderSection(Package, "Produtos", produtosItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+
+        {/* Financeiro */}
+        {renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
 
         <Separator className="my-2" />
 
