@@ -215,6 +215,12 @@ export default function Customers() {
           </CardContent>
         </Card>
 
+        <NewCustomerDialog
+          open={newCustomerOpen}
+          onOpenChange={setNewCustomerOpen}
+          onSave={createCustomer}
+        />
+
         <CustomerDetailsSidebar
           customer={selectedCustomer}
           open={!!selectedCustomer}
