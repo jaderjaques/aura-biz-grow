@@ -58,9 +58,7 @@ const financeiroItems: NavItem[] = [
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart },
 ];
 
-const produtosItems: NavItem[] = [
-  { title: "Produtos", href: "/produtos", icon: Package },
-];
+const produtosItem: NavItem = { title: "Produtos", href: "/produtos", icon: Package };
 
 const vendasItems: NavItem[] = [
   { title: "Leads", href: "/leads", icon: Users },
