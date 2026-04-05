@@ -31,6 +31,7 @@ import IntegracoesPage from "./pages/Integracoes";
 import GoogleCallbackPage from "./pages/GoogleCallback";
 import Relatorios from "./pages/Relatorios";
 import PipelineConfig from "./pages/PipelineConfig";
+import Patients from "./pages/Patients";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -229,6 +230,15 @@ const App = () => (
               element={<GoogleCallbackPage />}
             />
             
+            <Route
+              path="/pacientes"
+              element={
+                <ProtectedRoute>
+                  <Patients />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Redirect root to dashboard */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             
