@@ -66,12 +66,42 @@ export function useDeals() {
   ) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
+      // Calculate totals from products
+      let setupValue = 0;
+      let recurringValue = 0;
+      let discountTotal = 0;
+
+      products.forEach((p) => {
+        const lineTotal = p.quantity * p.unit_price;
+        const lineDiscount = p.discount_amount || (lineTotal * (p.discount_percent || 0)) / 100;
+        discountTotal += lineDiscount;
+
+        const isRecurring = p.product.is_recurring;
+        const type = p.product.type;
+
+        if (type === "setup") {
+          setupValue += lineTotal - lineDiscount;
+        } else if (isRecurring || type === "monthly") {
+          recurringValue += lineTotal - lineDiscount;
+        } else {
+          setupValue += lineTotal - lineDiscount;
+        }
+      });
+
+      const totalValue = setupValue + recurringValue;
+
       // Create deal
       const { data: deal, error: dealError } = await supabase
         .from("deals")
         .insert({
           ...dealData,
+          stage: "proposta",
+          status: "open",
+          total_value: totalValue,
+          setup_value: setupValue,
+          recurring_value: recurringValue,
+          discount_total: discountTotal,
           created_by: user?.id,
           assigned_to: dealData.assigned_to || user?.id,
         } as any)
