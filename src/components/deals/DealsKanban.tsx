@@ -42,7 +42,10 @@ export function DealsKanban({ deals, onRefresh, onDealClick, onDealWon }: DealsK
   );
 
   const dealsByStage = STAGES.reduce((acc, stage) => {
-    acc[stage.id] = deals.filter((d) => d.stage === stage.id);
+    acc[stage.id] = deals.filter((d) => {
+      const dealStage = d.stage || 'proposta';
+      return dealStage === stage.id;
+    });
     return acc;
   }, {} as Record<string, DealWithDetails[]>);
 
