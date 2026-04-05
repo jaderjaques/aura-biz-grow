@@ -22,6 +22,9 @@ import {
   Briefcase,
   Settings,
   GitBranch,
+  Stethoscope,
+  HeartPulse,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -29,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenantModule } from "@/hooks/useTenantModule";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -45,6 +49,8 @@ interface NavItem {
   badge?: number;
   adminOnly?: boolean;
 }
+
+// ── Agency menu ──────────────────────────────────────────────────────────────
 
 const topLevelItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: Home },
@@ -78,6 +84,27 @@ const integracoesItems: NavItem[] = [
   { title: "WhatsApp", href: "/configuracoes/whatsapp", icon: Smartphone, adminOnly: true },
   { title: "Google Calendar", href: "/google-calendar", icon: CalendarDays },
   { title: "API Keys", href: "/configuracoes/integracoes", icon: Plug, adminOnly: true },
+];
+
+// ── Clinic menu ───────────────────────────────────────────────────────────────
+
+const clinicAtendimentoItems: NavItem[] = [
+  { title: "Agenda", href: "/agenda", icon: CalendarDays },
+  { title: "Pacientes", href: "/pacientes", icon: HeartPulse },
+  { title: "Tarefas", href: "/tarefas", icon: ClipboardList },
+];
+
+const clinicComercialItems: NavItem[] = [
+  { title: "Orçamentos", href: "/propostas", icon: FileText },
+  { title: "Convênios", href: "/convenios", icon: ShieldCheck },
+];
+
+const clinicProcedimentosItem: NavItem = { title: "Procedimentos", href: "/produtos", icon: Package };
+
+const clinicFinanceiroItems: NavItem[] = [
+  { title: "Visão Geral", href: "/financeiro", icon: DollarSign },
+  { title: "Faturas", href: "/faturas", icon: Receipt },
+  { title: "Relatórios", href: "/relatorios", icon: FileBarChart },
 ];
 
 interface SidebarContentProps {
@@ -180,6 +207,7 @@ function renderSection(
 
 function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarContentProps) {
   const { profile, isAdmin, signOut } = useAuth();
+  const { isClinic } = useTenantModule();
 
   const getInitials = (name: string) => {
     return name
@@ -213,7 +241,7 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-hide">
-        {/* Top-level items */}
+        {/* Top-level: igual em todos os módulos */}
         {topLevelItems.map((item) => (
           <NavItemLink
             key={item.href}
@@ -225,25 +253,45 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
 
         <Separator className="my-2" />
 
-        {/* Vendas */}
-        {renderSection(FileText, "Vendas", vendasItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+        {isClinic ? (
+          <>
+            {/* Atendimento (Clínica) */}
+            {renderSection(Stethoscope, "Atendimento", clinicAtendimentoItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
 
-        {/* Produtos */}
-        <NavItemLink
-          item={produtosItem}
-          collapsed={collapsed && !isMobile}
-          isMobile={!!isMobile}
-        />
+            {/* Comercial (Clínica) */}
+            {renderSection(FileText, "Comercial", clinicComercialItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
 
-        {/* Financeiro */}
-        {renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+            {/* Procedimentos */}
+            <NavItemLink
+              item={clinicProcedimentosItem}
+              collapsed={collapsed && !isMobile}
+              isMobile={!!isMobile}
+            />
+
+            {/* Financeiro (Clínica) */}
+            {renderSection(DollarSign, "Financeiro", clinicFinanceiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+          </>
+        ) : (
+          <>
+            {/* Vendas (Agency) */}
+            {renderSection(FileText, "Vendas", vendasItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+
+            {/* Produtos */}
+            <NavItemLink
+              item={produtosItem}
+              collapsed={collapsed && !isMobile}
+              isMobile={!!isMobile}
+            />
+
+            {/* Financeiro (Agency) */}
+            {renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+          </>
+        )}
 
         <Separator className="my-2" />
 
-        {/* Configurações */}
+        {/* Configurações e Integrações: iguais */}
         {renderSection(Settings, "Configurações", configItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
-
-        {/* Integrações */}
         {renderSection(Plug, "Integrações", integracoesItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
       </nav>
 
