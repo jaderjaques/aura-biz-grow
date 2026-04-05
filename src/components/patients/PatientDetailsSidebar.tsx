@@ -20,9 +20,10 @@ import {
 import { Switch } from "@/components/ui/switch";
 import {
   User, Phone, Mail, MapPin, Shield, Calendar,
-  MessageCircle, Pencil, Save, X, Users,
+  MessageCircle, Pencil, Save, X, Users, FileText,
 } from "lucide-react";
 import { PatientWithDetails, PatientStatus, GENDER_LABELS, Insurance } from "@/types/patients";
+import { MedicalRecordsTab } from "./MedicalRecordsTab";
 
 interface PatientDetailsSidebarProps {
   patient: PatientWithDetails | null;
@@ -30,6 +31,7 @@ interface PatientDetailsSidebarProps {
   onOpenChange: (open: boolean) => void;
   onUpdate: (id: string, data: any) => Promise<void>;
   insurances: Insurance[];
+  showOdontogram?: boolean;
 }
 
 export function PatientDetailsSidebar({
@@ -38,6 +40,7 @@ export function PatientDetailsSidebar({
   onOpenChange,
   onUpdate,
   insurances,
+  showOdontogram = false,
 }: PatientDetailsSidebarProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -172,7 +175,7 @@ export function PatientDetailsSidebar({
         </SheetHeader>
 
         <Tabs defaultValue="info" className="mt-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="info">
               <User className="h-4 w-4 mr-1" />
               Informações
@@ -180,6 +183,10 @@ export function PatientDetailsSidebar({
             <TabsTrigger value="historico">
               <Calendar className="h-4 w-4 mr-1" />
               Histórico
+            </TabsTrigger>
+            <TabsTrigger value="prontuario">
+              <FileText className="h-4 w-4 mr-1" />
+              Prontuário
             </TabsTrigger>
           </TabsList>
 
@@ -465,6 +472,14 @@ export function PatientDetailsSidebar({
                 Nenhuma consulta registrada ainda.
               </div>
             )}
+          </TabsContent>
+
+          {/* ABA PRONTUÁRIO */}
+          <TabsContent value="prontuario" className="mt-4">
+            <MedicalRecordsTab
+              patientId={patient.id}
+              showOdontogram={showOdontogram}
+            />
           </TabsContent>
         </Tabs>
       </SheetContent>
