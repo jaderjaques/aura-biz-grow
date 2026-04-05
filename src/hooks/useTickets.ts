@@ -10,6 +10,8 @@ export function useTickets() {
 
   const ticketsQuery = useQuery({
     queryKey: ['tickets'],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tickets')
@@ -29,6 +31,8 @@ export function useTickets() {
 
   const categoriesQuery = useQuery({
     queryKey: ['ticket_categories'],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ticket_categories')
@@ -44,6 +48,8 @@ export function useTickets() {
 
   const quickRepliesQuery = useQuery({
     queryKey: ['quick_replies'],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quick_replies')
@@ -152,6 +158,8 @@ export function useTickets() {
 export function useTicketMessages(ticketId: string | null) {
   return useQuery({
     queryKey: ['ticket_messages', ticketId],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       if (!ticketId) return [];
       

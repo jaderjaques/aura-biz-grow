@@ -79,13 +79,31 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
     };
   }, [chatId, queryClient]);
 
-  // Polling fallback — refetch a cada 5s caso Realtime falhe
+  // Polling fallback — refetch a cada 5s caso Realtime falhe, pausa quando aba está oculta
   useEffect(() => {
-    const interval = setInterval(() => {
-      queryClient.refetchQueries({ queryKey: ["messages", chatId] });
-    }, 5000);
+    let interval: ReturnType<typeof setInterval>;
 
-    return () => clearInterval(interval);
+    const startPolling = () => {
+      interval = setInterval(() => {
+        queryClient.refetchQueries({ queryKey: ["messages", chatId] });
+      }, 5000);
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        startPolling();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    startPolling();
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [chatId, queryClient]);
 
   // Realtime chat status (ai_mode, assumed_by, last_message_preview)

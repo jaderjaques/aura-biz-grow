@@ -19,6 +19,8 @@ export function useSavedReports() {
 
   return useQuery({
     queryKey: ["saved-reports", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("saved_reports")
@@ -109,6 +111,8 @@ export function useOverviewMetrics() {
 
   return useQuery({
     queryKey: ["overview-metrics", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async (): Promise<OverviewMetrics> => {
       // Fetch leads count
       const { count: totalLeads } = await supabase
@@ -162,6 +166,8 @@ export function useSalesFunnel() {
 
   return useQuery({
     queryKey: ["sales-funnel", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async (): Promise<FunnelStage[]> => {
       const stages = ['proposta', 'negociacao', 'fechamento', 'won'];
       const result: FunnelStage[] = [];
@@ -200,6 +206,8 @@ export function useLeadSourcePerformance() {
 
   return useQuery({
     queryKey: ["lead-source-performance", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async (): Promise<LeadSourcePerformance[]> => {
       const { data: leads, error } = await supabase
         .from("leads")
@@ -237,6 +245,8 @@ export function useTeamPerformance() {
 
   return useQuery({
     queryKey: ["team-performance", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async (): Promise<TeamMemberPerformance[]> => {
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
@@ -299,6 +309,8 @@ export function useRevenueData() {
 
   return useQuery({
     queryKey: ["revenue-data", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async (): Promise<RevenueDataPoint[]> => {
       // Mock data - in production, this would aggregate from invoices
       const months = ['Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -317,6 +329,8 @@ export function useFinancialMetrics() {
 
   return useQuery({
     queryKey: ["financial-metrics", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data: customers } = await supabase
         .from("customers")
@@ -357,6 +371,8 @@ export function useMrrMovement(): { data: MrrMovement | undefined; isLoading: bo
 
   return useQuery({
     queryKey: ["mrr-movement", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async (): Promise<MrrMovement> => {
       // Mock data - would need historical MRR tracking
       return {
@@ -376,6 +392,8 @@ export function useLtvCacMetrics(): { data: LtvCacMetrics | undefined; isLoading
 
   return useQuery({
     queryKey: ["ltv-cac-metrics", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async (): Promise<LtvCacMetrics> => {
       const { data: customers } = await supabase
         .from("customers")
@@ -404,6 +422,8 @@ export function usePipelineByStage() {
 
   return useQuery({
     queryKey: ["pipeline-by-stage", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("deals")

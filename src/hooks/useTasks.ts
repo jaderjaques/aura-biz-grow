@@ -18,6 +18,8 @@ export const useTasks = (filters?: TaskFilters) => {
 
   const { data: tasks = [], isLoading, refetch } = useQuery({
     queryKey: ["tasks", filters],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       let query = supabase
         .from("tasks")
@@ -92,6 +94,8 @@ export const useTasks = (filters?: TaskFilters) => {
 
   const { data: metrics } = useQuery({
     queryKey: ["task-metrics", user?.id],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async (): Promise<TaskMetrics> => {
       const today = new Date().toISOString().split("T")[0];
 
@@ -282,6 +286,8 @@ export const useActivities = (filters?: { leadId?: string; customerId?: string }
 
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ["activities", filters],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       let query = supabase
         .from("activities")

@@ -13,6 +13,8 @@ export const useInvoices = (filters?: {
 
   const { data: invoices = [], isLoading, refetch } = useQuery({
     queryKey: ["invoices", filters],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       let query = supabase
         .from("invoices")
@@ -229,6 +231,8 @@ export const useInvoices = (filters?: {
 export const useFinancialMetrics = () => {
   return useQuery({
     queryKey: ["financial-metrics"],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async (): Promise<FinancialMetrics> => {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -291,6 +295,8 @@ export const useFinancialMetrics = () => {
 export const usePayments = (customerId?: string) => {
   return useQuery({
     queryKey: ["payments", customerId],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       let query = supabase
         .from("payments")
@@ -317,6 +323,8 @@ export const useFinancialAlerts = () => {
   
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ["financial-alerts"],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("financial_alerts")

@@ -7,6 +7,8 @@ import { ApiKey, Webhook, MessageTemplate, IntegrationLog, IntegrationSetting } 
 export function useApiKeys() {
   return useQuery({
     queryKey: ["api-keys"],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("api_keys")
@@ -119,6 +121,8 @@ export function useDeleteApiKey() {
 export function useWebhooks() {
   return useQuery({
     queryKey: ["webhooks"],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("webhooks")
@@ -219,6 +223,8 @@ export function useDeleteWebhook() {
 export function useMessageTemplates() {
   return useQuery({
     queryKey: ["message-templates"],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("message_templates")
@@ -294,6 +300,8 @@ export function useDeleteTemplate() {
 export function useIntegrationLogs(integrationType?: string) {
   return useQuery({
     queryKey: ["integration-logs", integrationType],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       let query = supabase
         .from("integration_logs")
@@ -317,6 +325,8 @@ export function useIntegrationLogs(integrationType?: string) {
 export function useIntegrationSettings() {
   return useQuery({
     queryKey: ["integration-settings"],
+    staleTime: 30000,
+    gcTime: 300000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("integration_settings")
