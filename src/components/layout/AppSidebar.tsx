@@ -26,6 +26,7 @@ import {
   HeartPulse,
   ShieldCheck,
   UserCog,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -34,6 +35,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantModule } from "@/hooks/useTenantModule";
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -215,6 +217,7 @@ function renderSection(
 function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarContentProps) {
   const { profile, isAdmin, signOut } = useAuth();
   const { isClinic } = useTenantModule();
+  const { isSuperAdmin } = useSuperAdmin();
 
   const getInitials = (name: string) => {
     return name
@@ -337,6 +340,19 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
             </div>
           )}
         </div>
+
+        {isSuperAdmin && (
+          <NavLink
+            to="/admin"
+            className={cn(
+              "flex items-center gap-2 w-full mt-1 px-3 py-2 rounded-lg text-xs font-semibold text-amber-600 hover:bg-amber-50 transition-colors",
+              collapsed && !isMobile ? "justify-center px-0" : ""
+            )}
+          >
+            <Shield className="h-4 w-4 shrink-0" />
+            {(!collapsed || isMobile) && <span>Master Admin</span>}
+          </NavLink>
+        )}
 
         <Button
           variant="ghost"

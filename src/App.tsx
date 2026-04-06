@@ -35,6 +35,11 @@ import PipelineConfig from "./pages/PipelineConfig";
 import Patients from "./pages/Patients";
 import AgendaRouter from "./pages/AgendaRouter";
 import Profissionais from "./pages/Profissionais";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminTenants from "./pages/admin/AdminTenants";
+import AdminTenantDetail from "./pages/admin/AdminTenantDetail";
+import AdminUsers from "./pages/admin/AdminUsers";
+import { SuperAdminRoute } from "./components/admin/SuperAdminRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -246,6 +251,48 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Patients />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin routes */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminRoute>
+                    <AdminDashboard />
+                  </SuperAdminRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/empresas"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminRoute>
+                    <AdminTenants />
+                  </SuperAdminRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/empresas/:id"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminRoute>
+                    <AdminTenantDetail />
+                  </SuperAdminRoute>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/usuarios"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminRoute>
+                    <AdminUsers />
+                  </SuperAdminRoute>
                 </ProtectedRoute>
               }
             />
