@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,9 +20,16 @@ import { ProfessionalWithProfile } from "@/types/professionals";
 import { PatientWithDetails } from "@/types/patients";
 import { ClinicProcedure } from "@/types/treatmentPlans";
 
+interface Consultorio {
+  id: string;
+  name: string;
+  active: boolean;
+}
+
 interface Props {
   appointment?: any;
   defaultProfessionalId?: string;
+  defaultConsultorioId?: string;
   defaultDate?: Date;
   professionals: ProfessionalWithProfile[];
   patients: PatientWithDetails[];
@@ -33,6 +40,7 @@ interface Props {
 export function ClinicAgendamentoForm({
   appointment,
   defaultProfessionalId,
+  defaultConsultorioId,
   defaultDate,
   professionals,
   patients,
@@ -47,7 +55,9 @@ export function ClinicAgendamentoForm({
     appointment?.professional_id ?? defaultProfessionalId ?? ""
   );
   const [procedureId, setProcedureId] = useState(appointment?.procedure_id ?? "");
-  const [room, setRoom] = useState(appointment?.room ?? "");
+  const [consultorioId, setConsultorioId] = useState(
+    appointment?.consultorio_id ?? defaultConsultorioId ?? ""
+  );
   const [scheduledFor, setScheduledFor] = useState(
     appointment?.scheduled_for
       ? format(new Date(appointment.scheduled_for), "yyyy-MM-dd'T'HH:mm")
@@ -59,8 +69,18 @@ export function ClinicAgendamentoForm({
   const [status, setStatus] = useState(appointment?.status ?? "scheduled");
   const [notes, setNotes] = useState(appointment?.internal_notes ?? "");
 
-  const selectedProfessional = professionals.find((p) => p.id === professionalId);
-  const availableRooms = selectedProfessional?.rooms ?? [];
+  // Fetch consultorios ativos
+  const { data: consultorios = [] } = useQuery<Consultorio[]>({
+    queryKey: ["consultorios"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("consultorios")
+        .select("id, name, active")
+        .eq("active", true)
+        .order("name");
+      return data ?? [];
+    },
+  });
 
   // Auto-fill duration from procedure
   useEffect(() => {
@@ -80,29 +100,23 @@ export function ClinicAgendamentoForm({
     }
   }, [professionalId, procedures]);
 
-  // Reset room if professional changes and room no longer available
-  useEffect(() => {
-    if (room && availableRooms.length > 0 && !availableRooms.includes(room)) {
-      setRoom("");
-    }
-  }, [professionalId]);
-
   const mutation = useMutation({
     mutationFn: async () => {
       const patient = patients.find((p) => p.id === patientId);
       const proc = procedures.find((p) => p.id === procedureId);
+      const consult = consultorios.find((c) => c.id === consultorioId);
 
       const payload: Record<string, any> = {
         patient_id: patientId || null,
         professional_id: professionalId || null,
         procedure_id: procedureId || null,
-        room: room || null,
+        consultorio_id: consultorioId || null,
+        room: consult?.name ?? null,
         scheduled_for: scheduledFor,
         duration_minutes: duration,
         status,
         internal_notes: notes || null,
         appointment_type: proc?.category ?? "consultation",
-        // For compatibility with agency calendar rendering:
         client_name: patient?.full_name ?? "",
         client_phone: patient?.phone ?? "",
         title: `${patient?.full_name ?? "Paciente"} — ${proc?.name ?? "Consulta"}`,
@@ -232,21 +246,22 @@ export function ClinicAgendamentoForm({
                 </Select>
               </div>
 
-              {availableRooms.length > 0 && (
-                <div className="col-span-2 space-y-1">
-                  <Label>Consultório</Label>
-                  <Select value={room} onValueChange={setRoom}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o consultório" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableRooms.map((r) => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              <div className="col-span-2 space-y-1">
+                <Label>Consultório</Label>
+                <Select value={consultorioId} onValueChange={setConsultorioId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={consultorios.length === 0 ? "Nenhum consultório cadastrado" : "Selecione o consultório"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">— Sem consultório —</SelectItem>
+                    {consultorios.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
