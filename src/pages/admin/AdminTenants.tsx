@@ -19,10 +19,9 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Search, Building2, MoreHorizontal, Settings, Users,
-} from "lucide-react";
+import { Search, Building2, MoreHorizontal, Settings, Plus, Users } from "lucide-react";
 import { useAdminTenants } from "@/hooks/useSuperAdmin";
+import { CreateTenantDialog } from "@/components/admin/CreateTenantDialog";
 
 const MODULE_LABELS: Record<string, string> = {
   agency: "Agência",
@@ -39,17 +38,24 @@ const MODULE_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
 export default function AdminTenants() {
   const { tenants, loading, toggleActive } = useAdminTenants();
   const navigate = useNavigate();
+  const [createOpen, setCreateOpen] = useState(false);
 
   const [search, setSearch] = useState("");
   const [moduleFilter, setModuleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const filtered = tenants.filter((t) => {
     const matchSearch =
       !search ||
       t.name.toLowerCase().includes(search.toLowerCase()) ||
-      (t.subdomain ?? "").toLowerCase().includes(search.toLowerCase());
+      (t.subdomain ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (t.email ?? "").toLowerCase().includes(search.toLowerCase());
     const matchModule = moduleFilter === "all" || t.module === moduleFilter;
-    return matchSearch && matchModule;
+    const matchStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && t.active) ||
+      (statusFilter === "inactive" && !t.active);
+    return matchSearch && matchModule && matchStatus;
   });
 
   const fmtCurrency = (v: number | null) =>
@@ -57,19 +63,25 @@ export default function AdminTenants() {
 
   const total = tenants.length;
   const active = tenants.filter((t) => t.active).length;
-  const totalUsers = tenants.reduce((s, t) => s + (t.user_count ?? 0), 0);
   const mrr = tenants
     .filter((t) => t.active && t.monthly_price)
     .reduce((s, t) => s + (t.monthly_price ?? 0), 0);
+  const totalUsers = tenants.reduce((s, t) => s + (t.user_count ?? 0), 0);
 
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Empresas</h1>
-          <p className="text-muted-foreground text-sm">
-            {total} empresa{total !== 1 ? "s" : ""} cadastrada{total !== 1 ? "s" : ""}
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Empresas</h1>
+            <p className="text-muted-foreground text-sm">
+              {total} empresa{total !== 1 ? "s" : ""} cadastrada{total !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova empresa
+          </Button>
         </div>
 
         {/* KPIs */}
@@ -77,7 +89,7 @@ export default function AdminTenants() {
           {[
             { label: "Total", value: total, color: "text-foreground" },
             { label: "Ativas", value: active, color: "text-green-600" },
-            { label: "Usuários totais", value: totalUsers, color: "text-blue-600" },
+            { label: "Inativas", value: total - active, color: "text-red-500" },
             { label: "MRR", value: fmtCurrency(mrr), color: "text-amber-600" },
           ].map((kpi) => (
             <Card key={kpi.label}>
@@ -90,13 +102,13 @@ export default function AdminTenants() {
         </div>
 
         {/* Filtros */}
-        <div className="flex gap-3">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nome ou subdomínio..."
+              placeholder="Buscar por nome, subdomínio ou e-mail..."
               className="pl-9"
             />
           </div>
@@ -109,6 +121,16 @@ export default function AdminTenants() {
               <SelectItem value="agency">Agência</SelectItem>
               <SelectItem value="clinic_dental">Clínica Odonto</SelectItem>
               <SelectItem value="clinic_aesthetics">Clínica Estética</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Ativas</SelectItem>
+              <SelectItem value="inactive">Inativas</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -130,8 +152,8 @@ export default function AdminTenants() {
                   <TableHead>Módulo</TableHead>
                   <TableHead>Plano</TableHead>
                   <TableHead>Usuários</TableHead>
-                  <TableHead>MRR</TableHead>
-                  <TableHead>Criada em</TableHead>
+                  <TableHead>Mensalidade</TableHead>
+                  <TableHead>Cadastro</TableHead>
                   <TableHead>Ativa</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
@@ -146,7 +168,10 @@ export default function AdminTenants() {
                     <TableCell>
                       <div>
                         <p className="font-medium">{t.name}</p>
-                        <p className="text-xs text-muted-foreground">{t.subdomain}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{t.subdomain}</p>
+                        {t.email && (
+                          <p className="text-xs text-muted-foreground">{t.email}</p>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -154,7 +179,7 @@ export default function AdminTenants() {
                         {MODULE_LABELS[t.module ?? "agency"]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-sm capitalize">
                       {t.plan_tier ?? "—"}
                     </TableCell>
                     <TableCell>
@@ -163,7 +188,7 @@ export default function AdminTenants() {
                         {t.user_count ?? 0}
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="text-sm font-medium">
                       {fmtCurrency(t.monthly_price)}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -187,10 +212,6 @@ export default function AdminTenants() {
                             <Settings className="mr-2 h-4 w-4" />
                             Editar configurações
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/admin/usuarios?tenant=${t.subdomain}`)}>
-                            <Users className="mr-2 h-4 w-4" />
-                            Ver usuários
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -200,6 +221,8 @@ export default function AdminTenants() {
             </Table>
           </div>
         )}
+
+        <CreateTenantDialog open={createOpen} onOpenChange={setCreateOpen} />
       </div>
     </AdminLayout>
   );

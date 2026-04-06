@@ -19,17 +19,15 @@ export interface TenantWithStats {
   user_count?: number;
 }
 
-export interface AdminUser {
-  id: string;
-  full_name: string;
-  email: string;
-  tenant_id: string;
-  role: string | null;
-  is_active: boolean;
-  is_super_admin: boolean;
-  created_at: string;
-  last_login_at: string | null;
-  tenant_name?: string;
+export interface CreateTenantInput {
+  name: string;
+  subdomain: string;
+  module: string;
+  plan_tier?: string;
+  monthly_price?: number | null;
+  email?: string;
+  whatsapp_number?: string;
+  business_segment?: string;
 }
 
 export function useSuperAdmin() {
@@ -68,6 +66,7 @@ export function useAdminTenants() {
 
       if (!tenantsRes.data) return;
 
+      // Only count users per tenant — no personal data accessed
       const userCountMap: Record<string, number> = {};
       (profilesRes.data ?? []).forEach((p) => {
         if (p.tenant_id) {
@@ -86,6 +85,33 @@ export function useAdminTenants() {
     }
   };
 
+  const createTenant = async (input: CreateTenantInput) => {
+    // Validate subdomain format (lowercase letters, numbers, hyphens)
+    if (!/^[a-z0-9-]+$/.test(input.subdomain)) {
+      throw new Error("O subdomínio deve conter apenas letras minúsculas, números e hífens.");
+    }
+
+    const { data, error } = await supabase
+      .from("tenant_config")
+      .insert({
+        name: input.name,
+        subdomain: input.subdomain,
+        module: input.module,
+        plan_tier: input.plan_tier || null,
+        monthly_price: input.monthly_price || null,
+        email: input.email || null,
+        whatsapp_number: input.whatsapp_number || null,
+        business_segment: input.business_segment || null,
+        active: true,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    await fetchAll();
+    return data;
+  };
+
   const updateTenant = async (id: string, data: Partial<TenantWithStats>) => {
     const { error } = await supabase
       .from("tenant_config")
@@ -99,57 +125,11 @@ export function useAdminTenants() {
     await updateTenant(id, { active });
   };
 
-  return { tenants, loading, updateTenant, toggleActive, refetch: fetchAll };
-}
-
-export function useAdminUsers() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [tenants, setTenants] = useState<TenantWithStats[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchAll();
-  }, []);
-
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const [usersRes, tenantsRes] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id, full_name, email, tenant_id, role, is_active, is_super_admin, created_at, last_login_at")
-          .order("created_at", { ascending: false }),
-        supabase.from("tenant_config").select("subdomain, name"),
-      ]);
-
-      const tenantNameMap: Record<string, string> = {};
-      (tenantsRes.data ?? []).forEach((t: any) => {
-        tenantNameMap[t.subdomain] = t.name;
-      });
-
-      const enriched: AdminUser[] = (usersRes.data ?? []).map((u: any) => ({
-        ...u,
-        tenant_name: tenantNameMap[u.tenant_id] ?? u.tenant_id,
-      }));
-
-      setUsers(enriched);
-      setTenants(tenantsRes.data as any ?? []);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleUserActive = async (id: string, is_active: boolean) => {
-    const { error } = await supabase.from("profiles").update({ is_active }).eq("id", id);
+  const deleteTenant = async (id: string) => {
+    const { error } = await supabase.from("tenant_config").delete().eq("id", id);
     if (error) throw error;
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, is_active } : u)));
+    setTenants((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const toggleSuperAdmin = async (id: string, is_super_admin: boolean) => {
-    const { error } = await supabase.from("profiles").update({ is_super_admin }).eq("id", id);
-    if (error) throw error;
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, is_super_admin } : u)));
-  };
-
-  return { users, tenants, loading, toggleUserActive, toggleSuperAdmin, refetch: fetchAll };
+  return { tenants, loading, createTenant, updateTenant, toggleActive, deleteTenant, refetch: fetchAll };
 }

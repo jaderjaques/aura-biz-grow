@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Building2, Users, ArrowLeft, Shield,
+  LayoutDashboard, Building2, ArrowLeft, Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/empresas", label: "Empresas", icon: Building2, exact: false },
-  { href: "/admin/usuarios", label: "Usuários", icon: Users, exact: false },
 ];
 
 function AdminNav() {
@@ -54,7 +53,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <Shield className="h-5 w-5 text-amber-400" />
             <span className="text-white font-bold text-sm tracking-wide">MASTER ADMIN</span>
           </div>
-          <p className="text-white/40 text-xs">Painel de controle global</p>
+          <p className="text-white/40 text-xs">Gestão de contratos SaaS</p>
         </div>
 
         {/* Nav */}

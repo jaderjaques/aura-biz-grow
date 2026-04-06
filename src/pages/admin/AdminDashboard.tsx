@@ -1,7 +1,7 @@
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Users, Activity, TrendingUp } from "lucide-react";
+import { Building2, Activity, TrendingUp, AlertCircle } from "lucide-react";
 import { useAdminTenants } from "@/hooks/useSuperAdmin";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,7 +25,9 @@ export default function AdminDashboard() {
 
   const active = tenants.filter((t) => t.active);
   const inactive = tenants.filter((t) => !t.active);
-  const totalUsers = tenants.reduce((sum, t) => sum + (t.user_count ?? 0), 0);
+  const mrr = active
+    .filter((t) => t.monthly_price)
+    .reduce((sum, t) => sum + (t.monthly_price ?? 0), 0);
 
   const byModule = tenants.reduce<Record<string, number>>((acc, t) => {
     const mod = t.module ?? "agency";
@@ -39,8 +41,8 @@ export default function AdminDashboard() {
     <AdminLayout>
       <div className="p-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard Master</h1>
-          <p className="text-muted-foreground text-sm">Visão geral de todas as empresas</p>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground text-sm">Visão geral dos contratos ativos</p>
         </div>
 
         {/* KPIs */}
@@ -59,16 +61,16 @@ export default function AdminDashboard() {
               <Activity className="h-8 w-8 text-green-500" />
               <div>
                 <p className="text-2xl font-bold text-green-600">{active.length}</p>
-                <p className="text-xs text-muted-foreground">Empresas ativas</p>
+                <p className="text-xs text-muted-foreground">Contratos ativos</p>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 pb-4 flex items-center gap-3">
-              <Users className="h-8 w-8 text-blue-500" />
+              <AlertCircle className="h-8 w-8 text-red-400" />
               <div>
-                <p className="text-2xl font-bold">{totalUsers}</p>
-                <p className="text-xs text-muted-foreground">Usuários totais</p>
+                <p className="text-2xl font-bold text-red-500">{inactive.length}</p>
+                <p className="text-xs text-muted-foreground">Inativos / Inadimplentes</p>
               </div>
             </CardContent>
           </Card>
@@ -77,12 +79,9 @@ export default function AdminDashboard() {
               <TrendingUp className="h-8 w-8 text-amber-500" />
               <div>
                 <p className="text-2xl font-bold">
-                  {tenants
-                    .filter((t) => t.monthly_price)
-                    .reduce((sum, t) => sum + (t.monthly_price ?? 0), 0)
-                    .toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                  {mrr.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                 </p>
-                <p className="text-xs text-muted-foreground">MRR total</p>
+                <p className="text-xs text-muted-foreground">MRR (contratos ativos)</p>
               </div>
             </CardContent>
           </Card>
@@ -92,7 +91,7 @@ export default function AdminDashboard() {
           {/* Por módulo */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Empresas por Módulo</CardTitle>
+              <CardTitle className="text-base">Contratos por Módulo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {Object.entries(byModule).map(([mod, count]) => (
@@ -130,7 +129,7 @@ export default function AdminDashboard() {
                 <p className="text-sm text-muted-foreground">Carregando...</p>
               ) : recent.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  Nenhuma empresa.
+                  Nenhuma empresa cadastrada.
                 </p>
               ) : (
                 recent.map((t) => (
@@ -148,9 +147,7 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <p className="text-sm font-medium">{t.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t.user_count ?? 0} usuário{(t.user_count ?? 0) !== 1 ? "s" : ""}
-                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">{t.subdomain}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

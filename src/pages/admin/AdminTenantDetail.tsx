@@ -13,13 +13,12 @@ import {
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Table, TableBody, TableCell, TableHead,
-  TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
-  ArrowLeft, Save, Users, Shield, CheckCircle, XCircle,
-} from "lucide-react";
-import { useAdminTenants, useAdminUsers, TenantWithStats, AdminUser } from "@/hooks/useSuperAdmin";
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { useAdminTenants, TenantWithStats } from "@/hooks/useSuperAdmin";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -27,11 +26,9 @@ import { ptBR } from "date-fns/locale";
 export default function AdminTenantDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tenants, updateTenant, loading: tenantsLoading } = useAdminTenants();
-  const { users, toggleUserActive } = useAdminUsers();
+  const { tenants, updateTenant, deleteTenant, loading: tenantsLoading } = useAdminTenants();
 
   const tenant = tenants.find((t) => t.id === id);
-  const tenantUsers = users.filter((u) => u.tenant_id === tenant?.subdomain);
 
   const [form, setForm] = useState<Partial<TenantWithStats>>({});
   const [saving, setSaving] = useState(false);
@@ -60,11 +57,22 @@ export default function AdminTenantDetail() {
     setSaving(true);
     try {
       await updateTenant(id, form);
-      toast.success("Empresa atualizada!");
+      toast.success("Empresa atualizada com sucesso!");
     } catch {
-      toast.error("Erro ao salvar");
+      toast.error("Erro ao salvar alterações.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    try {
+      await deleteTenant(id);
+      toast.success("Empresa removida.");
+      navigate("/admin/empresas");
+    } catch {
+      toast.error("Erro ao remover empresa.");
     }
   };
 
@@ -102,47 +110,85 @@ export default function AdminTenantDetail() {
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold">{tenant.name}</h1>
-            <p className="text-muted-foreground text-sm">{tenant.subdomain}</p>
+            <p className="text-muted-foreground text-sm font-mono">{tenant.subdomain}</p>
           </div>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? "Salvando..." : "Salvar alterações"}
-          </Button>
+          <div className="flex gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="icon" className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remover empresa?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. A empresa <strong>{tenant.name}</strong> e todas as suas configurações serão removidas permanentemente.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive hover:bg-destructive/90"
+                    onClick={handleDelete}
+                  >
+                    Remover
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Configurações */}
           <div className="lg:col-span-2 space-y-5">
+            {/* Dados da empresa */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Configurações Gerais</CardTitle>
+                <CardTitle className="text-base">Dados da Empresa</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
+                  <div className="col-span-2 space-y-1">
                     <Label>Nome da empresa</Label>
                     <Input value={form.name ?? ""} onChange={(e) => set("name", e.target.value)} />
                   </div>
                   <div className="space-y-1">
-                    <Label>Subdomínio (tenant ID)</Label>
-                    <Input value={form.subdomain ?? ""} onChange={(e) => set("subdomain", e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>E-mail de contato</Label>
-                    <Input value={form.email ?? ""} onChange={(e) => set("email", e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>WhatsApp</Label>
-                    <Input value={form.whatsapp_number ?? ""} onChange={(e) => set("whatsapp_number", e.target.value)} />
+                    <Label>Subdomínio (ID do tenant)</Label>
+                    <Input
+                      value={form.subdomain ?? ""}
+                      onChange={(e) => set("subdomain", e.target.value)}
+                      className="font-mono text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">Identificador único. Altere com cuidado.</p>
                   </div>
                   <div className="space-y-1">
                     <Label>Segmento</Label>
                     <Input value={form.business_segment ?? ""} onChange={(e) => set("business_segment", e.target.value)} />
                   </div>
+                  <div className="space-y-1">
+                    <Label>E-mail de contato</Label>
+                    <Input type="email" value={form.email ?? ""} onChange={(e) => set("email", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>WhatsApp</Label>
+                    <Input value={form.whatsapp_number ?? ""} onChange={(e) => set("whatsapp_number", e.target.value)} />
+                  </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <Separator />
-
+            {/* Contrato / Plano */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Contrato & Acesso</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <Label>Módulo</Label>
@@ -176,70 +222,23 @@ export default function AdminTenantDetail() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="block mb-2">Status</Label>
-                    <div className="flex items-center gap-2">
+                    <Label className="block mb-2">Status do contrato</Label>
+                    <div className="flex items-center gap-3">
                       <Switch checked={form.active ?? true} onCheckedChange={(v) => set("active", v)} />
-                      <span className="text-sm">{form.active ? "Ativa" : "Inativa"}</span>
+                      <div>
+                        <span className="text-sm font-medium">{form.active ? "Ativa" : "Inativa"}</span>
+                        {!form.active && (
+                          <p className="text-xs text-muted-foreground">Acesso bloqueado para os usuários desta empresa</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Usuários da empresa */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Usuários ({tenantUsers.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {tenantUsers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-6">
-                    Nenhum usuário nesta empresa.
-                  </p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Perfil</TableHead>
-                        <TableHead>Ativo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tenantUsers.map((u) => (
-                        <TableRow key={u.id}>
-                          <TableCell className="font-medium">{u.full_name}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-                          <TableCell>
-                            {u.is_super_admin ? (
-                              <Badge variant="destructive" className="text-xs gap-1">
-                                <Shield className="h-3 w-3" />
-                                Super Admin
-                              </Badge>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">{u.role ?? "—"}</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Switch
-                              checked={u.is_active}
-                              onCheckedChange={(v) => toggleUserActive(u.id, v)}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
           </div>
 
-          {/* Sidebar de stats */}
+          {/* Sidebar de resumo */}
           <div className="space-y-4">
             <Card>
               <CardHeader>
@@ -252,30 +251,39 @@ export default function AdminTenantDetail() {
                     {tenant.active ? "Ativa" : "Inativa"}
                   </Badge>
                 </div>
+                <Separator />
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Módulo</span>
                   <span className="font-medium capitalize">{tenant.module ?? "agency"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Plano</span>
-                  <span>{tenant.plan_tier ?? "—"}</span>
+                  <span className="capitalize">{tenant.plan_tier ?? "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Mensalidade</span>
-                  <span className="font-semibold">
+                  <span className="font-semibold text-green-600">
                     {tenant.monthly_price
                       ? tenant.monthly_price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
                       : "—"}
                   </span>
                 </div>
+                <Separator />
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Usuários</span>
+                  <span className="text-muted-foreground">Usuários ativos</span>
                   <span>{tenant.user_count ?? 0}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Criada em</span>
+                  <span className="text-muted-foreground">Cadastrada em</span>
                   <span>{format(new Date(tenant.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-amber-200 bg-amber-50">
+              <CardContent className="pt-4 pb-4 text-xs text-amber-800 space-y-1">
+                <p className="font-semibold">⚠️ Bloquear acesso</p>
+                <p>Desativar o status do contrato impede que todos os usuários desta empresa façam login no sistema.</p>
               </CardContent>
             </Card>
           </div>
