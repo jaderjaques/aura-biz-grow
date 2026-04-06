@@ -10,6 +10,7 @@ interface Profile {
   phone: string | null;
   avatar_url: string | null;
   role_id: string | null;
+  tenant_id: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -57,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         phone,
         avatar_url,
         role_id,
+        tenant_id,
         is_active,
         created_at,
         updated_at,
