@@ -35,6 +35,7 @@ import PipelineConfig from "./pages/PipelineConfig";
 import Patients from "./pages/Patients";
 import AgendaRouter from "./pages/AgendaRouter";
 import Profissionais from "./pages/Profissionais";
+import Consultorios from "./pages/Consultorios";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminTenants from "./pages/admin/AdminTenants";
 import AdminTenantDetail from "./pages/admin/AdminTenantDetail";
@@ -250,6 +251,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Patients />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/consultorios"
+              element={
+                <ProtectedRoute>
+                  <Consultorios />
                 </ProtectedRoute>
               }
             />

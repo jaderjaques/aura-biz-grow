@@ -84,7 +84,6 @@ const configItems: NavItem[] = [
 ];
 
 const clinicConfigItems: NavItem[] = [
-  { title: "Profissionais", href: "/profissionais", icon: UserCog },
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
   { title: "Geral", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
@@ -100,15 +99,16 @@ const integracoesItems: NavItem[] = [
 const clinicAtendimentoItems: NavItem[] = [
   { title: "Agenda", href: "/agenda", icon: CalendarDays },
   { title: "Pacientes", href: "/pacientes", icon: HeartPulse },
+  { title: "Profissionais", href: "/profissionais", icon: UserCog },
+  { title: "Consultórios", href: "/consultorios", icon: Stethoscope },
   { title: "Tarefas", href: "/tarefas", icon: ClipboardList },
 ];
 
 const clinicComercialItems: NavItem[] = [
   { title: "Orçamentos", href: "/propostas", icon: FileText },
-  { title: "Convênios", href: "/convenios", icon: ShieldCheck },
 ];
 
-const clinicProcedimentosItem: NavItem = { title: "Procedimentos", href: "/produtos", icon: Package };
+const clinicServicosItem: NavItem = { title: "Serviços", href: "/produtos", icon: Package };
 
 const clinicFinanceiroItems: NavItem[] = [
   { title: "Visão Geral", href: "/financeiro", icon: DollarSign },
@@ -271,9 +271,9 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
             {/* Comercial (Clínica) */}
             {renderSection(FileText, "Comercial", clinicComercialItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
 
-            {/* Procedimentos */}
+            {/* Serviços */}
             <NavItemLink
-              item={clinicProcedimentosItem}
+              item={clinicServicosItem}
               collapsed={collapsed && !isMobile}
               isMobile={!!isMobile}
             />
