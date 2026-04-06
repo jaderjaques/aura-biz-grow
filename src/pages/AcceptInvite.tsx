@@ -137,12 +137,12 @@ export default function AcceptInvite() {
         return;
       }
 
-      // 2. Accept invite (update profile with new auth user id)
+      // 2. Accept invite — passa o auth_user_id para o profile ter o id correto
       const { data: acceptResult, error: acceptError } = await supabase.rpc(
         "accept_invite",
         {
-          token_value: token,
-          auth_user_id: authData.user.id,
+          p_token: token,
+          p_auth_user_id: authData.user.id,
         }
       );
 
