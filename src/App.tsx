@@ -12,6 +12,7 @@ import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import Leads from "./pages/Leads";
 import Deals from "./pages/Deals";
+import PropostasRouter from "./pages/PropostasRouter";
 import Products from "./pages/Products";
 import Customers from "./pages/Customers";
 import FinancialDashboard from "./pages/FinancialDashboard";
@@ -133,7 +134,7 @@ const App = () => (
               path="/propostas"
               element={
                 <ProtectedRoute>
-                  <Deals />
+                  <PropostasRouter />
                 </ProtectedRoute>
               }
             />
