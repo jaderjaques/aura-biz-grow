@@ -52,12 +52,21 @@ export function InviteTenantUserDialog({ open, onOpenChange, tenantId, tenantNam
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
 
+      // Busca o role "Administrador" para definir como padrão do primeiro usuário
+      const { data: roleData } = await supabase
+        .from("roles")
+        .select("id")
+        .eq("name", "Administrador")
+        .single();
+
       const { error } = await supabase.from("profiles").insert({
         id: crypto.randomUUID(),
         full_name: form.fullName,
         email: form.email,
         phone: form.phone || null,
         tenant_id: tenantId,
+        role_id: roleData?.id ?? null,
+        role: "admin",
         invited_by: profile?.id,
         invite_token: inviteToken,
         invite_sent_at: new Date().toISOString(),
