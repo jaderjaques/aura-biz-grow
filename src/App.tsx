@@ -33,6 +33,8 @@ import GoogleCallbackPage from "./pages/GoogleCallback";
 import Relatorios from "./pages/Relatorios";
 import PipelineConfig from "./pages/PipelineConfig";
 import Patients from "./pages/Patients";
+import AgendaRouter from "./pages/AgendaRouter";
+import Profissionais from "./pages/Profissionais";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -190,7 +192,7 @@ const App = () => (
               path="/agenda"
               element={
                 <ProtectedRoute>
-                  <Agenda />
+                  <AgendaRouter />
                 </ProtectedRoute>
               }
             />
@@ -231,6 +233,14 @@ const App = () => (
               element={<GoogleCallbackPage />}
             />
             
+            <Route
+              path="/profissionais"
+              element={
+                <ProtectedRoute>
+                  <Profissionais />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/pacientes"
               element={

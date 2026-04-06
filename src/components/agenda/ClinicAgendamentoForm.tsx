@@ -1,0 +1,336 @@
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import {
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { User, Calendar, Stethoscope } from "lucide-react";
+import { ProfessionalWithProfile } from "@/types/professionals";
+import { PatientWithDetails } from "@/types/patients";
+import { ClinicProcedure } from "@/types/treatmentPlans";
+
+interface Props {
+  appointment?: any;
+  defaultProfessionalId?: string;
+  defaultDate?: Date;
+  professionals: ProfessionalWithProfile[];
+  patients: PatientWithDetails[];
+  procedures: ClinicProcedure[];
+  onClose: () => void;
+}
+
+export function ClinicAgendamentoForm({
+  appointment,
+  defaultProfessionalId,
+  defaultDate,
+  professionals,
+  patients,
+  procedures,
+  onClose,
+}: Props) {
+  const queryClient = useQueryClient();
+  const isEdit = !!appointment;
+
+  const [patientId, setPatientId] = useState(appointment?.patient_id ?? "");
+  const [professionalId, setProfessionalId] = useState(
+    appointment?.professional_id ?? defaultProfessionalId ?? ""
+  );
+  const [procedureId, setProcedureId] = useState(appointment?.procedure_id ?? "");
+  const [room, setRoom] = useState(appointment?.room ?? "");
+  const [scheduledFor, setScheduledFor] = useState(
+    appointment?.scheduled_for
+      ? format(new Date(appointment.scheduled_for), "yyyy-MM-dd'T'HH:mm")
+      : defaultDate
+      ? format(defaultDate, "yyyy-MM-dd'T'HH:mm")
+      : ""
+  );
+  const [duration, setDuration] = useState(appointment?.duration_minutes ?? 60);
+  const [status, setStatus] = useState(appointment?.status ?? "scheduled");
+  const [notes, setNotes] = useState(appointment?.internal_notes ?? "");
+
+  const selectedProfessional = professionals.find((p) => p.id === professionalId);
+  const availableRooms = selectedProfessional?.rooms ?? [];
+
+  // Auto-fill duration from procedure
+  useEffect(() => {
+    if (procedureId) {
+      const proc = procedures.find((p) => p.id === procedureId);
+      if (proc?.duration_minutes) setDuration(proc.duration_minutes);
+    }
+  }, [procedureId, procedures]);
+
+  // Auto-fill duration from professional default when no procedure
+  useEffect(() => {
+    if (!procedureId && professionalId) {
+      const prof = professionals.find((p) => p.id === professionalId);
+      if (prof?.default_appointment_duration) {
+        setDuration(prof.default_appointment_duration);
+      }
+    }
+  }, [professionalId, procedures]);
+
+  // Reset room if professional changes and room no longer available
+  useEffect(() => {
+    if (room && availableRooms.length > 0 && !availableRooms.includes(room)) {
+      setRoom("");
+    }
+  }, [professionalId]);
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const patient = patients.find((p) => p.id === patientId);
+      const proc = procedures.find((p) => p.id === procedureId);
+
+      const payload: Record<string, any> = {
+        patient_id: patientId || null,
+        professional_id: professionalId || null,
+        procedure_id: procedureId || null,
+        room: room || null,
+        scheduled_for: scheduledFor,
+        duration_minutes: duration,
+        status,
+        internal_notes: notes || null,
+        appointment_type: proc?.category ?? "consultation",
+        // For compatibility with agency calendar rendering:
+        client_name: patient?.full_name ?? "",
+        client_phone: patient?.phone ?? "",
+        title: `${patient?.full_name ?? "Paciente"} — ${proc?.name ?? "Consulta"}`,
+      };
+
+      if (isEdit) {
+        const { error } = await supabase
+          .from("appointments")
+          .update(payload)
+          .eq("id", appointment.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("appointments")
+          .insert([payload as any]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinic-appointments"] });
+      toast.success(isEdit ? "Agendamento atualizado!" : "Agendamento criado!");
+      onClose();
+    },
+    onError: () => toast.error("Erro ao salvar agendamento"),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("appointments")
+        .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+        .eq("id", appointment.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinic-appointments"] });
+      toast.success("Agendamento cancelado!");
+      onClose();
+    },
+  });
+
+  return (
+    <Dialog open onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {isEdit ? "Editar Agendamento" : "Novo Agendamento"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-5 mt-2">
+          {/* Paciente */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <User className="h-4 w-4" />
+              Paciente
+            </div>
+            <Separator />
+            <div className="space-y-1">
+              <Label>Paciente *</Label>
+              <Select value={patientId} onValueChange={setPatientId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o paciente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.full_name}
+                      {p.phone && (
+                        <span className="text-muted-foreground ml-2 text-xs">{p.phone}</span>
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Consulta */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Stethoscope className="h-4 w-4" />
+              Consulta
+            </div>
+            <Separator />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 space-y-1">
+                <Label>Profissional *</Label>
+                <Select value={professionalId} onValueChange={setProfessionalId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o profissional" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {professionals.filter((p) => p.active).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.profile?.full_name ?? "Profissional"}
+                        {p.license_number && (
+                          <span className="text-muted-foreground ml-2 text-xs">
+                            {p.license_type} {p.license_number}
+                          </span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="col-span-2 space-y-1">
+                <Label>Procedimento (opcional)</Label>
+                <Select value={procedureId} onValueChange={setProcedureId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o procedimento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">— Consulta geral —</SelectItem>
+                    {procedures.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                        {p.duration_minutes && (
+                          <span className="text-muted-foreground ml-2 text-xs">
+                            {p.duration_minutes} min
+                          </span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {availableRooms.length > 0 && (
+                <div className="col-span-2 space-y-1">
+                  <Label>Consultório</Label>
+                  <Select value={room} onValueChange={setRoom}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o consultório" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableRooms.map((r) => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Data/hora */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Calendar className="h-4 w-4" />
+              Data e Horário
+            </div>
+            <Separator />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Data e hora *</Label>
+                <Input
+                  type="datetime-local"
+                  value={scheduledFor}
+                  onChange={(e) => setScheduledFor(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Duração (min)</Label>
+                <Input
+                  type="number"
+                  min={15}
+                  step={15}
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Status</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Agendado</SelectItem>
+                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                    <SelectItem value="in_progress">Em atendimento</SelectItem>
+                    <SelectItem value="completed">Concluído</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                    <SelectItem value="no_show">Não compareceu</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Notas */}
+          <div className="space-y-1">
+            <Label>Observações internas</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Anotações sobre a consulta..."
+              rows={3}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-4 border-t mt-4">
+          {isEdit && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={() => {
+                if (confirm("Cancelar este agendamento?")) cancelMutation.mutate();
+              }}
+              disabled={cancelMutation.isPending}
+            >
+              Cancelar Agendamento
+            </Button>
+          )}
+          <div className="flex gap-2 ml-auto">
+            <Button variant="outline" onClick={onClose}>Fechar</Button>
+            <Button
+              onClick={() => mutation.mutate()}
+              disabled={mutation.isPending || !patientId || !professionalId || !scheduledFor}
+            >
+              {mutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -25,6 +25,7 @@ import {
   Stethoscope,
   HeartPulse,
   ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -77,6 +78,12 @@ const vendasItems: NavItem[] = [
 const configItems: NavItem[] = [
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
   { title: "Pipeline", href: "/configuracoes/pipeline", icon: GitBranch, adminOnly: true },
+  { title: "Geral", href: "/configuracoes", icon: Settings, adminOnly: true },
+];
+
+const clinicConfigItems: NavItem[] = [
+  { title: "Profissionais", href: "/profissionais", icon: UserCog },
+  { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
   { title: "Geral", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
 
@@ -290,8 +297,16 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
 
         <Separator className="my-2" />
 
-        {/* Configurações e Integrações: iguais */}
-        {renderSection(Settings, "Configurações", configItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+        {/* Configurações */}
+        {renderSection(
+          Settings,
+          "Configurações",
+          isClinic ? clinicConfigItems : configItems,
+          !!isAdmin,
+          collapsed && !isMobile,
+          !!isMobile
+        )}
+        {/* Integrações */}
         {renderSection(Plug, "Integrações", integracoesItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
       </nav>
 
