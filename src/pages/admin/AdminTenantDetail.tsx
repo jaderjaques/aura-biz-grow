@@ -17,8 +17,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Trash2, UserPlus } from "lucide-react";
 import { useAdminTenants, TenantWithStats } from "@/hooks/useSuperAdmin";
+import { InviteTenantUserDialog } from "@/components/admin/InviteTenantUserDialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -32,6 +33,7 @@ export default function AdminTenantDetail() {
 
   const [form, setForm] = useState<Partial<TenantWithStats>>({});
   const [saving, setSaving] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
     if (tenant) {
@@ -113,6 +115,10 @@ export default function AdminTenantDetail() {
             <p className="text-muted-foreground text-sm font-mono">{tenant.subdomain}</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setInviteOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Convidar usuário
+            </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="icon" className="text-destructive hover:text-destructive">
@@ -289,6 +295,13 @@ export default function AdminTenantDetail() {
           </div>
         </div>
       </div>
+
+      <InviteTenantUserDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        tenantId={tenant.subdomain}
+        tenantName={tenant.name}
+      />
     </AdminLayout>
   );
 }
