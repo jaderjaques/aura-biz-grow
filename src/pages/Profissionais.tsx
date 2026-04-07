@@ -226,13 +226,18 @@ export default function Profissionais() {
         )}
       </div>
 
-      <ProfessionalDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        professional={editing}
-        availableProfiles={unlinkedProfiles}
-        onSave={handleSave}
-      />
+      {dialogOpen && (
+        <ProfessionalDialog
+          open={dialogOpen}
+          onOpenChange={(v) => {
+            setDialogOpen(v);
+            if (!v) setEditing(null);
+          }}
+          professional={editing}
+          availableProfiles={unlinkedProfiles}
+          onSave={handleSave}
+        />
+      )}
     </AppLayout>
   );
 }

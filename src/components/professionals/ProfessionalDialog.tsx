@@ -40,10 +40,10 @@ export function ProfessionalDialog({
 }: Props) {
   const isEdit = !!professional;
 
-  const [profileId, setProfileId] = useState(professional?.profile_id ?? "");
+  const [profileId, setProfileId] = useState(professional?.profile_id ?? "none");
   const [licenseType, setLicenseType] = useState(professional?.license_type ?? "CRO");
   const [licenseNumber, setLicenseNumber] = useState(professional?.license_number ?? "");
-  const [licenseState, setLicenseState] = useState(professional?.license_state ?? "");
+  const [licenseState, setLicenseState] = useState(professional?.license_state ?? "none");
   const [specialties, setSpecialties] = useState<string[]>(professional?.specialties ?? []);
   const [specialtyInput, setSpecialtyInput] = useState("");
   const [rooms, setRooms] = useState<string[]>(professional?.rooms ?? []);
@@ -56,10 +56,10 @@ export function ProfessionalDialog({
 
   useEffect(() => {
     if (professional) {
-      setProfileId(professional.profile_id ?? "");
+      setProfileId(professional.profile_id ?? "none");
       setLicenseType(professional.license_type ?? "CRO");
       setLicenseNumber(professional.license_number ?? "");
-      setLicenseState(professional.license_state ?? "");
+      setLicenseState(professional.license_state ?? "none");
       setSpecialties(professional.specialties ?? []);
       setRooms(professional.rooms ?? []);
       setDuration(professional.default_appointment_duration ?? 60);
@@ -94,10 +94,10 @@ export function ProfessionalDialog({
     setSaving(true);
     try {
       await onSave({
-        profile_id: profileId || null,
+        profile_id: profileId === "none" ? null : profileId || null,
         license_type: licenseType || null,
         license_number: licenseNumber || null,
-        license_state: licenseState || null,
+        license_state: licenseState === "none" ? null : licenseState || null,
         specialties: specialties.length > 0 ? specialties : null,
         rooms: rooms.length > 0 ? rooms : null,
         default_appointment_duration: duration,
@@ -135,7 +135,7 @@ export function ProfessionalDialog({
                   <SelectValue placeholder="Selecione um usuário cadastrado..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">— Nenhum (profissional externo) —</SelectItem>
+                  <SelectItem value="none">— Nenhum (profissional externo) —</SelectItem>
                   {availableProfiles.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.full_name} — {p.email}
@@ -181,6 +181,7 @@ export function ProfessionalDialog({
                 <Select value={licenseState} onValueChange={setLicenseState}>
                   <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">—</SelectItem>
                     {BR_STATES.map((s) => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}
