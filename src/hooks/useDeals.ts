@@ -1,282 +1,172 @@
-import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Deal, DealWithDetails, DealProduct, SelectedProduct } from "@/types/products";
+import { Deal, DealWithDetails, SelectedProduct } from "@/types/products";
+
+const DEALS_KEY = ["deals"];
+
+// ── query helper ──────────────────────────────────────────────────────────────
+
+async function fetchDealsQuery(): Promise<DealWithDetails[]> {
+  const { data, error } = await supabase
+    .from("deals")
+    .select(`
+      *,
+      assigned_user:profiles!deals_assigned_to_fkey(id, full_name, avatar_url),
+      deal_products(*, product:products(*))
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  const dealsData = data || [];
+  const leadIds = [...new Set(dealsData.map(d => d.lead_id).filter(Boolean))] as string[];
+
+  let leadsMap: Record<string, any> = {};
+  if (leadIds.length > 0) {
+    const { data: leadsData } = await supabase
+      .from("leads")
+      .select("id, company_name, trading_name, cnpj, segment, contact_name, position, phone, email")
+      .in("id", leadIds);
+    if (leadsData) leadsMap = Object.fromEntries(leadsData.map(l => [l.id, l]));
+  }
+
+  return dealsData.map(deal => ({
+    ...deal,
+    lead: deal.lead_id ? leadsMap[deal.lead_id] || null : null,
+  })) as DealWithDetails[];
+}
+
+// ── hook ──────────────────────────────────────────────────────────────────────
 
 export function useDeals() {
-  const [deals, setDeals] = useState<DealWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const fetchDeals = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("deals")
-        .select(`
-          *,
-          assigned_user:profiles!deals_assigned_to_fkey(id, full_name, avatar_url),
-          deal_products(*, product:products(*))
-        `)
-        .order("created_at", { ascending: false });
+  const { data: deals = [], isLoading: loading } = useQuery<DealWithDetails[]>({
+    queryKey: DEALS_KEY,
+    queryFn: fetchDealsQuery,
+    staleTime: 3 * 60_000,
+  });
 
-      if (error) throw error;
+  const invalidate  = () => queryClient.invalidateQueries({ queryKey: DEALS_KEY });
+  const fetchDeals  = () => invalidate();
 
-      // Fetch lead data separately since FK was removed
-      const dealsData = data || [];
-      const leadIds = [...new Set(dealsData.map(d => d.lead_id).filter(Boolean))] as string[];
-      
-      let leadsMap: Record<string, any> = {};
-      if (leadIds.length > 0) {
-        const { data: leadsData } = await supabase
-          .from("leads")
-          .select("id, company_name, trading_name, cnpj, segment, contact_name, position, phone, email")
-          .in("id", leadIds);
-        
-        if (leadsData) {
-          leadsMap = Object.fromEntries(leadsData.map(l => [l.id, l]));
-        }
-      }
-
-      const dealsWithLeads = dealsData.map(deal => ({
-        ...deal,
-        lead: deal.lead_id ? leadsMap[deal.lead_id] || null : null,
-      }));
-
-      setDeals(dealsWithLeads as DealWithDetails[] || []);
-    } catch (error: any) {
-      console.error("Error fetching deals:", error);
-      toast({
-        title: "Erro ao carregar propostas",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDeals();
-  }, []);
-
-  const createDeal = async (
-    dealData: Partial<Deal>,
-    products: SelectedProduct[]
-  ) => {
-    try {
+  // ── Criar ────────────────────────────────────────────────────────────────
+  const createMutation = useMutation({
+    mutationFn: async ({ dealData, products }: { dealData: Partial<Deal>; products: SelectedProduct[] }) => {
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Calculate totals from products
-      let setupValue = 0;
-      let recurringValue = 0;
-      let discountTotal = 0;
-
+      let setupValue = 0, recurringValue = 0, discountTotal = 0;
       products.forEach((p) => {
-        const lineTotal = p.quantity * p.unit_price;
+        const lineTotal   = p.quantity * p.unit_price;
         const lineDiscount = p.discount_amount || (lineTotal * (p.discount_percent || 0)) / 100;
         discountTotal += lineDiscount;
-
-        const isRecurring = p.product.is_recurring;
-        const type = p.product.type;
-
-        if (type === "setup") {
-          setupValue += lineTotal - lineDiscount;
-        } else if (isRecurring || type === "monthly") {
-          recurringValue += lineTotal - lineDiscount;
-        } else {
-          setupValue += lineTotal - lineDiscount;
-        }
+        if (p.product.type === "setup" || !p.product.is_recurring) setupValue    += lineTotal - lineDiscount;
+        else                                                         recurringValue += lineTotal - lineDiscount;
       });
 
-      const totalValue = setupValue + recurringValue;
-
-      // Create deal
       const { data: deal, error: dealError } = await supabase
         .from("deals")
         .insert({
-          ...dealData,
-          stage: "proposta",
-          status: "open",
-          total_value: totalValue,
-          setup_value: setupValue,
-          recurring_value: recurringValue,
+          ...dealData, stage: "proposta", status: "open",
+          total_value: setupValue + recurringValue,
+          setup_value: setupValue, recurring_value: recurringValue,
           discount_total: discountTotal,
-          created_by: user?.id,
-          assigned_to: dealData.assigned_to || user?.id,
+          created_by: user?.id, assigned_to: dealData.assigned_to || user?.id,
         } as any)
-        .select()
-        .single();
-
+        .select().single();
       if (dealError) throw dealError;
 
-      // Add products to deal
       if (products.length > 0) {
-        const dealProducts = products.map((p) => ({
-          deal_id: deal.id,
-          product_id: p.product.id,
-          quantity: p.quantity,
-          unit_price: p.unit_price,
-          discount_percent: p.discount_percent,
-          discount_amount: p.discount_amount,
-        }));
-
-        const { error: productsError } = await supabase
-          .from("deal_products")
-          .insert(dealProducts as any);
-
-        if (productsError) throw productsError;
+        await supabase.from("deal_products").insert(
+          products.map(p => ({
+            deal_id: deal.id, product_id: p.product.id,
+            quantity: p.quantity, unit_price: p.unit_price,
+            discount_percent: p.discount_percent, discount_amount: p.discount_amount,
+          })) as any
+        );
       }
-
-      toast({
-        title: "Proposta criada!",
-        description: `${deal.deal_number} foi criada com sucesso`,
-      });
-
-      await fetchDeals();
       return deal;
-    } catch (error: any) {
-      console.error("Error creating deal:", error);
-      toast({
-        title: "Erro ao criar proposta",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
+    },
+    onSuccess: (deal) => {
+      toast({ title: "Proposta criada!", description: `${deal.deal_number} foi criada com sucesso` });
+      invalidate();
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro ao criar proposta", description: error.message, variant: "destructive" });
+    },
+  });
 
-  const updateDeal = async (id: string, dealData: Partial<Deal>) => {
-    try {
-      const { data, error } = await supabase
-        .from("deals")
-        .update(dealData)
-        .eq("id", id)
-        .select()
-        .single();
+  const createDeal = (dealData: Partial<Deal>, products: SelectedProduct[]) =>
+    createMutation.mutateAsync({ dealData, products });
 
+  // ── Atualizar ────────────────────────────────────────────────────────────
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Deal> }) => {
+      const { data: updated, error } = await supabase.from("deals").update(data).eq("id", id).select().single();
       if (error) throw error;
+      return updated;
+    },
+    onSuccess: () => {
+      toast({ title: "Proposta atualizada!" });
+      invalidate();
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro ao atualizar proposta", description: error.message, variant: "destructive" });
+    },
+  });
 
-      toast({
-        title: "Proposta atualizada!",
-      });
+  const updateDeal = (id: string, data: Partial<Deal>) =>
+    updateMutation.mutateAsync({ id, data });
 
-      await fetchDeals();
-      return data;
-    } catch (error: any) {
-      console.error("Error updating deal:", error);
-      toast({
-        title: "Erro ao atualizar proposta",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
+  // ── Ganhar / Perder / Deletar ─────────────────────────────────────────────
   const markAsWon = async (id: string) => {
-    try {
-      await updateDeal(id, {
-        status: "won",
-        stage: "ganho",
-        actual_close_date: new Date().toISOString().split("T")[0],
-        closed_at: new Date().toISOString(),
-        probability: 100,
-      });
-
-      toast({
-        title: "🎉 Proposta ganha!",
-        description: "A proposta foi marcada como ganha",
-      });
-    } catch (error) {
-      // Error already handled
-    }
+    await updateDeal(id, { status: "won", stage: "ganho", actual_close_date: new Date().toISOString().split("T")[0], closed_at: new Date().toISOString(), probability: 100 });
+    toast({ title: "🎉 Proposta ganha!", description: "A proposta foi marcada como ganha" });
   };
 
   const markAsLost = async (id: string, reason?: string) => {
-    try {
-      await updateDeal(id, {
-        status: "lost",
-        stage: "perdido",
-        actual_close_date: new Date().toISOString().split("T")[0],
-        closed_at: new Date().toISOString(),
-        probability: 0,
-        lost_reason: reason,
-      });
-
-      toast({
-        title: "Proposta perdida",
-        description: "A proposta foi marcada como perdida",
-      });
-    } catch (error) {
-      // Error already handled
-    }
+    await updateDeal(id, { status: "lost", stage: "perdido", actual_close_date: new Date().toISOString().split("T")[0], closed_at: new Date().toISOString(), probability: 0, lost_reason: reason });
+    toast({ title: "Proposta perdida", description: "A proposta foi marcada como perdida" });
   };
 
-  const deleteDeal = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("deals")
-        .delete()
-        .eq("id", id);
-
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("deals").delete().eq("id", id);
       if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Proposta excluída!" });
+      invalidate();
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro ao excluir proposta", description: error.message, variant: "destructive" });
+    },
+  });
 
-      toast({
-        title: "Proposta excluída!",
-      });
+  const deleteDeal = (id: string) => deleteMutation.mutateAsync(id);
 
-      await fetchDeals();
-    } catch (error: any) {
-      console.error("Error deleting deal:", error);
-      toast({
-        title: "Erro ao excluir proposta",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const getDealsByStage   = (stage: string) => deals.filter((d) => d.stage === stage);
+  const getOpenDeals      = () => deals.filter((d) => d.status === "open");
+  const getWonDeals       = () => deals.filter((d) => d.status === "won");
+  const getLostDeals      = () => deals.filter((d) => d.status === "lost");
+  const getTotalValue     = () => deals.filter((d) => d.status === "open").reduce((s, d) => s + Number(d.total_value || 0), 0);
+  const getWonThisMonth   = () => {
+    const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    return deals.filter((d) => d.status === "won" && new Date(d.closed_at || "") >= firstDay).length;
   };
-
-  const getDealsByStage = (stage: string) => 
-    deals.filter((d) => d.stage === stage);
-
-  const getOpenDeals = () => deals.filter((d) => d.status === "open");
-  const getWonDeals = () => deals.filter((d) => d.status === "won");
-  const getLostDeals = () => deals.filter((d) => d.status === "lost");
-
-  const getTotalValue = () => 
-    deals.filter((d) => d.status === "open").reduce((sum, d) => sum + Number(d.total_value || 0), 0);
-
-  const getWonThisMonth = () => {
-    const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    return deals.filter(
-      (d) => d.status === "won" && new Date(d.closed_at || "") >= firstDayOfMonth
-    ).length;
-  };
-
   const getConversionRate = () => {
     const closed = deals.filter((d) => d.status !== "open");
-    if (closed.length === 0) return 0;
-    const won = closed.filter((d) => d.status === "won").length;
-    return Math.round((won / closed.length) * 100);
+    if (!closed.length) return 0;
+    return Math.round((closed.filter((d) => d.status === "won").length / closed.length) * 100);
   };
 
   return {
-    deals,
-    loading,
-    fetchDeals,
-    createDeal,
-    updateDeal,
-    markAsWon,
-    markAsLost,
-    deleteDeal,
-    getDealsByStage,
-    getOpenDeals,
-    getWonDeals,
-    getLostDeals,
-    getTotalValue,
-    getWonThisMonth,
-    getConversionRate,
+    deals, loading, fetchDeals,
+    createDeal, updateDeal, markAsWon, markAsLost, deleteDeal,
+    getDealsByStage, getOpenDeals, getWonDeals, getLostDeals,
+    getTotalValue, getWonThisMonth, getConversionRate,
   };
 }

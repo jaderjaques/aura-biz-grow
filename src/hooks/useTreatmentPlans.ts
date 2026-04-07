@@ -1,136 +1,165 @@
-import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  TreatmentPlan,
-  TreatmentPlanItem,
-  TreatmentPlanWithDetails,
-  TreatmentPlanStatus,
-  ClinicProcedure,
+  TreatmentPlan, TreatmentPlanItem,
+  TreatmentPlanWithDetails, TreatmentPlanStatus, ClinicProcedure,
 } from "@/types/treatmentPlans";
 import { toast } from "sonner";
 
+const PLANS_KEY      = ["treatment-plans"];
+const PROCEDURES_KEY = ["procedures"];
+
+// ── query helpers ─────────────────────────────────────────────────────────────
+
+async function fetchPlansQuery(): Promise<TreatmentPlanWithDetails[]> {
+  const { data, error } = await supabase
+    .from("treatment_plans")
+    .select(`*, patient:patients(full_name, phone), insurance:insurances(name)`)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data as TreatmentPlanWithDetails[]) ?? [];
+}
+
+async function fetchProceduresQuery(): Promise<ClinicProcedure[]> {
+  const { data, error } = await supabase
+    .from("procedures")
+    .select("id, code, name, category, module, duration_minutes, sessions_default, price_private, tooth_region, body_area")
+    .eq("active", true)
+    .order("name");
+  if (error) throw error;
+  return (data as ClinicProcedure[]) ?? [];
+}
+
+// ── hook ──────────────────────────────────────────────────────────────────────
+
 export function useTreatmentPlans() {
-  const [plans, setPlans] = useState<TreatmentPlanWithDetails[]>([]);
-  const [procedures, setProcedures] = useState<ClinicProcedure[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  // ── Fase 1: planos recentes (leve) — aparece rápido ────────────────────
+  const { data: quickPlans = [], isLoading: loadingQuick } = useQuery({
+    queryKey: [...PLANS_KEY, "quick"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("treatment_plans")
+        .select("id, plan_number, status, patient_id, final_value, created_at")
+        .order("created_at", { ascending: false })
+        .limit(30);
+      return (data ?? []) as Partial<TreatmentPlanWithDetails>[];
+    },
+    staleTime: 2 * 60_000,
+  });
 
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const [plansRes, procsRes] = await Promise.all([
-        supabase
-          .from("treatment_plans")
-          .select(`
-            *,
-            patient:patients(full_name, phone),
-            insurance:insurances(name)
-          `)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("procedures")
-          .select("id, code, name, category, module, duration_minutes, sessions_default, price_private, tooth_region, body_area")
-          .eq("active", true)
-          .order("name"),
-      ]);
+  // ── Fase 2: planos completos com joins — background ────────────────────
+  const { data: fullPlans, isFetching: fetchingPlans } = useQuery({
+    queryKey: [...PLANS_KEY, "full"],
+    queryFn: fetchPlansQuery,
+    staleTime: 3 * 60_000,
+    enabled: !loadingQuick,
+  });
 
-      if (plansRes.data) setPlans(plansRes.data as TreatmentPlanWithDetails[]);
-      if (procsRes.data) setProcedures(procsRes.data as ClinicProcedure[]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const plans   = (fullPlans ?? quickPlans) as TreatmentPlanWithDetails[];
+  const loading = loadingQuick;
 
+  // ── Procedimentos com cache longo ───────────────────────────────────────
+  const { data: procedures = [] } = useQuery<ClinicProcedure[]>({
+    queryKey: PROCEDURES_KEY,
+    queryFn: fetchProceduresQuery,
+    staleTime: 10 * 60_000,
+  });
+
+  const invalidatePlans = () => queryClient.invalidateQueries({ queryKey: PLANS_KEY });
+
+  // ── Itens de um plano ────────────────────────────────────────────────────
   const fetchPlanItems = async (planId: string): Promise<TreatmentPlanItem[]> => {
     const { data, error } = await supabase
       .from("treatment_plan_items")
       .select(`*, procedure:procedures(name, category)`)
       .eq("treatment_plan_id", planId)
       .order("execution_order");
-
     if (error) return [];
     return data as TreatmentPlanItem[];
   };
 
-  const createPlan = async (
-    planData: Partial<TreatmentPlan>,
-    items: Partial<TreatmentPlanItem>[]
-  ) => {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("tenant_id, id")
-      .single();
+  // ── Criar plano ───────────────────────────────────────────────────────────
+  const createMutation = useMutation({
+    mutationFn: async ({
+      planData,
+      items,
+    }: {
+      planData: Partial<TreatmentPlan>;
+      items: Partial<TreatmentPlanItem>[];
+    }) => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("tenant_id, id")
+        .single();
+      if (!profile) throw new Error("Profile not found");
 
-    if (!profile) throw new Error("Profile not found");
+      const { count } = await supabase
+        .from("treatment_plans")
+        .select("id", { count: "exact", head: true });
 
-    // Generate plan number
-    const { count } = await supabase
-      .from("treatment_plans")
-      .select("id", { count: "exact", head: true });
+      const planNumber = `ORC-${String((count ?? 0) + 1).padStart(4, "0")}`;
 
-    const planNumber = `ORC-${String((count ?? 0) + 1).padStart(4, "0")}`;
+      const { data: plan, error: planError } = await supabase
+        .from("treatment_plans")
+        .insert({
+          ...planData,
+          tenant_id: profile.tenant_id,
+          professional_id: profile.id,
+          created_by: profile.id,
+          plan_number: planNumber,
+          created_date: new Date().toISOString().split("T")[0],
+          status: planData.status ?? "draft",
+        })
+        .select()
+        .single();
 
-    const { data: plan, error: planError } = await supabase
-      .from("treatment_plans")
-      .insert({
-        ...planData,
-        tenant_id: profile.tenant_id,
-        professional_id: profile.id,
-        created_by: profile.id,
-        plan_number: planNumber,
-        created_date: new Date().toISOString().split("T")[0],
-        status: planData.status ?? "draft",
-      })
-      .select()
-      .single();
+      if (planError) throw planError;
 
-    if (planError) {
-      toast.error("Erro ao criar orçamento");
-      throw planError;
-    }
-
-    if (items.length > 0) {
-      const itemsPayload = items.map((item, idx) => ({
-        ...item,
-        treatment_plan_id: plan.id,
-        execution_order: item.execution_order ?? idx + 1,
-        sessions_completed: 0,
-        status: "pending",
-      }));
-
-      const { error: itemsError } = await supabase
-        .from("treatment_plan_items")
-        .insert(itemsPayload);
-
-      if (itemsError) {
-        toast.error("Orçamento criado, mas erro ao salvar itens");
+      if (items.length > 0) {
+        const itemsPayload = items.map((item, idx) => ({
+          ...item,
+          treatment_plan_id: plan.id,
+          execution_order: item.execution_order ?? idx + 1,
+          sessions_completed: 0,
+          status: "pending",
+        }));
+        await supabase.from("treatment_plan_items").insert(itemsPayload);
       }
-    }
 
-    toast.success(`Orçamento ${planNumber} criado!`);
-    await fetchAll();
-    return plan;
-  };
+      return { plan, planNumber };
+    },
+    onSuccess: ({ planNumber }) => {
+      toast.success(`Orçamento ${planNumber} criado!`);
+      invalidatePlans();
+    },
+    onError: () => toast.error("Erro ao criar orçamento"),
+  });
 
-  const updatePlan = async (id: string, data: Partial<TreatmentPlan>) => {
-    const { error } = await supabase
-      .from("treatment_plans")
-      .update({ ...data, updated_at: new Date().toISOString() })
-      .eq("id", id);
+  const createPlan = (planData: Partial<TreatmentPlan>, items: Partial<TreatmentPlanItem>[]) =>
+    createMutation.mutateAsync({ planData, items }).then((r) => r.plan);
 
-    if (error) {
-      toast.error("Erro ao atualizar orçamento");
-      throw error;
-    }
+  // ── Atualizar plano ───────────────────────────────────────────────────────
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<TreatmentPlan> }) => {
+      const { error } = await supabase
+        .from("treatment_plans")
+        .update({ ...data, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Orçamento atualizado!");
+      invalidatePlans();
+    },
+    onError: () => toast.error("Erro ao atualizar orçamento"),
+  });
 
-    setPlans((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...data } : p))
-    );
-  };
+  const updatePlan = (id: string, data: Partial<TreatmentPlan>) =>
+    updateMutation.mutateAsync({ id, data });
 
+  // ── Progresso de item ─────────────────────────────────────────────────────
   const updateItemProgress = async (
     itemId: string,
     sessionsCompleted: number,
@@ -140,39 +169,37 @@ export function useTreatmentPlans() {
       .from("treatment_plan_items")
       .update({ sessions_completed: sessionsCompleted, status })
       .eq("id", itemId);
-
     if (error) {
       toast.error("Erro ao atualizar progresso");
       throw error;
     }
   };
 
+  // ── Mudar status ──────────────────────────────────────────────────────────
   const changeStatus = async (id: string, status: TreatmentPlanStatus) => {
     const extra: Partial<TreatmentPlan> = {};
     const today = new Date().toISOString().split("T")[0];
-
-    if (status === "approved") extra.approved_date = today;
-    if (status === "in_progress") extra.start_date = today;
-    if (status === "completed") extra.completed_date = today;
-
+    if (status === "approved")    extra.approved_date  = today;
+    if (status === "in_progress") extra.start_date     = today;
+    if (status === "completed")   extra.completed_date = today;
     await updatePlan(id, { status, ...extra });
     toast.success("Status atualizado!");
   };
 
-  const deletePlan = async (id: string) => {
-    const { error } = await supabase
-      .from("treatment_plans")
-      .delete()
-      .eq("id", id);
+  // ── Deletar ───────────────────────────────────────────────────────────────
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("treatment_plans").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Orçamento removido");
+      invalidatePlans();
+    },
+    onError: () => toast.error("Erro ao remover orçamento"),
+  });
 
-    if (error) {
-      toast.error("Erro ao remover orçamento");
-      throw error;
-    }
-
-    setPlans((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Orçamento removido");
-  };
+  const deletePlan = (id: string) => deleteMutation.mutateAsync(id);
 
   const getByStatus = (status: TreatmentPlanStatus) =>
     plans.filter((p) => p.status === status);
@@ -185,6 +212,7 @@ export function useTreatmentPlans() {
     plans,
     procedures,
     loading,
+    fetchingPlans,
     totalValue,
     createPlan,
     updatePlan,
@@ -193,6 +221,6 @@ export function useTreatmentPlans() {
     deletePlan,
     fetchPlanItems,
     getByStatus,
-    refetch: fetchAll,
+    refetch: invalidatePlans,
   };
 }

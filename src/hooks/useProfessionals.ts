@@ -1,101 +1,103 @@
-import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Professional, ProfessionalWithProfile } from "@/types/professionals";
 import { toast } from "sonner";
 
+const QUERY_KEY = ["professionals"];
+
+async function fetchAllProfessionals(): Promise<ProfessionalWithProfile[]> {
+  const { data, error } = await supabase
+    .from("professionals")
+    .select(`*, profile:profiles(id, full_name, email, avatar_url)`)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data as ProfessionalWithProfile[]) ?? [];
+}
+
 export function useProfessionals() {
-  const [professionals, setProfessionals] = useState<ProfessionalWithProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetch();
-  }, []);
+  const { data: professionals = [], isLoading: loading } = useQuery<ProfessionalWithProfile[]>({
+    queryKey: QUERY_KEY,
+    queryFn: fetchAllProfessionals,
+    staleTime: 5 * 60_000, // 5 minutos — navegar entre páginas não re-busca
+  });
 
-  const fetch = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("professionals")
-        .select(`
-          *,
-          profile:profiles(id, full_name, email, avatar_url)
-        `)
-        .order("created_at", { ascending: true });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
 
-      if (error) throw error;
-      setProfessionals((data as ProfessionalWithProfile[]) ?? []);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Profiles not yet linked to a professional (for the "new professional" dialog)
+  // ── Profiles ainda não vinculados a um profissional ─────────────────────
   const fetchUnlinkedProfiles = async () => {
     const linkedIds = professionals
       .filter((p) => p.profile_id)
       .map((p) => p.profile_id as string);
 
-    const query = supabase
+    const { data } = await supabase
       .from("profiles")
       .select("id, full_name, email, avatar_url")
       .eq("is_active", true)
       .order("full_name");
 
-    const { data } = await query;
     if (!data) return [];
-
     return data.filter((p) => !linkedIds.includes(p.id));
   };
 
-  const createProfessional = async (data: Partial<Professional>) => {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("tenant_id")
-      .single();
+  // ── Criar ────────────────────────────────────────────────────────────────
+  const createMutation = useMutation({
+    mutationFn: async (data: Partial<Professional>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("id", user!.id)
+        .single();
 
-    if (!profile) throw new Error("Profile not found");
+      if (!profile) throw new Error("Profile not found");
 
-    const { data: created, error } = await supabase
-      .from("professionals")
-      .insert({ ...data, tenant_id: profile.tenant_id, active: true })
-      .select(`*, profile:profiles(id, full_name, email, avatar_url)`)
-      .single();
+      const { data: created, error } = await supabase
+        .from("professionals")
+        .insert({ ...data, tenant_id: profile.tenant_id, active: true })
+        .select(`*, profile:profiles(id, full_name, email, avatar_url)`)
+        .single();
 
-    if (error) {
-      toast.error("Erro ao cadastrar profissional");
-      throw error;
-    }
+      if (error) throw error;
+      return created as ProfessionalWithProfile;
+    },
+    onSuccess: () => {
+      toast.success("Profissional cadastrado!");
+      invalidate();
+    },
+    onError: () => toast.error("Erro ao cadastrar profissional"),
+  });
 
-    toast.success("Profissional cadastrado!");
-    setProfessionals((prev) => [...prev, created as ProfessionalWithProfile]);
-    return created;
-  };
+  const createProfessional = (data: Partial<Professional>) =>
+    createMutation.mutateAsync(data);
 
-  const updateProfessional = async (id: string, data: Partial<Professional>) => {
-    const { data: updated, error } = await supabase
-      .from("professionals")
-      .update({ ...data, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select(`*, profile:profiles(id, full_name, email, avatar_url)`)
-      .single();
+  // ── Atualizar ────────────────────────────────────────────────────────────
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Professional> }) => {
+      const { data: updated, error } = await supabase
+        .from("professionals")
+        .update({ ...data, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select(`*, profile:profiles(id, full_name, email, avatar_url)`)
+        .single();
+      if (error) throw error;
+      return updated as ProfessionalWithProfile;
+    },
+    onSuccess: () => {
+      toast.success("Profissional atualizado!");
+      invalidate();
+    },
+    onError: () => toast.error("Erro ao atualizar profissional"),
+  });
 
-    if (error) {
-      toast.error("Erro ao atualizar profissional");
-      throw error;
-    }
+  const updateProfessional = (id: string, data: Partial<Professional>) =>
+    updateMutation.mutateAsync({ id, data });
 
-    toast.success("Profissional atualizado!");
-    setProfessionals((prev) =>
-      prev.map((p) => (p.id === id ? (updated as ProfessionalWithProfile) : p))
-    );
-  };
+  const toggleActive = (id: string, active: boolean) =>
+    updateProfessional(id, { active });
 
-  const toggleActive = async (id: string, active: boolean) => {
-    await updateProfessional(id, { active });
-  };
-
-  const getActiveProfessionals = () =>
-    professionals.filter((p) => p.active);
+  const getActiveProfessionals = () => professionals.filter((p) => p.active);
 
   return {
     professionals,
@@ -105,6 +107,6 @@ export function useProfessionals() {
     toggleActive,
     fetchUnlinkedProfiles,
     getActiveProfessionals,
-    refetch: fetch,
+    refetch: invalidate,
   };
 }
