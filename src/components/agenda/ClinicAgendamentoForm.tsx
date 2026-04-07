@@ -50,13 +50,13 @@ export function ClinicAgendamentoForm({
   const queryClient = useQueryClient();
   const isEdit = !!appointment;
 
-  const [patientId, setPatientId] = useState(appointment?.patient_id ?? "");
+  const [patientId, setPatientId] = useState(appointment?.patient_id ?? "none");
   const [professionalId, setProfessionalId] = useState(
-    appointment?.professional_id ?? defaultProfessionalId ?? ""
+    appointment?.professional_id ?? defaultProfessionalId ?? "none"
   );
-  const [procedureId, setProcedureId] = useState(appointment?.procedure_id ?? "");
+  const [procedureId, setProcedureId] = useState(appointment?.procedure_id ?? "none");
   const [consultorioId, setConsultorioId] = useState(
-    appointment?.consultorio_id ?? defaultConsultorioId ?? ""
+    appointment?.consultorio_id ?? defaultConsultorioId ?? "none"
   );
   const [scheduledFor, setScheduledFor] = useState(
     appointment?.scheduled_for
@@ -84,7 +84,7 @@ export function ClinicAgendamentoForm({
 
   // Auto-fill duration from procedure
   useEffect(() => {
-    if (procedureId) {
+    if (procedureId && procedureId !== "none") {
       const proc = procedures.find((p) => p.id === procedureId);
       if (proc?.duration_minutes) setDuration(proc.duration_minutes);
     }
@@ -92,7 +92,7 @@ export function ClinicAgendamentoForm({
 
   // Auto-fill duration from professional default when no procedure
   useEffect(() => {
-    if (!procedureId && professionalId) {
+    if ((!procedureId || procedureId === "none") && professionalId && professionalId !== "none") {
       const prof = professionals.find((p) => p.id === professionalId);
       if (prof?.default_appointment_duration) {
         setDuration(prof.default_appointment_duration);
@@ -107,10 +107,10 @@ export function ClinicAgendamentoForm({
       const consult = consultorios.find((c) => c.id === consultorioId);
 
       const payload: Record<string, any> = {
-        patient_id: patientId || null,
-        professional_id: professionalId || null,
-        procedure_id: procedureId || null,
-        consultorio_id: consultorioId || null,
+        patient_id: patientId === "none" ? null : patientId || null,
+        professional_id: professionalId === "none" ? null : professionalId || null,
+        procedure_id: procedureId === "none" ? null : procedureId || null,
+        consultorio_id: consultorioId === "none" ? null : consultorioId || null,
         room: consult?.name ?? null,
         scheduled_for: scheduledFor,
         duration_minutes: duration,
@@ -182,6 +182,7 @@ export function ClinicAgendamentoForm({
                   <SelectValue placeholder="Selecione o paciente" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">— Selecione o paciente —</SelectItem>
                   {patients.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.full_name}
@@ -210,6 +211,7 @@ export function ClinicAgendamentoForm({
                     <SelectValue placeholder="Selecione o profissional" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">— Selecione o profissional —</SelectItem>
                     {professionals.filter((p) => p.active).map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.profile?.full_name ?? "Profissional"}
@@ -231,7 +233,7 @@ export function ClinicAgendamentoForm({
                     <SelectValue placeholder="Selecione o procedimento" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">— Consulta geral —</SelectItem>
+                    <SelectItem value="none">— Consulta geral —</SelectItem>
                     {procedures.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.name}
@@ -253,7 +255,7 @@ export function ClinicAgendamentoForm({
                     <SelectValue placeholder={consultorios.length === 0 ? "Nenhum consultório cadastrado" : "Selecione o consultório"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">— Sem consultório —</SelectItem>
+                    <SelectItem value="none">— Sem consultório —</SelectItem>
                     {consultorios.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.name}
@@ -339,7 +341,7 @@ export function ClinicAgendamentoForm({
             <Button variant="outline" onClick={onClose}>Fechar</Button>
             <Button
               onClick={() => mutation.mutate()}
-              disabled={mutation.isPending || !patientId || !professionalId || !scheduledFor}
+              disabled={mutation.isPending || !patientId || patientId === "none" || !professionalId || professionalId === "none" || !scheduledFor}
             >
               {mutation.isPending ? "Salvando..." : "Salvar"}
             </Button>

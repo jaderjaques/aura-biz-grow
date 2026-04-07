@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { isSameDay, addMinutes, format } from "date-fns";
+import { isSameDay, addMinutes, format, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -14,8 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Calendar as CalendarIcon, List, Users, Stethoscope } from "lucide-react";
 import { useProfessionals } from "@/hooks/useProfessionals";
-import { usePatients } from "@/hooks/usePatients";
-import { useTreatmentPlans } from "@/hooks/useTreatmentPlans";
 import { PROFESSIONAL_COLORS } from "@/types/professionals";
 
 interface Consultorio {
@@ -33,10 +31,40 @@ export default function ClinicAgenda() {
   const [filterConsultorioId, setFilterConsultorioId] = useState<string>("all");
 
   const { professionals } = useProfessionals();
-  const { patients } = usePatients();
-  const { procedures } = useTreatmentPlans();
 
   const activeProfessionals = professionals.filter((p) => p.active);
+
+  // Intervalo fixo: 3 meses atrás até 6 meses à frente
+  const rangeStart = useMemo(() => subMonths(new Date(), 3).toISOString(), []);
+  const rangeEnd   = useMemo(() => addMonths(new Date(), 6).toISOString(), []);
+
+  // Pacientes — query leve (só id, nome, telefone)
+  const { data: patients = [] } = useQuery({
+    queryKey: ["patients-agenda"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("patients")
+        .select("id, full_name, phone")
+        .is("deleted_at", null)
+        .order("full_name");
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+
+  // Procedimentos — query leve (sem planos de tratamento)
+  const { data: procedures = [] } = useQuery({
+    queryKey: ["procedures-agenda"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("procedures")
+        .select("id, name, category, duration_minutes")
+        .eq("active", true)
+        .order("name");
+      return data ?? [];
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutos
+  });
 
   // Map professionalId → color
   const profColorMap = Object.fromEntries(
@@ -57,12 +85,14 @@ export default function ClinicAgenda() {
   });
 
   const { data: appointments, isLoading } = useQuery({
-    queryKey: ["clinic-appointments"],
+    queryKey: ["clinic-appointments", rangeStart, rangeEnd],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("appointments")
         .select(`
-          *,
+          id, patient_id, professional_id, procedure_id, consultorio_id,
+          scheduled_for, duration_minutes, status, internal_notes,
+          client_name, client_phone, title,
           patient:patients(full_name, phone),
           professional:professionals(
             id,
@@ -71,13 +101,15 @@ export default function ClinicAgenda() {
           procedure:procedures(name, category),
           consultorio:consultorios(id, name)
         `)
+        .gte("scheduled_for", rangeStart)
+        .lte("scheduled_for", rangeEnd)
         .not("patient_id", "is", null)
         .order("scheduled_for", { ascending: true });
 
       if (error) throw error;
       return data || [];
     },
-    staleTime: 30000,
+    staleTime: 60000, // 1 minuto
   });
 
   const filtered = (appointments ?? []).filter((apt) => {
