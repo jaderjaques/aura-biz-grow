@@ -1,6 +1,9 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { isSameDay, addMinutes, format, subMonths, addMonths } from "date-fns";
+import {
+  isSameDay, addMinutes, format,
+  subMonths, addMonths, startOfMonth, endOfMonth,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -12,16 +15,34 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Calendar as CalendarIcon, List, Users, Stethoscope } from "lucide-react";
-import { useProfessionals } from "@/hooks/useProfessionals";
-import { PROFESSIONAL_COLORS } from "@/types/professionals";
+import { Plus, Calendar as CalendarIcon, List, Users, Stethoscope, Loader2 } from "lucide-react";
+import { PROFESSIONAL_COLORS, ProfessionalWithProfile } from "@/types/professionals";
 
-interface Consultorio {
-  id: string;
-  name: string;
-  active: boolean;
+interface Consultorio { id: string; name: string; active: boolean }
+
+// ─── query helper ────────────────────────────────────────────────────────────
+async function fetchAppointments(from: string, to: string) {
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(`
+      id, patient_id, professional_id, procedure_id, consultorio_id,
+      scheduled_for, duration_minutes, status, internal_notes,
+      client_name, client_phone, title,
+      patient:patients(full_name, phone),
+      professional:professionals(id, profile:profiles(full_name, avatar_url)),
+      procedure:procedures(name, category),
+      consultorio:consultorios(id, name)
+    `)
+    .gte("scheduled_for", from)
+    .lte("scheduled_for", to)
+    .not("patient_id", "is", null)
+    .order("scheduled_for", { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
 }
 
+// ─── component ───────────────────────────────────────────────────────────────
 export default function ClinicAgenda() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
@@ -30,15 +51,59 @@ export default function ClinicAgenda() {
   const [filterProfessionalId, setFilterProfessionalId] = useState<string>("all");
   const [filterConsultorioId, setFilterConsultorioId] = useState<string>("all");
 
-  const { professionals } = useProfessionals();
-
-  const activeProfessionals = professionals.filter((p) => p.active);
-
-  // Intervalo fixo: 3 meses atrás até 6 meses à frente
+  // ── intervalos ──────────────────────────────────────────────────────────
+  const monthStart = useMemo(() => startOfMonth(new Date()).toISOString(), []);
+  const monthEnd   = useMemo(() => endOfMonth(new Date()).toISOString(), []);
   const rangeStart = useMemo(() => subMonths(new Date(), 3).toISOString(), []);
   const rangeEnd   = useMemo(() => addMonths(new Date(), 6).toISOString(), []);
 
-  // Pacientes — query leve (só id, nome, telefone)
+  // ── Fase 1: mês atual — mostra o calendário rapidamente ─────────────────
+  const { data: monthAppts = [], isLoading: loadingMonth } = useQuery({
+    queryKey: ["clinic-appts-month", monthStart],
+    queryFn: () => fetchAppointments(monthStart, monthEnd),
+    staleTime: 60_000,
+  });
+
+  // ── Fase 2: range completo — carrega em background para navegação ────────
+  const { data: fullAppts, isFetching: fetchingFull } = useQuery({
+    queryKey: ["clinic-appts-full", rangeStart, rangeEnd],
+    queryFn: () => fetchAppointments(rangeStart, rangeEnd),
+    staleTime: 60_000,
+    // só dispara depois que fase 1 concluiu (não bloqueia o calendário)
+    enabled: !loadingMonth,
+  });
+
+  // Usa dados completos quando prontos; enquanto isso, exibe o mês atual
+  const appointments = fullAppts ?? monthAppts;
+  const isLoading = loadingMonth; // calendário aparece ao fim da fase 1
+
+  // ── Profissionais (com cache de 5 min) ───────────────────────────────────
+  const { data: professionals = [] } = useQuery<ProfessionalWithProfile[]>({
+    queryKey: ["professionals-agenda"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("professionals")
+        .select(`
+          id, profile_id, active, default_appointment_duration,
+          license_type, license_number, specialties, rooms, working_hours,
+          commission_type, commission_percent, commission_fixed,
+          accepts_insurance, insurances_accepted, created_at, updated_at,
+          tenant_id,
+          profile:profiles(id, full_name, email, avatar_url)
+        `)
+        .order("created_at");
+      return (data as ProfessionalWithProfile[]) ?? [];
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const activeProfessionals = professionals.filter((p) => p.active);
+
+  const profColorMap = Object.fromEntries(
+    activeProfessionals.map((p, i) => [p.id, PROFESSIONAL_COLORS[i % PROFESSIONAL_COLORS.length]])
+  );
+
+  // ── Pacientes — query leve ────────────────────────────────────────────────
   const { data: patients = [] } = useQuery({
     queryKey: ["patients-agenda"],
     queryFn: async () => {
@@ -49,10 +114,10 @@ export default function ClinicAgenda() {
         .order("full_name");
       return data ?? [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60_000,
   });
 
-  // Procedimentos — query leve (sem planos de tratamento)
+  // ── Procedimentos — query leve ────────────────────────────────────────────
   const { data: procedures = [] } = useQuery({
     queryKey: ["procedures-agenda"],
     queryFn: async () => {
@@ -63,15 +128,10 @@ export default function ClinicAgenda() {
         .order("name");
       return data ?? [];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutos
+    staleTime: 10 * 60_000,
   });
 
-  // Map professionalId → color
-  const profColorMap = Object.fromEntries(
-    activeProfessionals.map((p, i) => [p.id, PROFESSIONAL_COLORS[i % PROFESSIONAL_COLORS.length]])
-  );
-
-  // Fetch consultorios
+  // ── Consultórios ──────────────────────────────────────────────────────────
   const { data: consultorios = [] } = useQuery<Consultorio[]>({
     queryKey: ["consultorios"],
     queryFn: async () => {
@@ -82,37 +142,11 @@ export default function ClinicAgenda() {
         .order("name");
       return data ?? [];
     },
+    staleTime: 10 * 60_000,
   });
 
-  const { data: appointments, isLoading } = useQuery({
-    queryKey: ["clinic-appointments", rangeStart, rangeEnd],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("appointments")
-        .select(`
-          id, patient_id, professional_id, procedure_id, consultorio_id,
-          scheduled_for, duration_minutes, status, internal_notes,
-          client_name, client_phone, title,
-          patient:patients(full_name, phone),
-          professional:professionals(
-            id,
-            profile:profiles(full_name, avatar_url)
-          ),
-          procedure:procedures(name, category),
-          consultorio:consultorios(id, name)
-        `)
-        .gte("scheduled_for", rangeStart)
-        .lte("scheduled_for", rangeEnd)
-        .not("patient_id", "is", null)
-        .order("scheduled_for", { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    },
-    staleTime: 60000, // 1 minuto
-  });
-
-  const filtered = (appointments ?? []).filter((apt) => {
+  // ── filtros e eventos ─────────────────────────────────────────────────────
+  const filtered = appointments.filter((apt) => {
     const matchProf = filterProfessionalId === "all" || apt.professional_id === filterProfessionalId;
     const matchConsult = filterConsultorioId === "all" || apt.consultorio_id === filterConsultorioId;
     return matchProf && matchConsult;
@@ -133,35 +167,32 @@ export default function ClinicAgenda() {
     color: apt.professional_id ? profColorMap[apt.professional_id] : undefined,
   }));
 
-  const openCreate = () => {
-    setSelectedAppointment(null);
-    setShowForm(true);
-  };
-
-  const openEdit = (apt: any) => {
-    setSelectedAppointment(apt);
-    setShowForm(true);
-  };
+  const openCreate = () => { setSelectedAppointment(null); setShowForm(true); };
+  const openEdit   = (apt: any) => { setSelectedAppointment(apt); setShowForm(true); };
 
   const getInitials = (name?: string | null) =>
     (name ?? "?").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   const STATUS_LABEL: Record<string, string> = {
-    scheduled: "Agendado",
-    confirmed: "Confirmado",
-    in_progress: "Em atendimento",
-    completed: "Concluído",
-    cancelled: "Cancelado",
-    no_show: "Não compareceu",
+    scheduled: "Agendado", confirmed: "Confirmado", in_progress: "Em atendimento",
+    completed: "Concluído", cancelled: "Cancelado", no_show: "Não compareceu",
   };
 
+  // ── render ────────────────────────────────────────────────────────────────
   return (
     <AppLayout>
       <div className="space-y-4 p-6">
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Agenda</h1>
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              Agenda
+              {/* indicador sutil de carregamento do range completo */}
+              {fetchingFull && !loadingMonth && (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" title="Carregando demais meses..." />
+              )}
+            </h1>
             <p className="text-sm text-muted-foreground">
               {format(selectedDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>
@@ -172,30 +203,22 @@ export default function ClinicAgenda() {
               <button
                 onClick={() => setView("calendar")}
                 className={`px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  view === "calendar"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                  view === "calendar" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <CalendarIcon className="h-4 w-4" />
-                Calendário
+                <CalendarIcon className="h-4 w-4" /> Calendário
               </button>
               <button
                 onClick={() => setView("list")}
                 className={`px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  view === "list"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                  view === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <List className="h-4 w-4" />
-                Lista
+                <List className="h-4 w-4" /> Lista
               </button>
             </div>
-
             <Button onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-1" />
-              Novo Agendamento
+              <Plus className="h-4 w-4 mr-1" /> Novo Agendamento
             </Button>
           </div>
         </div>
@@ -209,9 +232,7 @@ export default function ClinicAgenda() {
             <button
               onClick={() => setFilterProfessionalId("all")}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition ${
-                filterProfessionalId === "all"
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "border-border hover:bg-muted"
+                filterProfessionalId === "all" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"
               }`}
             >
               Todos
@@ -230,20 +251,16 @@ export default function ClinicAgenda() {
                 >
                   <Avatar className="h-5 w-5">
                     <AvatarImage src={prof.profile?.avatar_url ?? undefined} />
-                    <AvatarFallback
-                      className="text-[10px]"
-                      style={{ backgroundColor: color, color: "#fff" }}
-                    >
+                    <AvatarFallback className="text-[10px]" style={{ backgroundColor: color, color: "#fff" }}>
                       {getInitials(prof.profile?.full_name)}
                     </AvatarFallback>
                   </Avatar>
                   <span>{prof.profile?.full_name ?? "Profissional"}</span>
                   <Badge
-                    variant="outline"
-                    className="text-[10px] px-1 py-0 h-4 ml-1"
+                    variant="outline" className="text-[10px] px-1 py-0 h-4 ml-1"
                     style={isActive ? { borderColor: "rgba(255,255,255,0.4)", color: "white" } : {}}
                   >
-                    {(appointments ?? []).filter((a) => a.professional_id === prof.id).length}
+                    {appointments.filter((a) => a.professional_id === prof.id).length}
                   </Badge>
                 </button>
               );
@@ -261,30 +278,25 @@ export default function ClinicAgenda() {
               <button
                 onClick={() => setFilterConsultorioId("all")}
                 className={`px-3 py-1.5 rounded-full text-sm border transition ${
-                  filterConsultorioId === "all"
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border hover:bg-muted"
+                  filterConsultorioId === "all" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"
                 }`}
               >
                 Todos
               </button>
               {consultorios.map((c) => {
                 const isActive = filterConsultorioId === c.id;
-                const count = (appointments ?? []).filter((a) => a.consultorio_id === c.id).length;
                 return (
                   <button
                     key={c.id}
                     onClick={() => setFilterConsultorioId(c.id)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border transition ${
-                      isActive
-                        ? "bg-secondary text-secondary-foreground border-secondary"
-                        : "border-border hover:bg-muted"
+                      isActive ? "bg-secondary text-secondary-foreground border-secondary" : "border-border hover:bg-muted"
                     }`}
                   >
                     <Stethoscope className="h-3.5 w-3.5" />
                     {c.name}
                     <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 ml-1">
-                      {count}
+                      {appointments.filter((a) => a.consultorio_id === c.id).length}
                     </Badge>
                   </button>
                 );
@@ -293,6 +305,7 @@ export default function ClinicAgenda() {
           </div>
         )}
 
+        {/* Conteúdo principal */}
         {isLoading ? (
           <Skeleton className="h-[600px] w-full rounded-xl" />
         ) : view === "calendar" ? (
@@ -317,34 +330,23 @@ export default function ClinicAgenda() {
           <Card className="p-4">
             <h3 className="font-semibold mb-4">
               Todos os Agendamentos
-              <span className="text-muted-foreground font-normal text-sm ml-2">
-                ({filtered.length})
-              </span>
+              <span className="text-muted-foreground font-normal text-sm ml-2">({filtered.length})</span>
             </h3>
             <div className="space-y-2">
               {filtered.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-8 text-center">
-                  Nenhum agendamento encontrado.
-                </p>
+                <p className="text-sm text-muted-foreground py-8 text-center">Nenhum agendamento encontrado.</p>
               ) : (
                 filtered.map((apt) => {
-                  const color = apt.professional_id
-                    ? profColorMap[apt.professional_id]
-                    : "#e5e7eb";
+                  const color = apt.professional_id ? profColorMap[apt.professional_id] : "#e5e7eb";
                   return (
                     <button
                       key={apt.id}
                       onClick={() => openEdit(apt)}
                       className="w-full flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition text-left"
                     >
-                      <div
-                        className="w-1 h-10 rounded-full shrink-0"
-                        style={{ backgroundColor: color }}
-                      />
+                      <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: color }} />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">
-                          {apt.patient?.full_name ?? apt.client_name}
-                        </p>
+                        <p className="font-medium text-sm">{apt.patient?.full_name ?? apt.client_name}</p>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(apt.scheduled_for), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                           {apt.procedure?.name && ` · ${apt.procedure.name}`}
@@ -390,10 +392,7 @@ export default function ClinicAgenda() {
           professionals={activeProfessionals}
           patients={patients}
           procedures={procedures}
-          onClose={() => {
-            setShowForm(false);
-            setSelectedAppointment(null);
-          }}
+          onClose={() => { setShowForm(false); setSelectedAppointment(null); }}
         />
       )}
     </AppLayout>

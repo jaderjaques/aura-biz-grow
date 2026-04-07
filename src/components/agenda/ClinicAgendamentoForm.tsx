@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/select";
 import { User, Calendar, Stethoscope } from "lucide-react";
 import { ProfessionalWithProfile } from "@/types/professionals";
-import { PatientWithDetails } from "@/types/patients";
 import { ClinicProcedure } from "@/types/treatmentPlans";
 
 interface Consultorio {
@@ -26,13 +25,19 @@ interface Consultorio {
   active: boolean;
 }
 
+interface PatientOption {
+  id: string;
+  full_name: string | null;
+  phone?: string | null;
+}
+
 interface Props {
   appointment?: any;
   defaultProfessionalId?: string;
   defaultConsultorioId?: string;
   defaultDate?: Date;
   professionals: ProfessionalWithProfile[];
-  patients: PatientWithDetails[];
+  patients: PatientOption[];
   procedures: ClinicProcedure[];
   onClose: () => void;
 }
