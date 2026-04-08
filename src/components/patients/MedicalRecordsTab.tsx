@@ -9,12 +9,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Plus, ChevronDown, ChevronRight, FileText, Stethoscope,
-  ClipboardList, Smile,
+  ClipboardList, Smile, ImageIcon,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRecords } from "@/hooks/useRecords";
 import { EvolutionDialog } from "./EvolutionDialog";
 import { AnamnesisForm } from "./AnamnesisForm";
 import { OdontogramComponent } from "./OdontogramComponent";
+import { ExamImagesTab } from "./ExamImagesTab";
 import { MedicalRecord, RECORD_TYPE_LABELS, RecordType } from "@/types/records";
 
 interface MedicalRecordsTabProps {
@@ -115,110 +117,131 @@ export function MedicalRecordsTab({ patientId, showOdontogram = false }: Medical
   }
 
   return (
-    <div className="space-y-4">
-      {/* Actions */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          {records.length} {records.length === 1 ? "registro" : "registros"}
-        </p>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm">
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              Novo Registro
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEvolutionOpen(true)}>
-              <Stethoscope className="mr-2 h-4 w-4" />
-              Evolução
-            </DropdownMenuItem>
-            {templates.length > 0 && (
-              <DropdownMenuItem onClick={() => setAnamnesisOpen(true)}>
-                <ClipboardList className="mr-2 h-4 w-4" />
-                Anamnese
-              </DropdownMenuItem>
-            )}
-            {showOdontogram && (
-              <DropdownMenuItem onClick={() => setOdontogramOpen(true)}>
-                <Smile className="mr-2 h-4 w-4" />
-                Odontograma
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+    <Tabs defaultValue="registros">
+      <TabsList className="w-full grid grid-cols-2 mb-4">
+        <TabsTrigger value="registros">
+          <FileText className="h-3.5 w-3.5 mr-1.5" />
+          Registros
+        </TabsTrigger>
+        <TabsTrigger value="exames">
+          <ImageIcon className="h-3.5 w-3.5 mr-1.5" />
+          Imagens / Exames
+        </TabsTrigger>
+      </TabsList>
 
-      {/* Odontogram panel (collapsible) */}
-      {showOdontogram && odontogramOpen && (
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="font-semibold text-sm flex items-center gap-2">
-                <Smile className="h-4 w-4" /> Odontograma
-              </p>
-              <Button variant="ghost" size="sm" onClick={() => setOdontogramOpen(false)}>
-                Fechar
-              </Button>
-            </div>
-            <OdontogramComponent
-              initialTeeth={odontogram?.teeth_status ?? {}}
-              initialNotes={odontogram?.notes ?? ""}
-              onSave={saveOdontogram}
-            />
-            {odontogram && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Última atualização: {format(new Date(odontogram.updated_at), "dd/MM/yyyy", { locale: ptBR })} — versão {odontogram.version}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Current odontogram summary (when closed) */}
-      {showOdontogram && !odontogramOpen && odontogram && (
-        <button
-          onClick={() => setOdontogramOpen(true)}
-          className="w-full flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition text-left"
-        >
-          <Smile className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="text-sm font-medium">Odontograma</p>
-            <p className="text-xs text-muted-foreground">
-              Versão {odontogram.version} — {format(new Date(odontogram.updated_at), "dd/MM/yyyy", { locale: ptBR })}
+      {/* ── ABA REGISTROS ─────────────────────────────────── */}
+      <TabsContent value="registros">
+        <div className="space-y-4">
+          {/* Actions */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {records.length} {records.length === 1 ? "registro" : "registros"}
             </p>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm">
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  Novo Registro
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setEvolutionOpen(true)}>
+                  <Stethoscope className="mr-2 h-4 w-4" />
+                  Evolução
+                </DropdownMenuItem>
+                {templates.length > 0 && (
+                  <DropdownMenuItem onClick={() => setAnamnesisOpen(true)}>
+                    <ClipboardList className="mr-2 h-4 w-4" />
+                    Anamnese
+                  </DropdownMenuItem>
+                )}
+                {showOdontogram && (
+                  <DropdownMenuItem onClick={() => setOdontogramOpen(true)}>
+                    <Smile className="mr-2 h-4 w-4" />
+                    Odontograma
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
-        </button>
-      )}
 
-      {/* Records timeline */}
-      {records.length === 0 ? (
-        <div className="text-center py-10 text-muted-foreground text-sm">
-          Nenhum registro no prontuário.
-          <br />
-          Comece adicionando uma evolução ou anamnese.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {records.map((r) => (
-            <RecordCard key={r.id} record={r} />
-          ))}
-        </div>
-      )}
+          {/* Odontogram panel (collapsible) */}
+          {showOdontogram && odontogramOpen && (
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="font-semibold text-sm flex items-center gap-2">
+                    <Smile className="h-4 w-4" /> Odontograma
+                  </p>
+                  <Button variant="ghost" size="sm" onClick={() => setOdontogramOpen(false)}>
+                    Fechar
+                  </Button>
+                </div>
+                <OdontogramComponent
+                  initialTeeth={odontogram?.teeth_status ?? {}}
+                  initialNotes={odontogram?.notes ?? ""}
+                  onSave={saveOdontogram}
+                />
+                {odontogram && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Última atualização: {format(new Date(odontogram.updated_at), "dd/MM/yyyy", { locale: ptBR })} — versão {odontogram.version}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Dialogs */}
-      <EvolutionDialog
-        open={evolutionOpen}
-        onOpenChange={setEvolutionOpen}
-        onSave={createRecord}
-      />
-      <AnamnesisForm
-        open={anamnesisOpen}
-        onOpenChange={setAnamnesisOpen}
-        templates={templates}
-        onSave={createRecord}
-      />
-    </div>
+          {/* Current odontogram summary (when closed) */}
+          {showOdontogram && !odontogramOpen && odontogram && (
+            <button
+              onClick={() => setOdontogramOpen(true)}
+              className="w-full flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition text-left"
+            >
+              <Smile className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Odontograma</p>
+                <p className="text-xs text-muted-foreground">
+                  Versão {odontogram.version} — {format(new Date(odontogram.updated_at), "dd/MM/yyyy", { locale: ptBR })}
+                </p>
+              </div>
+              <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+            </button>
+          )}
+
+          {/* Records timeline */}
+          {records.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground text-sm">
+              Nenhum registro no prontuário.
+              <br />
+              Comece adicionando uma evolução ou anamnese.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {records.map((r) => (
+                <RecordCard key={r.id} record={r} />
+              ))}
+            </div>
+          )}
+
+          {/* Dialogs */}
+          <EvolutionDialog
+            open={evolutionOpen}
+            onOpenChange={setEvolutionOpen}
+            onSave={createRecord}
+          />
+          <AnamnesisForm
+            open={anamnesisOpen}
+            onOpenChange={setAnamnesisOpen}
+            templates={templates}
+            onSave={createRecord}
+          />
+        </div>
+      </TabsContent>
+
+      {/* ── ABA IMAGENS / EXAMES ───────────────────────────── */}
+      <TabsContent value="exames">
+        <ExamImagesTab patientId={patientId} />
+      </TabsContent>
+    </Tabs>
   );
 }
