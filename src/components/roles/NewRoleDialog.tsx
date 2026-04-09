@@ -20,9 +20,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { 
-  LayoutDashboard, Users, FileText, Package, Building, DollarSign, 
-  ClipboardList, Headphones, BarChart3, Zap, Settings, Info 
+import {
+  LayoutDashboard, Users, FileText, Package, Building, DollarSign,
+  ClipboardList, Headphones, BarChart3, Zap, Settings, Info, CalendarDays
 } from "lucide-react";
 import { usePermissions, useCreateRole } from "@/hooks/usePermissions";
 import { CATEGORY_LABELS } from "@/types/permissions";
@@ -33,6 +33,7 @@ interface NewRoleDialogProps {
 }
 
 const categoryIcons: Record<string, React.ElementType> = {
+  agenda: CalendarDays,
   dashboard: LayoutDashboard,
   leads: Users,
   deals: FileText,

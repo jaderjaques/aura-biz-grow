@@ -21,6 +21,7 @@ export interface PermissionsByCategory {
 }
 
 export const CATEGORY_LABELS: Record<string, string> = {
+  agenda: 'Agenda',
   dashboard: 'Dashboard',
   leads: 'Leads',
   deals: 'Propostas',
