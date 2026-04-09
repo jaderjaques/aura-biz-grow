@@ -93,19 +93,31 @@ export function useCreateRole() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      name, 
-      description, 
-      permissionIds 
-    }: { 
-      name: string; 
-      description?: string; 
-      permissionIds: string[] 
+    mutationFn: async ({
+      name,
+      description,
+      permissionIds
+    }: {
+      name: string;
+      description?: string;
+      permissionIds: string[]
     }) => {
-      // Create role
+      // Fetch current user's tenant_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado.");
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile?.tenant_id) throw new Error("Tenant não encontrado.");
+
+      // Create role with tenant_id
       const { data: role, error: roleError } = await supabase
         .from("roles")
-        .insert([{ name, description }])
+        .insert([{ name, description, tenant_id: profile.tenant_id }])
         .select()
         .single();
 
