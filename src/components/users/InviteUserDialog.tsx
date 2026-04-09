@@ -128,7 +128,13 @@ export function InviteUserDialog({
 
       if (error) {
         console.error("Error creating invite:", error);
-        toast.error("Erro ao enviar convite");
+        let errorMsg = "Tente novamente em instantes.";
+        if (error.code === "23505") {
+          errorMsg = "Este e-mail já está cadastrado no sistema.";
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        toast.error("Erro ao enviar convite", { description: errorMsg });
       } else {
         const inviteLink = `${window.location.origin}/aceitar-convite?token=${inviteToken}`;
         
@@ -146,9 +152,10 @@ export function InviteUserDialog({
         onOpenChange(false);
         onSuccess();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error:", error);
-      toast.error("Erro ao enviar convite");
+      const msg = error instanceof Error ? error.message : "Tente novamente em instantes.";
+      toast.error("Erro ao enviar convite", { description: msg });
     }
 
     setIsSubmitting(false);
