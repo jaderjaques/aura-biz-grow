@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/accordion";
 import {
   LayoutDashboard, Users, FileText, Package, Building, DollarSign,
-  ClipboardList, Headphones, BarChart3, Zap, Settings, Info, CalendarDays
+  ClipboardList, Headphones, BarChart3, Zap, Settings, Info,
+  CalendarDays, Stethoscope, DoorOpen,
 } from "lucide-react";
 import { usePermissions, useCreateRole } from "@/hooks/usePermissions";
 import { CATEGORY_LABELS } from "@/types/permissions";
@@ -34,17 +35,20 @@ interface NewRoleDialogProps {
 
 const categoryIcons: Record<string, React.ElementType> = {
   agenda: CalendarDays,
-  dashboard: LayoutDashboard,
-  leads: Users,
-  deals: FileText,
-  products: Package,
+  consultorios: DoorOpen,
+  contracts: FileText,
   customers: Building,
+  dashboard: LayoutDashboard,
+  deals: FileText,
   financial: DollarSign,
+  integrations: Zap,
+  leads: Users,
+  products: Package,
+  profissionais: Stethoscope,
+  reports: BarChart3,
+  settings: Settings,
   tasks: ClipboardList,
   tickets: Headphones,
-  reports: BarChart3,
-  integrations: Zap,
-  settings: Settings,
 };
 
 export function NewRoleDialog({ open, onOpenChange }: NewRoleDialogProps) {

@@ -22,18 +22,20 @@ export interface PermissionsByCategory {
 
 export const CATEGORY_LABELS: Record<string, string> = {
   agenda: 'Agenda',
-  dashboard: 'Dashboard',
-  leads: 'Leads',
-  deals: 'Propostas',
-  products: 'Produtos',
-  customers: 'Clientes',
+  consultorios: 'Consultórios',
   contracts: 'Contratos',
+  customers: 'Clientes',
+  dashboard: 'Dashboard',
+  deals: 'Propostas',
   financial: 'Financeiro',
+  integrations: 'Integrações',
+  leads: 'Leads',
+  products: 'Serviços',
+  profissionais: 'Profissionais',
+  reports: 'Relatórios',
+  settings: 'Configurações',
   tasks: 'Tarefas',
   tickets: 'Suporte',
-  reports: 'Relatórios',
-  integrations: 'Integrações',
-  settings: 'Configurações'
 };
 
 export const CATEGORY_ICONS: Record<string, string> = {
