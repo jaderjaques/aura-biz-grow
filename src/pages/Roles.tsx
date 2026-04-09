@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, Plus, Edit, Trash2, Users } from "lucide-react";
 import { useRoles, useDeleteRole } from "@/hooks/usePermissions";
 import { NewRoleDialog } from "@/components/roles/NewRoleDialog";
+import { EditRoleDialog } from "@/components/roles/EditRoleDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,12 @@ import {
 export default function Roles() {
   const [showNewRoleDialog, setShowNewRoleDialog] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
+  const [roleToEdit, setRoleToEdit] = useState<{
+    id: string;
+    name: string;
+    description: string | null;
+    is_system_role: boolean | null;
+  } | null>(null);
   
   const { data: roles, isLoading } = useRoles();
   const deleteRole = useDeleteRole();
@@ -90,7 +97,15 @@ export default function Roles() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      disabled={role.is_system_role === true}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRoleToEdit({
+                          id: role.id,
+                          name: role.name,
+                          description: role.description,
+                          is_system_role: role.is_system_role,
+                        });
+                      }}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -131,9 +146,15 @@ export default function Roles() {
         )}
       </div>
 
-      <NewRoleDialog 
-        open={showNewRoleDialog} 
-        onOpenChange={setShowNewRoleDialog} 
+      <NewRoleDialog
+        open={showNewRoleDialog}
+        onOpenChange={setShowNewRoleDialog}
+      />
+
+      <EditRoleDialog
+        open={!!roleToEdit}
+        onOpenChange={(open) => { if (!open) setRoleToEdit(null); }}
+        role={roleToEdit}
       />
 
       <AlertDialog open={!!roleToDelete} onOpenChange={() => setRoleToDelete(null)}>
