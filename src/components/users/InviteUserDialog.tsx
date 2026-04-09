@@ -118,6 +118,7 @@ export function InviteUserDialog({
         email: data.email,
         phone: data.phone || null,
         role_id: data.roleId,
+        tenant_id: profile?.tenant_id,
         invited_by: profile?.id,
         invite_token: inviteToken,
         invite_sent_at: new Date().toISOString(),
