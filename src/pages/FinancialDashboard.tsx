@@ -479,7 +479,7 @@ export default function FinancialDashboard() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Clientes Ativos</p>
+                      <p className="text-sm text-muted-foreground">{isClinic ? "Pacientes Ativos" : "Clientes Ativos"}</p>
                       <p className="text-xl font-bold">{extraMetrics.activeCustomers}</p>
                     </div>
                     <Badge variant="secondary">Ativo</Badge>

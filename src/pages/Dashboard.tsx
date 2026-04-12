@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenantModule } from "@/hooks/useTenantModule";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -67,6 +68,9 @@ interface Metrics {
 export default function Dashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const { isClinic } = useTenantModule();
+  const patientsRoute = isClinic ? "/pacientes" : "/clientes";
+  const patientsLabel = isClinic ? "Pacientes Ativos" : "Clientes Ativos";
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -298,12 +302,12 @@ export default function Dashboard() {
             onClick={() => navigate("/financeiro")}
           />
           <KpiCard
-            title="Clientes Ativos"
+            title={patientsLabel}
             value={metrics.activeCustomers}
             growth={metrics.customersGrowth}
             icon={Users}
             iconClass="text-primary"
-            onClick={() => navigate("/clientes")}
+            onClick={() => navigate(patientsRoute)}
           />
           <KpiCard
             title="Pipeline"

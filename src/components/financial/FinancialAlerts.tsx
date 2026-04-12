@@ -21,6 +21,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useTenantModule } from "@/hooks/useTenantModule";
 
 interface AlertItem {
   id: string;
@@ -49,6 +50,9 @@ const formatCurrency = (value: number) =>
 
 export function FinancialAlerts() {
   const navigate = useNavigate();
+  const { isClinic } = useTenantModule();
+  const patientsRoute = isClinic ? "/pacientes" : "/clientes";
+  const patientsLabel = isClinic ? "Pacientes" : "Clientes";
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [cashflowProjection, setCashflowProjection] = useState({
@@ -141,7 +145,7 @@ export function FinancialAlerts() {
           type: "critical",
           category: "invoices",
           title: `${overdueInvoices.length} fatura(s) atrasada(s)`,
-          description: `Total de ${formatCurrency(totalOverdue)} em atraso. Contate os clientes imediatamente.`,
+          description: `Total de ${formatCurrency(totalOverdue)} em atraso. Contate os ${patientsLabel.toLowerCase()} imediatamente.`,
           action: { label: "Ver Faturas", path: "/faturas" },
           metric: { current: overdueInvoices.length, unit: "faturas" },
         });
@@ -155,7 +159,7 @@ export function FinancialAlerts() {
           type: "warning",
           category: "invoices",
           title: `${dueSoonInvoices.length} fatura(s) vencendo em 7 dias`,
-          description: `Total de ${formatCurrency(totalDueSoon)} a vencer. Envie lembretes aos clientes.`,
+          description: `Total de ${formatCurrency(totalDueSoon)} a vencer. Envie lembretes aos ${patientsLabel.toLowerCase()}.`,
           action: { label: "Ver Faturas", path: "/faturas" },
         });
       }
@@ -192,8 +196,8 @@ export function FinancialAlerts() {
           type: "critical",
           category: "churn",
           title: "Taxa de Churn alta",
-          description: `${churnRate.toFixed(1)}% dos clientes cancelaram este mês. Investigue os motivos e implemente ações de retenção.`,
-          action: { label: "Ver Clientes", path: "/clientes" },
+          description: `${churnRate.toFixed(1)}% dos ${patientsLabel.toLowerCase()} cancelaram este mês. Investigue os motivos e implemente ações de retenção.`,
+          action: { label: `Ver ${patientsLabel}`, path: patientsRoute },
           metric: { current: churnRate, target: 5, unit: "%" },
         });
       }
@@ -264,7 +268,7 @@ export function FinancialAlerts() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [patientsRoute, patientsLabel]);
 
   useEffect(() => {
     loadAlerts();

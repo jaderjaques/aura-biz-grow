@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTenantModule } from "@/hooks/useTenantModule";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -54,10 +55,10 @@ interface Goal {
   status?: string;
 }
 
-const typeLabels: Record<string, string> = {
+// typeLabels is built dynamically inside the component using newCustomersLabel
+const baseTypeLabels: Record<string, string> = {
   monthly_revenue: "Receita Mensal",
   mrr: "MRR",
-  new_customers: "Novos Clientes",
   churn_rate: "Taxa de Churn",
 };
 
@@ -78,6 +79,13 @@ function formatCurrency(value: number) {
 
 export function GoalsTab() {
   const { user } = useAuth();
+  const { isClinic } = useTenantModule();
+  const newCustomersLabel = isClinic ? "Novos Pacientes" : "Novos Clientes";
+  const newCustomersHint = isClinic ? "Quantidade de novos pacientes" : "Quantidade de novos clientes";
+  const typeLabels: Record<string, string> = {
+    ...baseTypeLabels,
+    new_customers: newCustomersLabel,
+  };
   const [loading, setLoading] = useState(true);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [isNewGoalOpen, setIsNewGoalOpen] = useState(false);
@@ -361,6 +369,7 @@ export function GoalsTab() {
             <GoalCard
               key={goal.id}
               goal={goal}
+              typeLabels={typeLabels}
               onEdit={() => openEditModal(goal)}
               onDelete={() => handleDelete(goal.id)}
             />
@@ -389,7 +398,7 @@ export function GoalsTab() {
                 <SelectContent>
                   <SelectItem value="monthly_revenue">Receita Mensal</SelectItem>
                   <SelectItem value="mrr">MRR (Receita Recorrente)</SelectItem>
-                  <SelectItem value="new_customers">Novos Clientes</SelectItem>
+                  <SelectItem value="new_customers">{newCustomersLabel}</SelectItem>
                   <SelectItem value="churn_rate">Taxa de Churn (%)</SelectItem>
                 </SelectContent>
               </Select>
@@ -407,7 +416,7 @@ export function GoalsTab() {
               />
               <p className="text-xs text-muted-foreground">
                 {formData.goal_type === "new_customers"
-                  ? "Quantidade de novos clientes"
+                  ? newCustomersHint
                   : formData.goal_type === "churn_rate"
                   ? "Percentual máximo aceitável"
                   : "Valor em R$"}
@@ -469,10 +478,12 @@ export function GoalsTab() {
 
 function GoalCard({
   goal,
+  typeLabels,
   onEdit,
   onDelete,
 }: {
   goal: Goal;
+  typeLabels: Record<string, string>;
   onEdit: () => void;
   onDelete: () => void;
 }) {
