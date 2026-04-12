@@ -20,10 +20,12 @@ import {
 import { Switch } from "@/components/ui/switch";
 import {
   User, Phone, Mail, MapPin, Shield, Calendar,
-  MessageCircle, Pencil, Save, X, Users, FileText,
+  MessageCircle, Pencil, Save, X, Users, FileText, AlertTriangle, ClipboardList,
 } from "lucide-react";
 import { PatientWithDetails, PatientStatus, GENDER_LABELS, Insurance } from "@/types/patients";
 import { MedicalRecordsTab } from "./MedicalRecordsTab";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PatientAnamnesisTab } from "./PatientAnamnesisTab";
 
 interface PatientDetailsSidebarProps {
   patient: PatientWithDetails | null;
@@ -73,6 +75,7 @@ export function PatientDetailsSidebar({
       address_state: patient.address_state || "",
       address_zip: patient.address_zip || "",
       notes: patient.notes || "",
+      allergies: patient.allergies || "",
     });
     setIsEditing(true);
   };
@@ -174,8 +177,18 @@ export function PatientDetailsSidebar({
           </div>
         </SheetHeader>
 
-        <Tabs defaultValue="info" className="mt-6">
-          <TabsList className="grid w-full grid-cols-3">
+        {/* Alerta de ATENÇÃO — alergias */}
+        {patient.allergies && (
+          <Alert className="mt-4 border-destructive/50 bg-destructive/10 text-destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="font-medium">
+              <span className="font-bold">ATENÇÃO:</span> {patient.allergies}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Tabs defaultValue="info" className="mt-4">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="info">
               <User className="h-4 w-4 mr-1" />
               Informações
@@ -187,6 +200,10 @@ export function PatientDetailsSidebar({
             <TabsTrigger value="prontuario">
               <FileText className="h-4 w-4 mr-1" />
               Prontuário
+            </TabsTrigger>
+            <TabsTrigger value="anamnese">
+              <ClipboardList className="h-4 w-4 mr-1" />
+              Anamnese
             </TabsTrigger>
           </TabsList>
 
@@ -392,6 +409,35 @@ export function PatientDetailsSidebar({
               </>
             )}
 
+            {/* ATENÇÃO — Alergias */}
+            {isEditing ? (
+              <>
+                <Separator />
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" /> ATENÇÃO (alergias, medicamentos, restrições)
+                  </Label>
+                  <Textarea
+                    value={form.allergies}
+                    onChange={(e) => set("allergies", e.target.value)}
+                    rows={2}
+                    placeholder="Ex: Alergia à penicilina, intolerante a látex..."
+                    className="border-destructive/50 focus-visible:ring-destructive/50"
+                  />
+                </div>
+              </>
+            ) : patient.allergies ? (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3.5 w-3.5" /> ATENÇÃO
+                  </h4>
+                  <p className="text-sm">{patient.allergies}</p>
+                </div>
+              </>
+            ) : null}
+
             {/* Observações */}
             {isEditing ? (
               <>
@@ -475,6 +521,10 @@ export function PatientDetailsSidebar({
           </TabsContent>
 
           {/* ABA PRONTUÁRIO */}
+          <TabsContent value="anamnese" className="mt-4">
+            <PatientAnamnesisTab patientId={patient.id} />
+          </TabsContent>
+
           <TabsContent value="prontuario" className="mt-4">
             <MedicalRecordsTab
               patientId={patient.id}

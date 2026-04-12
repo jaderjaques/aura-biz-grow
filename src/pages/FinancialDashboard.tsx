@@ -73,6 +73,7 @@ import {
   Legend,
 } from "recharts";
 import { useInvoices, useFinancialMetrics, useFinancialAlerts } from "@/hooks/useInvoices";
+import { useTenantModule } from "@/hooks/useTenantModule";
 import { NewInvoiceDialog } from "@/components/financial/NewInvoiceDialog";
 import { MarkAsPaidDialog } from "@/components/financial/MarkAsPaidDialog";
 import { InvoiceWithDetails } from "@/types/financial";
@@ -102,6 +103,8 @@ interface ProjectionData {
 
 export default function FinancialDashboard() {
   const navigate = useNavigate();
+  const { isClinic } = useTenantModule();
+  const patientsRoute = isClinic ? "/pacientes" : "/clientes";
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [showNewInvoice, setShowNewInvoice] = useState(false);
@@ -407,7 +410,7 @@ export default function FinancialDashboard() {
           <TabsContent value="dashboard" className="space-y-6 mt-6">
             {/* KPIs Principais */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/clientes")}>
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(patientsRoute)}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-medium text-muted-foreground">MRR</p>

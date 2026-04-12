@@ -34,6 +34,7 @@ export interface Patient {
   instagram: string | null;
   status: "active" | "inactive" | "blocked";
   notes: string | null;
+  allergies: string | null;
   tags: string[] | null;
   preferred_professional_id: string | null;
   preferred_day: string | null;
