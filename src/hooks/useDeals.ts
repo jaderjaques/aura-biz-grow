@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import { useToast } from "@/hooks/use-toast";
 import { Deal, DealWithDetails, SelectedProduct } from "@/types/products";
 
@@ -55,7 +56,7 @@ export function useDeals() {
   // ── Criar ────────────────────────────────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: async ({ dealData, products }: { dealData: Partial<Deal>; products: SelectedProduct[] }) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const profile = await getCurrentProfile();
 
       let setupValue = 0, recurringValue = 0, discountTotal = 0;
       products.forEach((p) => {
@@ -73,7 +74,8 @@ export function useDeals() {
           total_value: setupValue + recurringValue,
           setup_value: setupValue, recurring_value: recurringValue,
           discount_total: discountTotal,
-          created_by: user?.id, assigned_to: dealData.assigned_to || user?.id,
+          created_by: profile.id, assigned_to: dealData.assigned_to || profile.id,
+          tenant_id: profile.tenant_id,
         } as any)
         .select().single();
       if (dealError) throw dealError;
@@ -84,6 +86,7 @@ export function useDeals() {
             deal_id: deal.id, product_id: p.product.id,
             quantity: p.quantity, unit_price: p.unit_price,
             discount_percent: p.discount_percent, discount_amount: p.discount_amount,
+            tenant_id: profile.tenant_id,
           })) as any
         );
       }
