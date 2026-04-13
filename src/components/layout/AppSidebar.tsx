@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   UserCog,
   Shield,
+  Building,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/Logo";
@@ -80,11 +81,13 @@ const vendasItems: NavItem[] = [
 const configItems: NavItem[] = [
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
   { title: "Pipeline", href: "/configuracoes/pipeline", icon: GitBranch, adminOnly: true },
+  { title: "Empresa", href: "/configuracoes/empresa", icon: Building, adminOnly: true },
   { title: "Geral", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
 
 const clinicConfigItems: NavItem[] = [
   { title: "Usuários", href: "/configuracoes/usuarios", icon: UserPlus, adminOnly: true },
+  { title: "Empresa", href: "/configuracoes/empresa", icon: Building, adminOnly: true },
   { title: "Geral", href: "/configuracoes", icon: Settings, adminOnly: true },
 ];
 
