@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -86,12 +87,14 @@ export default function PipelineConfig() {
     setAdding(true);
     const maxOrder = stages.length > 0 ? Math.max(...stages.map((s) => s.stage_order)) : 0;
 
+    const profile = await getCurrentProfile();
     const { error } = await supabase.from("pipeline_stages").insert({
       name: newStageName.trim(),
       stage_order: maxOrder + 1,
       color: "#6366F1",
       is_closed_won: false,
       is_closed_lost: false,
+      tenant_id: profile.tenant_id,
     });
 
     if (error) {

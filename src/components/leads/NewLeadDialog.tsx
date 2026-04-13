@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import {
   Dialog,
   DialogContent,
@@ -99,8 +100,8 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
   const onSubmit = async (data: FormData) => {
     setLoading(true);
     try {
-      const { data: authUser } = await supabase.auth.getUser();
-      
+      const profile = await getCurrentProfile();
+
       const { data: newLead, error } = await supabase
         .from("leads")
         .insert({
@@ -120,7 +121,8 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
           source: "manual",
           status: "novo",
           stage: selectedStage || "Contato Inicial",
-          created_by: authUser.user?.id || null,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
         })
         .select()
         .single();

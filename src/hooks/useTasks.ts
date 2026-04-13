@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { TaskWithDetails, TaskMetrics, TaskStatus, TaskPriority, ChecklistItem } from "@/types/tasks";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 
 interface TaskFilters {
   assignedTo?: string;
@@ -146,7 +147,7 @@ export const useTasks = (filters?: TaskFilters) => {
       recurrence_pattern?: string;
       checklist?: ChecklistItem[];
     }) => {
-      const { data: userData } = await supabase.auth.getUser();
+      const profile = await getCurrentProfile();
 
       const { data, error } = await supabase
         .from("tasks")
@@ -156,7 +157,7 @@ export const useTasks = (filters?: TaskFilters) => {
           lead_id: task.lead_id || null,
           customer_id: task.customer_id || null,
           deal_id: task.deal_id || null,
-          assigned_to: task.assigned_to || userData.user?.id || null,
+          assigned_to: task.assigned_to || profile.id || null,
           priority: task.priority || "medium",
           task_type: task.task_type || null,
           due_date: task.due_date || null,
@@ -166,7 +167,8 @@ export const useTasks = (filters?: TaskFilters) => {
           recurrence_pattern: task.recurrence_pattern || null,
           checklist: task.checklist ? JSON.parse(JSON.stringify(task.checklist)) : null,
           status: "todo",
-          created_by: userData.user?.id || null,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
         }])
         .select()
         .single();
@@ -327,7 +329,7 @@ export const useActivities = (filters?: { leadId?: string; customerId?: string }
       next_action?: string;
       next_action_date?: string;
     }) => {
-      const { data: userData } = await supabase.auth.getUser();
+      const profile = await getCurrentProfile();
 
       const { data, error } = await supabase
         .from("activities")
@@ -343,7 +345,8 @@ export const useActivities = (filters?: { leadId?: string; customerId?: string }
           next_action: activity.next_action || null,
           next_action_date: activity.next_action_date || null,
           activity_date: new Date().toISOString(),
-          created_by: userData.user?.id || null,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
         })
         .select()
         .single();

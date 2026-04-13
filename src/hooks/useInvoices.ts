@@ -141,6 +141,7 @@ export const useInvoices = (filters?: {
       if (!invoice) throw new Error("Fatura não encontrada");
 
       // Create payment record
+      const profile = await getCurrentProfile();
       await supabase.from("payments").insert({
         invoice_id: invoiceId,
         customer_id: invoice.customer_id,
@@ -150,7 +151,8 @@ export const useInvoices = (filters?: {
         payment_method: paymentMethod,
         transaction_id: transactionId,
         notes,
-        created_by: user?.id,
+        created_by: profile.id,
+        tenant_id: profile.tenant_id,
       });
 
       // Update invoice status

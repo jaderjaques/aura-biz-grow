@@ -269,12 +269,14 @@ export function useLeads() {
     contact_name?: string; position?: string; segment?: string;
   }>) => {
     try {
+      const profile = await getCurrentProfile();
       const { data, error } = await supabase.from('leads').insert(
         leadsData.map(l => ({
           company_name: l.company_name, phone: l.phone, email: l.email || null,
           contact_name: l.contact_name || null, position: l.position || null,
           segment: l.segment || null, source: 'csv_import',
-          status: 'novo', stage: 'Contato Inicial', created_by: user?.id,
+          status: 'novo', stage: 'Contato Inicial',
+          created_by: profile.id, tenant_id: profile.tenant_id,
         }))
       ).select();
       if (error) throw error;

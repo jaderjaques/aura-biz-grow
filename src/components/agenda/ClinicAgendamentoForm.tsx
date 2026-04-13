@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -134,9 +135,10 @@ export function ClinicAgendamentoForm({
           .eq("id", appointment.id);
         if (error) throw error;
       } else {
+        const profile = await getCurrentProfile();
         const { error } = await supabase
           .from("appointments")
-          .insert([payload as any]);
+          .insert([{ ...payload, tenant_id: profile.tenant_id } as any]);
         if (error) throw error;
       }
     },

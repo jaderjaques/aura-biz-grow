@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { sendWhatsAppMessage } from "@/lib/whatsapp-helpers";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, Bot, User } from "lucide-react";
@@ -66,12 +67,14 @@ export function MessageInput({ chatId }: MessageInputProps) {
       if (textareaRef.current) textareaRef.current.style.height = "auto";
 
       // 1. Salvar no banco PRIMEIRO
+      const profile = await getCurrentProfile();
       const { error } = await supabase.from("chat_messages").insert({
         chat_id: chatId,
         direction: "outgoing",
         message_type: "text",
         content: trimmed,
-        sender_id: user?.id || null,
+        sender_id: profile.id,
+        tenant_id: profile.tenant_id,
       });
 
       if (error) {

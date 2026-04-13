@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ApiKey, Webhook, MessageTemplate, IntegrationLog, IntegrationSetting } from "@/types/integrations";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 
 // API Keys hooks
 export function useApiKeys() {
@@ -26,8 +27,7 @@ export function useCreateApiKey() {
 
   return useMutation({
     mutationFn: async (data: { key_name: string; scopes: string[]; expires_at?: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      const profile = await getCurrentProfile();
 
       // Generate API key with secure random bytes
       const apiKey = `rua_${crypto.randomUUID().replace(/-/g, "")}`;
@@ -46,7 +46,8 @@ export function useCreateApiKey() {
       const { data: result, error } = await supabase
         .from("api_keys")
         .insert({
-          user_id: user.id,
+          user_id: profile.id,
+          tenant_id: profile.tenant_id,
           key_name: data.key_name,
           api_key: apiKeyPrefix + '...', // Store only truncated version for display
           api_key_hash: apiKeyHash,       // Store hash for validation
@@ -146,13 +147,13 @@ export function useCreateWebhook() {
       auth_type?: string;
       auth_config?: Record<string, string>;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      const profile = await getCurrentProfile();
 
       const { data: result, error } = await supabase
         .from("webhooks")
         .insert({
-          user_id: user.id,
+          user_id: profile.id,
+          tenant_id: profile.tenant_id,
           name: data.name,
           url: data.url,
           events: data.events,
@@ -249,14 +250,14 @@ export function useCreateTemplate() {
       body: string;
       category?: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      const profile = await getCurrentProfile();
 
       const { data: result, error } = await supabase
         .from("message_templates")
         .insert({
           ...data,
-          created_by: user.id,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
         })
         .select()
         .single();

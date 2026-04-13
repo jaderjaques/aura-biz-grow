@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTenantModule } from "@/hooks/useTenantModule";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -194,13 +195,15 @@ export function GoalsTab() {
     setSaving(true);
 
     try {
+      const profile = await getCurrentProfile();
       const dataToSave = {
         goal_type: formData.goal_type,
         target_value: parseFloat(formData.target_value),
         period_start: formData.period_start,
         period_end: formData.period_end,
         description: formData.description || null,
-        created_by: user?.id || null,
+        created_by: profile.id,
+        tenant_id: profile.tenant_id,
       };
 
       if (editingGoal) {

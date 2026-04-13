@@ -2,6 +2,7 @@ import { useState } from "react";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,7 +85,7 @@ export default function Deals() {
       const deal = deals.find((d) => d.id === dealId);
       if (!deal) return;
 
-      const { data: user } = await supabase.auth.getUser();
+      const profile = await getCurrentProfile();
 
       const { data: quote, error } = await supabase
         .from("quotes")
@@ -94,7 +95,8 @@ export default function Deals() {
           total_value: deal.total_value,
           status: "draft",
           valid_until: addDays(new Date(), 15).toISOString().split("T")[0],
-          created_by: user.user?.id,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
         } as any)
         .select()
         .single();

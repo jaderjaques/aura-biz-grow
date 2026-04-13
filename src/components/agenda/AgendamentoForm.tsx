@@ -4,6 +4,7 @@ import * as z from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { X, Calendar, Clock, User, MapPin, FileText } from "lucide-react";
@@ -125,9 +126,10 @@ export function AgendamentoForm({ appointment, onClose }: AgendamentoFormProps) 
         if (error) throw error;
         appointmentId = appointment.id;
       } else {
+        const profile = await getCurrentProfile();
         const { data, error } = await supabase
           .from("appointments")
-          .insert([payload as any])
+          .insert([{ ...payload, tenant_id: profile.tenant_id } as any])
           .select("id")
           .single();
         if (error) throw error;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,9 +74,10 @@ export default function Consultorios() {
         if (error) throw error;
         toast.success("Consultório atualizado!");
       } else {
+        const profile = await getCurrentProfile();
         const { error } = await supabase
           .from("consultorios")
-          .insert({ name: form.name, description: form.description || null, active: true });
+          .insert({ name: form.name, description: form.description || null, active: true, tenant_id: profile.tenant_id });
         if (error) throw error;
         toast.success("Consultório criado!");
       }

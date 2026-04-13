@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 import {
   Dialog,
   DialogContent,
@@ -134,7 +135,7 @@ export function TransactionFormDialog({
     setLoading(true);
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const profile = await getCurrentProfile();
 
       let error;
 
@@ -167,7 +168,8 @@ export function TransactionFormDialog({
           is_recurring: formData.is_recurring,
           revenue_category_id: transactionType === "revenue" ? formData.category_id : null,
           expense_category_id: transactionType === "expense" ? formData.category_id : null,
-          created_by: userData.user?.id,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
         };
         ({ error } = await supabase.from("cash_transactions").insert([insertData]));
       }

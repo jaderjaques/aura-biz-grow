@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getCurrentProfile } from '@/lib/tenant-utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,9 +93,12 @@ export function SavedSegments({ currentFilters = {}, onApplySegment }: SavedSegm
 
     setLoading(true);
     try {
+      const profile = await getCurrentProfile();
       const dataToSave = {
         ...formData,
         filters: currentFilters as unknown as Json,
+        tenant_id: profile.tenant_id,
+        created_by: profile.id,
       };
 
       if (editingSegment) {

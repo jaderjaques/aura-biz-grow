@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getCurrentProfile } from '@/lib/tenant-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -106,9 +107,10 @@ export function TagManager() {
         if (error) throw error;
         toast.success('Tag atualizada!');
       } else {
+        const profile = await getCurrentProfile();
         const { error } = await supabase
           .from('tags')
-          .insert([formData]);
+          .insert([{ ...formData, tenant_id: profile.tenant_id }]);
 
         if (error) throw error;
         toast.success('Tag criada!');

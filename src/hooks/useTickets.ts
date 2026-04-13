@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Ticket, TicketCategory, TicketMessage, QuickReply } from '@/types/tickets';
+import { getCurrentProfile } from '@/lib/tenant-utils';
 
 export function useTickets() {
   const { user } = useAuth();
@@ -72,11 +73,13 @@ export function useTickets() {
       priority?: string;
       assigned_to?: string;
     }) => {
+      const profile = await getCurrentProfile();
       const { data, error } = await supabase
         .from('tickets')
         .insert({
           ...ticket,
-          created_by: user?.id,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
         })
         .select()
         .single();
@@ -120,11 +123,13 @@ export function useTickets() {
       message: string;
       is_internal?: boolean;
     }) => {
+      const profile = await getCurrentProfile();
       const { data, error } = await supabase
         .from('ticket_messages')
         .insert({
           ...message,
-          created_by: user?.id,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
           is_customer: false,
         })
         .select()
