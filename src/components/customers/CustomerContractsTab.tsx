@@ -84,7 +84,7 @@ export function CustomerContractsTab({ customerId, customerName }: CustomerContr
 
   const goToDeals = () => {
     setShowNewDealInfo(false);
-    navigate("/negociacoes");
+    navigate("/propostas");
   };
 
   if (loading) {
@@ -193,14 +193,14 @@ export function CustomerContractsTab({ customerId, customerName }: CustomerContr
             <AlertDialogTitle>Adicionar Novo Serviço</AlertDialogTitle>
             <AlertDialogDescription>
               Para adicionar um novo serviço ao cliente <strong>{customerName}</strong>, 
-              é necessário criar uma nova proposta no módulo de Negociações. 
+              é necessário criar uma nova proposta no módulo de Propostas.
               Isso garante que o processo comercial seja seguido corretamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={goToDeals}>
-              Ir para Negociações
+              Ir para Propostas
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
