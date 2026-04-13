@@ -12,7 +12,7 @@ const settingsTabs = [
   { id: "integracoes", label: "Integrações", icon: Key, href: "/configuracoes/integracoes" },
   { id: "equipe", label: "Equipe", icon: Users, href: "/configuracoes/equipe", comingSoon: true },
   { id: "notificacoes", label: "Notificações", icon: Bell, href: "/configuracoes/notificacoes", comingSoon: true },
-  { id: "empresa", label: "Empresa", icon: Building, href: "/configuracoes/empresa", comingSoon: true },
+  { id: "empresa", label: "Empresa", icon: Building, href: "/configuracoes/empresa" },
 ];
 
 export default function Settings() {
