@@ -52,9 +52,7 @@ export default function IntegracoesPage() {
   const handleConnect = () => {
     const clientId = "1075042757758-4v85dipv2a5ledandiu3ap6ks31vq0cf.apps.googleusercontent.com";
 
-    console.log('🔍 DEBUG - Client ID:', clientId);
-    console.log('🔍 DEBUG - Client ID length:', clientId?.length);
-    console.log('🔍 DEBUG - Client ID type:', typeof clientId);
+
 
     const redirectUri = `${window.location.origin}/google-calendar/callback`;
     const scope = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events';
@@ -68,7 +66,6 @@ export default function IntegracoesPage() {
       `prompt=consent&` +
       `state=${user?.id}`;
 
-    console.log('🔍 DEBUG - Auth URL:', authUrl);
 
     window.location.href = authUrl;
   };

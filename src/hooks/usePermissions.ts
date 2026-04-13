@@ -39,32 +39,31 @@ export function useRoles() {
   return useQuery({
     queryKey: ["roles-with-details"],
     queryFn: async () => {
-      const { data: roles, error: rolesError } = await supabase
-        .from("roles")
-        .select("*")
-        .order("name");
+      // Fetch roles + aggregated counts in 3 parallel queries instead of 2N
+      const [rolesResult, profilesResult, rpResult] = await Promise.all([
+        supabase.from("roles").select("*").order("name"),
+        supabase.from("profiles").select("role_id").not("role_id", "is", null),
+        supabase.from("role_permissions").select("role_id"),
+      ]);
 
-      if (rolesError) throw rolesError;
+      if (rolesResult.error) throw rolesResult.error;
 
-      const rolesWithDetails: RoleWithDetails[] = await Promise.all(
-        roles.map(async (role) => {
-          const { count: usersCount } = await supabase
-            .from("profiles")
-            .select("*", { count: "exact", head: true })
-            .eq("role_id", role.id);
+      // Build count maps client-side from flat arrays
+      const usersCountMap: Record<string, number> = {};
+      for (const p of profilesResult.data ?? []) {
+        if (p.role_id) usersCountMap[p.role_id] = (usersCountMap[p.role_id] ?? 0) + 1;
+      }
 
-          const { count: permissionsCount } = await supabase
-            .from("role_permissions")
-            .select("*", { count: "exact", head: true })
-            .eq("role_id", role.id);
+      const permissionsCountMap: Record<string, number> = {};
+      for (const rp of rpResult.data ?? []) {
+        permissionsCountMap[rp.role_id] = (permissionsCountMap[rp.role_id] ?? 0) + 1;
+      }
 
-          return {
-            ...role,
-            users_count: usersCount || 0,
-            permissions_count: permissionsCount || 0
-          };
-        })
-      );
+      const rolesWithDetails: RoleWithDetails[] = rolesResult.data.map((role) => ({
+        ...role,
+        users_count: usersCountMap[role.id] ?? 0,
+        permissions_count: permissionsCountMap[role.id] ?? 0,
+      }));
 
       return rolesWithDetails;
     }

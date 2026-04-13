@@ -41,9 +41,7 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
 
   // Realtime messages
   useEffect(() => {
-    console.log("🔄 Criando subscription para chatId:", chatId);
     if (!chatId) {
-      console.log("❌ chatId undefined, subscription não criada");
       return;
     }
 
@@ -57,11 +55,9 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           table: "chat_messages",
         },
         (payload) => {
-          console.log("🔥 REALTIME CALLBACK EXECUTOU", payload.new);
           const newMsg = payload.new as any;
           if (newMsg.chat_id !== chatId) return;
           queryClient.setQueryData(["messages", chatId], (old: any) => {
-            console.log("📝 setQueryData executou, old length:", old?.length);
             if (!old) return [newMsg];
             const exists = old.some((m: any) => m.id === newMsg.id);
             if (exists) return old;
@@ -69,12 +65,9 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           });
         }
       )
-      .subscribe((status) => {
-        console.log("📡 Realtime status:", status, "chatId:", chatId);
-      });
+      .subscribe();
 
     return () => {
-      console.log("🔴 Removendo subscription para chatId:", chatId);
       supabase.removeChannel(channel);
     };
   }, [chatId, queryClient]);

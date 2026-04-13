@@ -20,8 +20,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import {
   User, Phone, Mail, MapPin, Shield, Calendar,
-  MessageCircle, Pencil, Save, X, Users, FileText, AlertTriangle, ClipboardList,
+  MessageCircle, Pencil, Save, X, Users, FileText, AlertTriangle, ClipboardList, Eye, EyeOff,
 } from "lucide-react";
+import { maskCPF, formatCPF } from "@/lib/format-utils";
 import { PatientWithDetails, PatientStatus, GENDER_LABELS, Insurance } from "@/types/patients";
 import { MedicalRecordsTab } from "./MedicalRecordsTab";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -47,6 +48,7 @@ export function PatientDetailsSidebar({
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>({});
+  const [showCPF, setShowCPF] = useState(false);
 
   if (!patient) return null;
 
@@ -345,9 +347,22 @@ export function PatientDetailsSidebar({
               ) : (
                 <div className="grid gap-2 text-sm">
                   {patient.cpf && (
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">CPF:</span>
-                      <span>{patient.cpf}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="font-mono text-xs">
+                          {showCPF ? formatCPF(patient.cpf) : maskCPF(patient.cpf)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          onClick={() => setShowCPF((v) => !v)}
+                          title={showCPF ? "Ocultar CPF" : "Revelar CPF"}
+                        >
+                          {showCPF ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                        </Button>
+                      </div>
                     </div>
                   )}
                   {patient.birth_date && (

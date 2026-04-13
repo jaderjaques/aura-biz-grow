@@ -60,7 +60,6 @@ export default function Tasks() {
   const handleOpenTask = (taskId: string) => {
     setSelectedTaskId(taskId);
     // TODO: Open task details sidebar/modal
-    console.log("Open task:", taskId);
   };
 
   const handleCompleteTask = (task: TaskWithDetails) => {

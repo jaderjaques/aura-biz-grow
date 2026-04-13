@@ -135,6 +135,8 @@ export function ExamImagesTab({ patientId }: ExamImagesTabProps) {
                       src={img.file_url}
                       alt={img.file_name}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
                       }}
@@ -298,6 +300,8 @@ export function ExamImagesTab({ patientId }: ExamImagesTabProps) {
                 src={previewUrl}
                 alt={previewName}
                 className="max-w-full max-h-[65vh] object-contain rounded"
+                loading="lazy"
+                decoding="async"
               />
             ) : previewUrl ? (
               <iframe
