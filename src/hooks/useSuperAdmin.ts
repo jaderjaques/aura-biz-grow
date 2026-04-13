@@ -35,14 +35,21 @@ export function useSuperAdmin() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from("profiles")
-      .select("is_super_admin")
-      .single()
-      .then(({ data }) => {
-        setIsSuperAdmin(data?.is_super_admin ?? false);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
         setLoading(false);
-      });
+        return;
+      }
+      supabase
+        .from("profiles")
+        .select("is_super_admin")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          setIsSuperAdmin(data?.is_super_admin ?? false);
+          setLoading(false);
+        });
+    });
   }, []);
 
   return { isSuperAdmin, loading };
