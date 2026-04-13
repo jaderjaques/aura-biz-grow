@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/types/products";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -37,13 +38,13 @@ export function useProducts() {
 
   const createProduct = async (productData: Partial<Product>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const profile = await getCurrentProfile();
       const { data, error } = await supabase
         .from("products")
         .insert({
           ...productData,
-          created_by: user?.id,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
         } as any)
         .select()
         .single();

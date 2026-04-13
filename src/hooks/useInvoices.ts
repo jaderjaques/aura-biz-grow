@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { InvoiceWithDetails, PaymentWithDetails, FinancialAlert, FinancialMetrics } from "@/types/financial";
+import { getCurrentProfile } from "@/lib/tenant-utils";
 
 export const useInvoices = (filters?: {
   status?: string;
@@ -55,14 +56,14 @@ export const useInvoices = (filters?: {
       description?: string;
       is_recurring?: boolean;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const profile = await getCurrentProfile();
       const { data, error } = await supabase
         .from("invoices")
         .insert({
           ...invoice,
           invoice_number: "",
-          created_by: user?.id,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
         })
         .select()
         .single();

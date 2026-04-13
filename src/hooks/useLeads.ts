@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Lead, PipelineStage, Tag, Activity, StageHistory } from '@/types/leads';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { getCurrentProfile } from '@/lib/tenant-utils';
 
 const LEADS_KEY   = ['leads'];
 const STAGES_KEY  = ['pipeline-stages'];
@@ -134,6 +135,7 @@ export function useLeads() {
     company_name: string; phone: string; [key: string]: unknown;
   }) => {
     try {
+      const profile = await getCurrentProfile();
       const { data, error } = await supabase
         .from('leads')
         .insert({
@@ -153,7 +155,8 @@ export function useLeads() {
           source:          (leadData.source   as string) || 'manual',
           status:          (leadData.status   as string) || 'novo',
           stage:           (leadData.stage    as string) || 'Contato Inicial',
-          created_by:      user?.id,
+          created_by:      profile.id,
+          tenant_id:       profile.tenant_id,
         })
         .select().single();
       if (error) throw error;
@@ -196,6 +199,7 @@ export function useLeads() {
           if (lead) {
             const { data: existingCustomer } = await supabase.from('customers').select('id').eq('lead_id', leadId).single();
             if (!existingCustomer) {
+              const profile = await getCurrentProfile();
               const { error: customerError } = await supabase.from('customers').insert({
                 company_name: lead.company_name, trading_name: lead.trading_name, cnpj: lead.cnpj,
                 contact_name: lead.contact_name || lead.company_name, position: lead.position,
@@ -203,7 +207,8 @@ export function useLeads() {
                 segment: lead.segment, company_size: lead.company_size, employee_count: lead.employee_count,
                 lead_id: leadId, deal_id: deal.id, status: 'active',
                 customer_since: new Date().toISOString().split('T')[0],
-                monthly_value: deal.recurring_value || 0, created_by: user?.id,
+                monthly_value: deal.recurring_value || 0, created_by: profile.id,
+                tenant_id: profile.tenant_id,
               });
               if (!customerError) toast({ title: '🎉 Cliente criado!', description: `${lead.company_name} foi convertido em cliente automaticamente.` });
             }

@@ -76,9 +76,14 @@ export function useCustomers() {
   const createMutation = useMutation({
     mutationFn: async (customerData: any) => {
       const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("id", user!.id)
+        .single();
       const { data, error } = await supabase
         .from("customers")
-        .insert({ ...customerData, created_by: user?.id })
+        .insert({ ...customerData, created_by: user?.id, tenant_id: profile?.tenant_id })
         .select().single();
       if (error) throw error;
       return data;
@@ -154,7 +159,15 @@ export function useContracts(customerId?: string) {
   const createMutation = useMutation({
     mutationFn: async (contractData: any) => {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data, error } = await supabase.from("contracts").insert({ ...contractData, created_by: user?.id }).select().single();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("tenant_id")
+        .eq("id", user!.id)
+        .single();
+      const { data, error } = await supabase
+        .from("contracts")
+        .insert({ ...contractData, created_by: user?.id, tenant_id: profile?.tenant_id })
+        .select().single();
       if (error) throw error;
       return data;
     },
