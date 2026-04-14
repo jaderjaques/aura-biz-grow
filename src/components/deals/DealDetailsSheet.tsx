@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -19,7 +20,10 @@ import {
   CheckCircle,
   XCircle,
   FileText,
+  Pencil,
 } from "lucide-react";
+import { EditDealDialog } from "./EditDealDialog";
+import { useDeals } from "@/hooks/useDeals";
 
 interface DealDetailsSheetProps {
   deal: DealWithDetails | null;
@@ -38,11 +42,19 @@ export function DealDetailsSheet({
   onMarkAsLost,
   onGenerateQuote,
 }: DealDetailsSheetProps) {
+  const { fetchDeals } = useDeals();
+  const [showEdit, setShowEdit] = useState(false);
+
   if (!deal) return null;
 
+  // Fallback: compute totals from deal_products when stored values are missing
+  const productsTotal = (deal.deal_products || []).reduce(
+    (sum, dp) => sum + Number(dp.unit_price) * dp.quantity,
+    0
+  );
   const setupValue = Number(deal.setup_value) || 0;
   const recurringValue = Number(deal.recurring_value) || 0;
-  const totalValue = Number(deal.total_value) || 0;
+  const totalValue = Number(deal.total_value) || productsTotal;
 
   const getStageColor = (stage: string) => {
     switch (stage) {
@@ -68,7 +80,18 @@ export function DealDetailsSheet({
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="sm:max-w-[480px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle className="text-left">{deal.title}</SheetTitle>
+          <div className="flex items-start justify-between gap-2">
+            <SheetTitle className="text-left">{deal.title}</SheetTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setShowEdit(true)}
+            >
+              <Pencil className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
           <div className="flex items-center gap-2">
             <Badge className={getStageColor(deal.stage || "proposta")}>
               {getStageLabel(deal.stage || "proposta")}
@@ -247,6 +270,13 @@ export function DealDetailsSheet({
           </div>
         </div>
       </SheetContent>
+
+      <EditDealDialog
+        deal={deal}
+        open={showEdit}
+        onOpenChange={setShowEdit}
+        onSuccess={() => { fetchDeals(); }}
+      />
     </Sheet>
   );
 }
