@@ -27,6 +27,7 @@ import { Product, SelectedProduct } from "@/types/products";
 import { Lead } from "@/types/leads";
 import { useProducts } from "@/hooks/useProducts";
 import { useLeads } from "@/hooks/useLeads";
+import { useCustomers } from "@/hooks/useCustomers";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProductSelectorDialog } from "./ProductSelectorDialog";
 
@@ -40,10 +41,12 @@ interface NewDealDialogProps {
 export function NewDealDialog({ open, onOpenChange, onSubmit, lead }: NewDealDialogProps) {
   const { isAdmin } = useAuth();
   const { leads } = useLeads();
+  const { customers } = useCustomers();
   const [loading, setLoading] = useState(false);
   const [showProductSelector, setShowProductSelector] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string>("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -65,6 +68,7 @@ export function NewDealDialog({ open, onOpenChange, onSubmit, lead }: NewDealDia
       });
       setSelectedProducts([]);
       setSelectedLeadId(lead?.id || "");
+      setSelectedCustomerId("");
     }
   }, [open, lead]);
 
@@ -188,6 +192,7 @@ export function NewDealDialog({ open, onOpenChange, onSubmit, lead }: NewDealDia
           title: formData.title,
           description: formData.description || null,
           lead_id: selectedLeadId || lead?.id || null,
+          customer_id: selectedCustomerId || null,
           expected_close_date: formData.expected_close_date || null,
           payment_terms: formData.payment_terms || null,
           probability: parseInt(formData.probability),
@@ -243,26 +248,54 @@ export function NewDealDialog({ open, onOpenChange, onSubmit, lead }: NewDealDia
               </div>
 
               {!lead && (
-                <div className="col-span-2">
-                  <Label htmlFor="lead_id">Cliente / Lead</Label>
-                  <Select
-                    value={selectedLeadId || "none"}
-                    onValueChange={(v) => setSelectedLeadId(v === "none" ? "" : v)}
-                  >
-                    <SelectTrigger id="lead_id">
-                      <SelectValue placeholder="Selecione um lead/cliente (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">— Nenhum —</SelectItem>
-                      {leads.map((l) => (
-                        <SelectItem key={l.id} value={l.id}>
-                          {l.company_name}
-                          {l.contact_name ? ` — ${l.contact_name}` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <>
+                  <div className="col-span-2">
+                    <Label htmlFor="customer_id">Cliente Cadastrado</Label>
+                    <Select
+                      value={selectedCustomerId || "none"}
+                      onValueChange={(v) => {
+                        setSelectedCustomerId(v === "none" ? "" : v);
+                        if (v !== "none") setSelectedLeadId("");
+                      }}
+                    >
+                      <SelectTrigger id="customer_id">
+                        <SelectValue placeholder="Selecione um cliente (opcional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Nenhum —</SelectItem>
+                        {customers.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.company_name}
+                            {c.contact_name ? ` — ${c.contact_name}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {!selectedCustomerId && (
+                    <div className="col-span-2">
+                      <Label htmlFor="lead_id">ou Lead</Label>
+                      <Select
+                        value={selectedLeadId || "none"}
+                        onValueChange={(v) => setSelectedLeadId(v === "none" ? "" : v)}
+                      >
+                        <SelectTrigger id="lead_id">
+                          <SelectValue placeholder="Selecione um lead (opcional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">— Nenhum —</SelectItem>
+                          {leads.map((l) => (
+                            <SelectItem key={l.id} value={l.id}>
+                              {l.company_name}
+                              {l.contact_name ? ` — ${l.contact_name}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

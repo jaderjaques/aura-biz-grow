@@ -8,8 +8,8 @@ const DEALS_KEY = ["deals"];
 
 // ── query helper ──────────────────────────────────────────────────────────────
 
-async function fetchDealsQuery(): Promise<DealWithDetails[]> {
-  const { data, error } = await supabase
+async function fetchDealsQuery(customerId?: string): Promise<DealWithDetails[]> {
+  let query = supabase
     .from("deals")
     .select(`
       *,
@@ -18,6 +18,9 @@ async function fetchDealsQuery(): Promise<DealWithDetails[]> {
     `)
     .order("created_at", { ascending: false });
 
+  if (customerId) query = query.eq("customer_id", customerId);
+
+  const { data, error } = await query;
   if (error) throw error;
 
   const dealsData = data || [];
@@ -40,18 +43,21 @@ async function fetchDealsQuery(): Promise<DealWithDetails[]> {
 
 // ── hook ──────────────────────────────────────────────────────────────────────
 
-export function useDeals() {
+export function useDeals(customerId?: string) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const queryKey = customerId ? [...DEALS_KEY, customerId] : DEALS_KEY;
+
   const { data: deals = [], isLoading: loading } = useQuery<DealWithDetails[]>({
-    queryKey: DEALS_KEY,
-    queryFn: fetchDealsQuery,
+    queryKey,
+    queryFn: () => fetchDealsQuery(customerId),
     staleTime: 3 * 60_000,
   });
 
   const invalidate  = () => queryClient.invalidateQueries({ queryKey: DEALS_KEY });
   const fetchDeals  = () => invalidate();
+
 
   // ── Criar ────────────────────────────────────────────────────────────────
   const createMutation = useMutation({
@@ -76,6 +82,7 @@ export function useDeals() {
           discount_total: discountTotal,
           created_by: profile.id, assigned_to: dealData.assigned_to || profile.id,
           tenant_id: profile.tenant_id,
+          customer_id: (dealData as any).customer_id || null,
         } as any)
         .select().single();
       if (dealError) throw dealError;

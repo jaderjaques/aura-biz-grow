@@ -36,11 +36,15 @@ import {
   Pencil,
   X,
   Save,
+  Package,
+  Plus,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerWithDetails, CustomerStatus } from "@/types/customers";
 import { CustomerInvoicesTab } from "./CustomerInvoicesTab";
 import { CustomerContractsTab } from "./CustomerContractsTab";
+import { NewServiceDialog } from "./NewServiceDialog";
+import { useDeals } from "@/hooks/useDeals";
 
 interface CustomerDetailsSidebarProps {
   customer: CustomerWithDetails | null;
@@ -58,6 +62,8 @@ export function CustomerDetailsSidebar({
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showNewService, setShowNewService] = useState(false);
+  const { deals: customerDeals, loading: dealsLoading, fetchDeals } = useDeals(customer?.id);
   const [form, setForm] = useState({
     company_name: "",
     contact_name: "",
@@ -172,10 +178,14 @@ export function CustomerDetailsSidebar({
         </SheetHeader>
 
         <Tabs defaultValue="info" className="mt-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="info">
               <Building2 className="h-4 w-4 mr-1" />
-              Informações
+              Dados
+            </TabsTrigger>
+            <TabsTrigger value="services">
+              <Package className="h-4 w-4 mr-1" />
+              Serviços
             </TabsTrigger>
             <TabsTrigger value="invoices">
               <Receipt className="h-4 w-4 mr-1" />
@@ -183,7 +193,7 @@ export function CustomerDetailsSidebar({
             </TabsTrigger>
             <TabsTrigger value="contracts">
               <FileText className="h-4 w-4 mr-1" />
-              Serviços
+              Contratos
             </TabsTrigger>
           </TabsList>
 
@@ -417,6 +427,79 @@ export function CustomerDetailsSidebar({
             )}
           </TabsContent>
 
+          {/* ── Aba Serviços Contratados ─────────────────────────── */}
+          <TabsContent value="services" className="mt-4 space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold">Serviços Contratados ({customerDeals.length})</h3>
+              <Button size="sm" onClick={() => setShowNewService(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Adicionar Serviço
+              </Button>
+            </div>
+
+            {dealsLoading ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Carregando...</p>
+            ) : customerDeals.length === 0 ? (
+              <Card>
+                <CardContent className="py-10 text-center text-muted-foreground">
+                  <Package className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">Nenhum serviço registrado.</p>
+                  <Button variant="outline" size="sm" className="mt-3" onClick={() => setShowNewService(true)}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Adicionar primeiro serviço
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {customerDeals.map((deal) => {
+                  const total = Number(deal.total_value) ||
+                    (deal.deal_products || []).reduce((s, dp) => s + Number(dp.unit_price) * dp.quantity, 0);
+                  const recurring = Number(deal.recurring_value) ||
+                    (deal.deal_products || [])
+                      .filter((dp) => dp.product?.is_recurring)
+                      .reduce((s, dp) => s + Number(dp.unit_price) * dp.quantity, 0);
+
+                  return (
+                    <Card key={deal.id}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium text-sm">{deal.title}</p>
+                            {deal.deal_products && deal.deal_products.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {deal.deal_products.map((dp) => (
+                                  <Badge key={dp.id} variant="outline" className="text-xs">
+                                    {dp.product?.name}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-primary text-sm">
+                              {formatCurrency(total)}
+                            </p>
+                            {recurring > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                {formatCurrency(recurring)}/mês
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {deal.payment_terms && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Pagamento: {deal.payment_terms.toUpperCase()}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="invoices" className="mt-4">
             <CustomerInvoicesTab customerId={customer.id} />
           </TabsContent>
@@ -426,6 +509,14 @@ export function CustomerDetailsSidebar({
           </TabsContent>
         </Tabs>
       </SheetContent>
+
+      <NewServiceDialog
+        open={showNewService}
+        onOpenChange={setShowNewService}
+        customerId={customer.id}
+        customerName={customer.company_name}
+        onSuccess={() => fetchDeals()}
+      />
     </Sheet>
   );
 }
