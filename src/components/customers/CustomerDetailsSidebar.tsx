@@ -44,7 +44,9 @@ import { CustomerWithDetails, CustomerStatus } from "@/types/customers";
 import { CustomerInvoicesTab } from "./CustomerInvoicesTab";
 import { CustomerContractsTab } from "./CustomerContractsTab";
 import { NewServiceDialog } from "./NewServiceDialog";
+import { EditServiceDialog } from "./EditServiceDialog";
 import { useDeals } from "@/hooks/useDeals";
+import { DealWithDetails } from "@/types/products";
 
 interface CustomerDetailsSidebarProps {
   customer: CustomerWithDetails | null;
@@ -63,6 +65,7 @@ export function CustomerDetailsSidebar({
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showNewService, setShowNewService] = useState(false);
+  const [editingService, setEditingService] = useState<DealWithDetails | null>(null);
   const { deals: customerDeals, loading: dealsLoading, fetchDeals } = useDeals(customer?.id);
   const [form, setForm] = useState({
     company_name: "",
@@ -461,11 +464,11 @@ export function CustomerDetailsSidebar({
                       .reduce((s, dp) => s + Number(dp.unit_price) * dp.quantity, 0);
 
                   return (
-                    <Card key={deal.id}>
+                    <Card key={deal.id} className="hover:shadow-sm transition-shadow">
                       <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-medium text-sm">{deal.title}</p>
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{deal.title}</p>
                             {deal.deal_products && deal.deal_products.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {deal.deal_products.map((dp) => (
@@ -475,23 +478,34 @@ export function CustomerDetailsSidebar({
                                 ))}
                               </div>
                             )}
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-primary text-sm">
-                              {formatCurrency(total)}
-                            </p>
-                            {recurring > 0 && (
-                              <p className="text-xs text-muted-foreground">
-                                {formatCurrency(recurring)}/mês
+                            {deal.payment_terms && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Pagamento: {deal.payment_terms.toUpperCase()}
                               </p>
                             )}
                           </div>
+                          <div className="flex flex-col items-end gap-2 shrink-0">
+                            <div className="text-right">
+                              <p className="font-bold text-primary text-sm">
+                                {formatCurrency(total)}
+                              </p>
+                              {recurring > 0 && (
+                                <p className="text-xs text-muted-foreground">
+                                  {formatCurrency(recurring)}/mês
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2"
+                              onClick={() => setEditingService(deal)}
+                            >
+                              <Pencil className="h-3 w-3 mr-1" />
+                              Editar
+                            </Button>
+                          </div>
                         </div>
-                        {deal.payment_terms && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Pagamento: {deal.payment_terms.toUpperCase()}
-                          </p>
-                        )}
                       </CardContent>
                     </Card>
                   );
@@ -517,6 +531,15 @@ export function CustomerDetailsSidebar({
         customerName={customer.company_name}
         onSuccess={() => fetchDeals()}
       />
+
+      {editingService && (
+        <EditServiceDialog
+          deal={editingService}
+          open={!!editingService}
+          onOpenChange={(o) => { if (!o) setEditingService(null); }}
+          onSuccess={() => fetchDeals()}
+        />
+      )}
     </Sheet>
   );
 }
