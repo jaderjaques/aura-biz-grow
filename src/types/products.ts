@@ -43,3 +43,21 @@ export interface SelectedProduct {
   discount_percent: number;
   discount_amount: number;
 }
+
+/** Retorna o valor real de um deal — usa total_value do banco ou calcula dos deal_products como fallback */
+export function getDealTotal(deal: DealWithDetails): number {
+  const stored = Number(deal.total_value);
+  if (stored > 0) return stored;
+  return (deal.deal_products || []).reduce(
+    (sum, dp) => sum + Number(dp.unit_price) * Number(dp.quantity) - Number(dp.discount_amount || 0),
+    0
+  );
+}
+
+export function getDealRecurring(deal: DealWithDetails): number {
+  const stored = Number(deal.recurring_value);
+  if (stored > 0) return stored;
+  return (deal.deal_products || [])
+    .filter((dp) => dp.product?.is_recurring)
+    .reduce((sum, dp) => sum + Number(dp.unit_price) * Number(dp.quantity) - Number(dp.discount_amount || 0), 0);
+}

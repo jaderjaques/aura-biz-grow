@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { DealWithDetails } from "@/types/products";
+import { DealWithDetails, getDealTotal } from "@/types/products";
 import { DollarSign } from "lucide-react";
 
 const STAGES = [
@@ -142,7 +142,7 @@ function KanbanColumn({
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
 
-  const totalValue = deals.reduce((sum, d) => sum + Number(d.total_value || 0), 0);
+  const totalValue = deals.reduce((sum, d) => sum + getDealTotal(d), 0);
 
   return (
     <div
@@ -231,7 +231,7 @@ function DealCard({
 
         <div className="flex items-center gap-1">
           <DollarSign className="h-3 w-3 text-muted-foreground" />
-          <span className="text-sm font-semibold">{formatCurrency(Number(deal.total_value || 0))}</span>
+          <span className="text-sm font-semibold">{formatCurrency(getDealTotal(deal))}</span>
         </div>
 
         {deal.assigned_user && (

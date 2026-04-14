@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Eye, FileText, CheckCircle, XCircle } from "lucide-react";
-import { DealWithDetails } from "@/types/products";
+import { DealWithDetails, getDealTotal } from "@/types/products";
 
 interface DealsTableProps {
   deals: DealWithDetails[];
@@ -115,7 +115,7 @@ export function DealsTable({
               </TableCell>
 
               <TableCell>
-                <p className="font-semibold">{formatCurrency(Number(deal.total_value))}</p>
+                <p className="font-semibold">{formatCurrency(getDealTotal(deal))}</p>
               </TableCell>
 
               <TableCell>

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentProfile } from "@/lib/tenant-utils";
 import { useToast } from "@/hooks/use-toast";
-import { Deal, DealWithDetails, SelectedProduct } from "@/types/products";
+import { Deal, DealWithDetails, SelectedProduct, getDealTotal } from "@/types/products";
 
 const DEALS_KEY = ["deals"];
 
@@ -162,7 +162,7 @@ export function useDeals(customerId?: string) {
   const getOpenDeals      = () => deals.filter((d) => d.status === "open");
   const getWonDeals       = () => deals.filter((d) => d.status === "won");
   const getLostDeals      = () => deals.filter((d) => d.status === "lost");
-  const getTotalValue     = () => deals.filter((d) => d.status === "open").reduce((s, d) => s + Number(d.total_value || 0), 0);
+  const getTotalValue     = () => deals.filter((d) => d.status === "open").reduce((s, d) => s + getDealTotal(d), 0);
   const getWonThisMonth   = () => {
     const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     return deals.filter((d) => d.status === "won" && new Date(d.closed_at || "") >= firstDay).length;
