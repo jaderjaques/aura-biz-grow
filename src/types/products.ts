@@ -19,12 +19,34 @@ export interface DealWithDetails extends Deal {
     phone: string;
     email: string | null;
   } | null;
+  customer?: {
+    id: string;
+    company_name: string;
+    trading_name: string | null;
+    cnpj: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
   assigned_user?: {
     id: string;
     full_name: string;
     avatar_url: string | null;
   } | null;
   deal_products?: DealProductWithProduct[];
+}
+
+/** Retorna o nome de exibição da empresa vinculada ao deal (customer ou lead) */
+export function getDealClientName(deal: DealWithDetails): string {
+  if (deal.customer?.company_name) return deal.customer.company_name;
+  if (deal.lead?.company_name) return deal.lead.company_name;
+  return "-";
+}
+
+/** Retorna o nome do contato vinculado ao deal */
+export function getDealContactName(deal: DealWithDetails): string | null {
+  if (deal.customer) return deal.customer.trading_name || null;
+  if (deal.lead) return deal.lead.contact_name || null;
+  return null;
 }
 
 export interface DealProductWithProduct extends DealProduct {

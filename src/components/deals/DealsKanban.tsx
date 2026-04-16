@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { DealWithDetails, getDealTotal } from "@/types/products";
+import { DealWithDetails, getDealTotal, getDealClientName } from "@/types/products";
 import { DollarSign } from "lucide-react";
 
 const STAGES = [
@@ -225,8 +225,8 @@ function DealCard({
       <CardContent className="p-3 space-y-2">
         <p className="font-medium text-sm leading-tight">{deal.title}</p>
 
-        {deal.lead?.company_name && (
-          <p className="text-xs text-muted-foreground">{deal.lead.company_name}</p>
+        {(deal.customer?.company_name || deal.lead?.company_name) && (
+          <p className="text-xs text-muted-foreground">{getDealClientName(deal)}</p>
         )}
 
         <div className="flex items-center gap-1">

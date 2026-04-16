@@ -31,7 +31,7 @@ import { NewDealDialog } from "@/components/deals/NewDealDialog";
 import { DealWonModal } from "@/components/deals/DealWonModal";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { DealWithDetails, SelectedProduct } from "@/types/products";
+import { DealWithDetails, SelectedProduct, getDealClientName, getDealContactName } from "@/types/products";
 
 export default function Deals() {
   const navigate = useNavigate();
@@ -87,11 +87,23 @@ export default function Deals() {
 
       const profile = await getCurrentProfile();
 
+      // Fetch tenant company name for the PDF
+      const { data: fiscalConfig } = await supabase
+        .from("tenant_fiscal_config")
+        .select("razao_social, nome_fantasia")
+        .eq("tenant_id", profile.tenant_id)
+        .maybeSingle();
+
+      const companyName =
+        fiscalConfig?.nome_fantasia || fiscalConfig?.razao_social || "Sua Empresa";
+
+      const clientName = getDealClientName(deal);
+
       const { data: quote, error } = await supabase
         .from("quotes")
         .insert({
           deal_id: dealId,
-          title: `Proposta Comercial - ${deal.lead?.company_name || "Cliente"}`,
+          title: `Proposta Comercial - ${clientName}`,
           total_value: deal.total_value,
           status: "draft",
           valid_until: addDays(new Date(), 15).toISOString().split("T")[0],
@@ -103,7 +115,7 @@ export default function Deals() {
 
       if (error) throw error;
 
-      const html = generateQuoteHTML(deal, quote);
+      const html = generateQuoteHTML(deal, quote, companyName);
       const blob = new Blob([html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
@@ -278,10 +290,15 @@ export default function Deals() {
   );
 }
 
-// --- Quote HTML generator (kept from original) ---
-function generateQuoteHTML(deal: DealWithDetails, quote: any) {
+// --- Quote HTML generator ---
+function generateQuoteHTML(deal: DealWithDetails, quote: any, companyName: string = "Sua Empresa") {
   const fmtCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+  const clientName  = getDealClientName(deal);
+  const contactName = getDealContactName(deal) || "-";
+  const clientEmail = deal.customer?.email || deal.lead?.email || "-";
+  const clientPhone = deal.customer?.phone || deal.lead?.phone || "-";
 
   const productsHTML = deal.deal_products
     ?.map(
@@ -290,17 +307,19 @@ function generateQuoteHTML(deal: DealWithDetails, quote: any) {
         <td style="padding:12px;border-bottom:1px solid #eee;">${dp.product?.name}</td>
         <td style="padding:12px;border-bottom:1px solid #eee;text-align:center;">${dp.quantity}</td>
         <td style="padding:12px;border-bottom:1px solid #eee;text-align:right;">${fmtCurrency(Number(dp.unit_price))}</td>
-        <td style="padding:12px;border-bottom:1px solid #eee;text-align:right;">${fmtCurrency(Number(dp.total))}</td>
+        <td style="padding:12px;border-bottom:1px solid #eee;text-align:right;">${fmtCurrency(Number(dp.unit_price) * Number(dp.quantity))}</td>
       </tr>`
     )
     .join("") || "";
 
+  const totalValue = Number(deal.total_value) || (deal.deal_products || []).reduce((s, dp) => s + Number(dp.unit_price) * Number(dp.quantity), 0);
+
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${quote.quote_number}</title>
 <style>body{font-family:'Segoe UI',sans-serif;margin:40px;color:#333}.header{text-align:center;margin-bottom:40px}.logo{font-size:24px;font-weight:bold;color:#8B3A8B}.products-table{width:100%;border-collapse:collapse;margin-bottom:30px}.products-table th{background:#f5f5f5;padding:12px;text-align:left}.totals{background:linear-gradient(135deg,#8B3A8B10,#FF6B3510);padding:20px;border-radius:8px}.total-row{display:flex;justify-content:space-between;margin-bottom:8px}.total-final{font-size:24px;font-weight:bold;color:#8B3A8B}.validity{margin-top:20px;padding:10px;background:#fff3cd;border-radius:4px}.footer{margin-top:40px;text-align:center;color:#666;font-size:12px}</style></head><body>
-<div class="header"><div class="logo">Responde uAI</div><div>${quote.quote_number}</div></div>
-<div><h2>Proposta para ${deal.lead?.company_name || "Cliente"}</h2><p><strong>Contato:</strong> ${deal.lead?.contact_name || "-"}</p><p><strong>Email:</strong> ${deal.lead?.email || "-"}</p><p><strong>Telefone:</strong> ${deal.lead?.phone || "-"}</p></div>
+<div class="header"><div class="logo">${companyName}</div><div>${quote.quote_number}</div></div>
+<div><h2>Proposta para ${clientName}</h2><p><strong>Contato:</strong> ${contactName}</p><p><strong>Email:</strong> ${clientEmail}</p><p><strong>Telefone:</strong> ${clientPhone}</p></div>
 <h3>Produtos e Serviços</h3><table class="products-table"><thead><tr><th>Produto</th><th style="text-align:center;">Qtd</th><th style="text-align:right;">Preço Unit.</th><th style="text-align:right;">Total</th></tr></thead><tbody>${productsHTML}</tbody></table>
-<div class="totals"><div class="total-row"><span>Subtotal:</span><span>${fmtCurrency(Number(deal.total_value) + Number(deal.discount_total))}</span></div>${Number(deal.discount_total) > 0 ? `<div class="total-row" style="color:#dc3545;"><span>Desconto:</span><span>- ${fmtCurrency(Number(deal.discount_total))}</span></div>` : ""}<hr style="border:none;border-top:1px solid #ddd;margin:10px 0;"/><div class="total-row"><span style="font-size:18px;font-weight:bold;">Total:</span><span class="total-final">${fmtCurrency(Number(deal.total_value))}</span></div>${Number(deal.recurring_value) > 0 ? `<div class="total-row" style="margin-top:10px;"><span>Setup:</span><span>${fmtCurrency(Number(deal.setup_value))}</span></div><div class="total-row"><span>Mensalidade:</span><span>${fmtCurrency(Number(deal.recurring_value))}/mês</span></div>` : ""}</div>
+<div class="totals"><div class="total-row"><span>Subtotal:</span><span>${fmtCurrency(totalValue + Number(deal.discount_total || 0))}</span></div>${Number(deal.discount_total) > 0 ? `<div class="total-row" style="color:#dc3545;"><span>Desconto:</span><span>- ${fmtCurrency(Number(deal.discount_total))}</span></div>` : ""}<hr style="border:none;border-top:1px solid #ddd;margin:10px 0;"/><div class="total-row"><span style="font-size:18px;font-weight:bold;">Total:</span><span class="total-final">${fmtCurrency(totalValue)}</span></div>${Number(deal.recurring_value) > 0 ? `<div class="total-row" style="margin-top:10px;"><span>Setup:</span><span>${fmtCurrency(Number(deal.setup_value))}</span></div><div class="total-row"><span>Mensalidade:</span><span>${fmtCurrency(Number(deal.recurring_value))}/mês</span></div>` : ""}</div>
 <div class="validity"><strong>⚠️ Validade:</strong> Esta proposta é válida até ${format(new Date(quote.valid_until), "dd/MM/yyyy", { locale: ptBR })}.</div>
-<div class="footer"><p>Responde uAI - Automatize seu negócio</p><p>Documento gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p></div></body></html>`;
+<div class="footer"><p>${companyName}</p><p>Documento gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p></div></body></html>`;
 }

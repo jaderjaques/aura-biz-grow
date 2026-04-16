@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Eye, FileText, CheckCircle, XCircle } from "lucide-react";
-import { DealWithDetails, getDealTotal } from "@/types/products";
+import { DealWithDetails, getDealTotal, getDealClientName, getDealContactName } from "@/types/products";
 
 interface DealsTableProps {
   deals: DealWithDetails[];
@@ -107,9 +107,9 @@ export function DealsTable({
 
               <TableCell>
                 <div>
-                  <p className="font-medium">{deal.lead?.company_name || "-"}</p>
+                  <p className="font-medium">{getDealClientName(deal)}</p>
                   <p className="text-xs text-muted-foreground">
-                    {deal.lead?.contact_name}
+                    {getDealContactName(deal)}
                   </p>
                 </div>
               </TableCell>

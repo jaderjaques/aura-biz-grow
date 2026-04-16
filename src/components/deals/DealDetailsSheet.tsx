@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { DealWithDetails } from "@/types/products";
+import { DealWithDetails, getDealClientName, getDealContactName } from "@/types/products";
 import {
   Building,
   User,
@@ -109,17 +109,17 @@ export function DealDetailsSheet({
               <Building className="h-4 w-4" /> Cliente
             </h3>
             <div className="text-sm space-y-1 pl-6">
-              <p>{deal.lead?.company_name || "—"}</p>
-              {deal.lead?.contact_name && (
+              <p>{getDealClientName(deal)}</p>
+              {getDealContactName(deal) && (
                 <p className="text-muted-foreground flex items-center gap-1">
-                  <User className="h-3 w-3" /> {deal.lead.contact_name}
+                  <User className="h-3 w-3" /> {getDealContactName(deal)}
                 </p>
               )}
-              {deal.lead?.email && (
-                <p className="text-muted-foreground">{deal.lead.email}</p>
+              {(deal.customer?.email || deal.lead?.email) && (
+                <p className="text-muted-foreground">{deal.customer?.email || deal.lead?.email}</p>
               )}
-              {deal.lead?.phone && (
-                <p className="text-muted-foreground">{deal.lead.phone}</p>
+              {(deal.customer?.phone || deal.lead?.phone) && (
+                <p className="text-muted-foreground">{deal.customer?.phone || deal.lead?.phone}</p>
               )}
             </div>
           </section>

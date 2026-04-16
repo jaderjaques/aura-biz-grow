@@ -17,21 +17,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { MoreVertical, Edit, RefreshCw, Plus, FileText } from "lucide-react";
 import { useContracts } from "@/hooks/useCustomers";
 import { ContractWithDetails } from "@/types/customers";
 import { EditContractDialog } from "./EditContractDialog";
-import { useNavigate } from "react-router-dom";
+import { NewServiceDialog } from "./NewServiceDialog";
 
 interface CustomerContractsTabProps {
   customerId: string;
@@ -39,11 +29,10 @@ interface CustomerContractsTabProps {
 }
 
 export function CustomerContractsTab({ customerId, customerName }: CustomerContractsTabProps) {
-  const navigate = useNavigate();
   const { contracts, loading, fetchContracts } = useContracts(customerId);
-  
+
   const [editingContract, setEditingContract] = useState<ContractWithDetails | null>(null);
-  const [showNewDealInfo, setShowNewDealInfo] = useState(false);
+  const [showNewService, setShowNewService] = useState(false);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -79,12 +68,7 @@ export function CustomerContractsTab({ customerId, customerName }: CustomerContr
   };
 
   const handleNewService = () => {
-    setShowNewDealInfo(true);
-  };
-
-  const goToDeals = () => {
-    setShowNewDealInfo(false);
-    navigate("/propostas");
+    setShowNewService(true);
   };
 
   if (loading) {
@@ -187,24 +171,13 @@ export function CustomerContractsTab({ customerId, customerName }: CustomerContr
         onSuccess={() => fetchContracts()}
       />
 
-      <AlertDialog open={showNewDealInfo} onOpenChange={setShowNewDealInfo}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Adicionar Novo Serviço</AlertDialogTitle>
-            <AlertDialogDescription>
-              Para adicionar um novo serviço ao cliente <strong>{customerName}</strong>, 
-              é necessário criar uma nova proposta no módulo de Propostas.
-              Isso garante que o processo comercial seja seguido corretamente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={goToDeals}>
-              Ir para Propostas
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <NewServiceDialog
+        open={showNewService}
+        onOpenChange={setShowNewService}
+        customerId={customerId}
+        customerName={customerName}
+        onSuccess={() => fetchContracts()}
+      />
     </div>
   );
 }

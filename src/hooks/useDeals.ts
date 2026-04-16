@@ -24,8 +24,9 @@ async function fetchDealsQuery(customerId?: string): Promise<DealWithDetails[]> 
   if (error) throw error;
 
   const dealsData = data || [];
-  const leadIds = [...new Set(dealsData.map(d => d.lead_id).filter(Boolean))] as string[];
 
+  // Fetch leads
+  const leadIds = [...new Set(dealsData.map(d => d.lead_id).filter(Boolean))] as string[];
   let leadsMap: Record<string, any> = {};
   if (leadIds.length > 0) {
     const { data: leadsData } = await supabase
@@ -35,9 +36,21 @@ async function fetchDealsQuery(customerId?: string): Promise<DealWithDetails[]> 
     if (leadsData) leadsMap = Object.fromEntries(leadsData.map(l => [l.id, l]));
   }
 
-  return dealsData.map(deal => ({
+  // Fetch customers
+  const customerIds = [...new Set(dealsData.map((d: any) => d.customer_id).filter(Boolean))] as string[];
+  let customersMap: Record<string, any> = {};
+  if (customerIds.length > 0) {
+    const { data: customersData } = await supabase
+      .from("customers")
+      .select("id, company_name, trading_name, cnpj, email, phone")
+      .in("id", customerIds);
+    if (customersData) customersMap = Object.fromEntries(customersData.map(c => [c.id, c]));
+  }
+
+  return dealsData.map((deal: any) => ({
     ...deal,
     lead: deal.lead_id ? leadsMap[deal.lead_id] || null : null,
+    customer: deal.customer_id ? customersMap[deal.customer_id] || null : null,
   })) as DealWithDetails[];
 }
 
