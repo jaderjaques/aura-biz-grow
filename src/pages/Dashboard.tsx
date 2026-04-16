@@ -8,6 +8,7 @@ import {
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenantModule } from "@/hooks/useTenantModule";
+import ClinicDashboard from "./ClinicDashboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,6 +70,10 @@ export default function Dashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const { isClinic } = useTenantModule();
+
+  // Clínicas têm dashboard próprio
+  if (isClinic) return <ClinicDashboard />;
+
   const patientsRoute = isClinic ? "/pacientes" : "/clientes";
   const patientsLabel = isClinic ? "Pacientes Ativos" : "Clientes Ativos";
   const [loading, setLoading] = useState(true);
