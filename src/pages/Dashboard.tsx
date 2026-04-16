@@ -66,16 +66,19 @@ interface Metrics {
   openTickets: number;
 }
 
-export default function Dashboard() {
+// Wrapper que escolhe o dashboard correto ANTES de qualquer hook condicional
+export default function DashboardRouter() {
+  const { isClinic } = useTenantModule();
+  if (isClinic) return <ClinicDashboard />;
+  return <AgencyDashboard />;
+}
+
+function AgencyDashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const { isClinic } = useTenantModule();
 
-  // Clínicas têm dashboard próprio
-  if (isClinic) return <ClinicDashboard />;
-
-  const patientsRoute = isClinic ? "/pacientes" : "/clientes";
-  const patientsLabel = isClinic ? "Pacientes Ativos" : "Clientes Ativos";
+  const patientsRoute = "/clientes";
+  const patientsLabel = "Clientes Ativos";
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
