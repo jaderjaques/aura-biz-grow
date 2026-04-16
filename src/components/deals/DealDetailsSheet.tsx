@@ -21,8 +21,10 @@ import {
   XCircle,
   FileText,
   Pencil,
+  FileSignature,
 } from "lucide-react";
 import { EditDealDialog } from "./EditDealDialog";
+import { GenerateContractDialog } from "./GenerateContractDialog";
 import { useDeals } from "@/hooks/useDeals";
 
 interface DealDetailsSheetProps {
@@ -43,7 +45,8 @@ export function DealDetailsSheet({
   onGenerateQuote,
 }: DealDetailsSheetProps) {
   const { fetchDeals } = useDeals();
-  const [showEdit, setShowEdit] = useState(false);
+  const [showEdit,     setShowEdit]     = useState(false);
+  const [showContract, setShowContract] = useState(false);
 
   if (!deal) return null;
 
@@ -246,6 +249,17 @@ export function DealDetailsSheet({
               <FileText className="mr-2 h-4 w-4" />
               Gerar Proposta PDF
             </Button>
+            {deal.status === "won" && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-green-600 text-green-700 hover:bg-green-50"
+                onClick={() => setShowContract(true)}
+              >
+                <FileSignature className="mr-2 h-4 w-4" />
+                Gerar Contrato
+              </Button>
+            )}
             {deal.status === "open" && (
               <div className="flex gap-2">
                 <Button
@@ -275,6 +289,13 @@ export function DealDetailsSheet({
         deal={deal}
         open={showEdit}
         onOpenChange={setShowEdit}
+        onSuccess={() => { fetchDeals(); }}
+      />
+
+      <GenerateContractDialog
+        deal={deal}
+        open={showContract}
+        onOpenChange={setShowContract}
         onSuccess={() => { fetchDeals(); }}
       />
     </Sheet>
