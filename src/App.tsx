@@ -43,7 +43,16 @@ import AdminTenantDetail from "./pages/admin/AdminTenantDetail";
 import { SuperAdminRoute } from "./components/admin/SuperAdminRoute";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0,             // dados sempre considerados desatualizados
+      refetchOnWindowFocus: true, // rebusca ao focar a janela/aba
+      refetchOnMount: true,     // rebusca ao montar o componente
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

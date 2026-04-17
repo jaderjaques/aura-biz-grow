@@ -58,14 +58,12 @@ export function usePatients(
         .limit(50);
       return (data ?? []) as Partial<PatientWithDetails>[];
     },
-    staleTime: 2 * 60_000,
   });
 
   // ── Fase 2: dados completos — carrega em background ────────────────────
   const { data: fullPatients, isFetching: fetchingFull } = useQuery({
     queryKey: [...PATIENTS_KEY, "full", filters],
     queryFn: () => fetchPatientsQuery(filters),
-    staleTime: 3 * 60_000,
     enabled: !loadingQuick, // só começa depois que a fase 1 termina
   });
 
@@ -85,7 +83,7 @@ export function usePatients(
       if (error) throw error;
       return (data as Insurance[]) ?? [];
     },
-    staleTime: 10 * 60_000,
+    staleTime: 5 * 60_000, // convênios mudam pouco, cache de 5 min está ok
   });
 
   const invalidate = () =>

@@ -153,15 +153,17 @@ export default function ClinicDashboard() {
       const attendanceRate = scheduled > 0 ? (attended / scheduled) * 100 : 0;
 
       // ── Pacientes ─────────────────────────────────────────────────────────
-      const { data: customers } = await supabase
-        .from("customers")
-        .select("id, status, monthly_value, customer_since");
+      const { data: patientsData } = await supabase
+        .from("patients")
+        .select("id, status, created_at")
+        .is("deleted_at", null);
 
-      const activePatients = customers?.filter((c) => c.status === "active") || [];
-      const newThisMonth = activePatients.filter(
-        (c) => c.customer_since && c.customer_since >= monthStart
+      const activePatients = patientsData?.filter((p) => p.status === "active") || [];
+      const monthPrefix = monthStart.slice(0, 7); // "yyyy-MM"
+      const newThisMonth = (patientsData || []).filter(
+        (p) => p.created_at && p.created_at.startsWith(monthPrefix)
       ).length;
-      const currentMRR = activePatients.reduce((s, c) => s + (Number(c.monthly_value) || 0), 0);
+      // MRR da clínica vem da receita do mês (calculada abaixo via cash_transactions)
 
       // ── Receita do mês ────────────────────────────────────────────────────
       const { data: revenue } = await supabase
@@ -229,7 +231,7 @@ export default function ClinicDashboard() {
         todayCancelled: statusCount("cancelled"),
         todayNoShow: statusCount("no_show"),
         todayPending: statusCount("scheduled"),
-        mrr: currentMRR,
+        mrr: revenueMonth,
         mrrGrowth: 0, // simplificado
         activePatients: activePatients.length,
         newPatientsMonth: newThisMonth,
