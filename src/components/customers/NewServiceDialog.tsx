@@ -27,6 +27,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProducts } from "@/hooks/useProducts";
 import { useDeals } from "@/hooks/useDeals";
 import { ProductSelectorDialog } from "@/components/deals/ProductSelectorDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NewServiceDialogProps {
   open: boolean;
@@ -136,6 +137,19 @@ export function NewServiceDialog({
         } as any,
         selectedProducts
       );
+
+      // Recalculate and update customer MRR
+      const { data: wonDeals } = await supabase
+        .from("deals")
+        .select("recurring_value")
+        .eq("customer_id", customerId)
+        .eq("status", "won");
+      const totalMRR = (wonDeals || []).reduce((sum, d) => sum + Number(d.recurring_value || 0), 0);
+      await supabase
+        .from("customers")
+        .update({ monthly_value: totalMRR })
+        .eq("id", customerId);
+
       setSelectedProducts([]);
       setFormData({ payment_terms: "", expected_close_date: new Date().toISOString().split("T")[0], notes: "" });
       onSuccess?.();

@@ -287,9 +287,37 @@ export function DealWonModal({ deal, isOpen, onClose, onSuccess }: DealWonModalP
         })
         .eq("id", deal!.id);
 
+      // Auto-create contract from won deal
+      try {
+        const contractNumber = `CTR-${Date.now().toString().slice(-6)}`;
+        await supabase.from("contracts").insert({
+          title: `Contrato — ${deal!.title}`,
+          customer_id: customer.id,
+          deal_id: deal!.id,
+          start_date: new Date().toISOString().split("T")[0],
+          billing_cycle: "monthly",
+          recurring_value: recurringInvoice.create ? recurringInvoice.amount : (Number(deal!.recurring_value) || 0),
+          setup_value: setupInvoice.create ? setupInvoice.amount : (Number(deal!.setup_value) || 0),
+          status: "active",
+          auto_renew: true,
+          contract_number: contractNumber,
+          products: (deal!.deal_products || []).map((dp: any) => ({
+            product_id: dp.product_id,
+            name: dp.product?.name,
+            quantity: dp.quantity,
+            unit_price: dp.unit_price,
+            is_recurring: dp.product?.is_recurring,
+          })) as any,
+          created_by: profile.id,
+          tenant_id: profile.tenant_id,
+        } as any);
+      } catch (contractErr) {
+        console.warn("Contrato não criado automaticamente:", contractErr);
+      }
+
       toast({
         title: "🎉 Faturas geradas com sucesso!",
-        description: `${createdInvoices?.length || 0} fatura(s) criada(s)`,
+        description: `${createdInvoices?.length || 0} fatura(s) criada(s) • Contrato gerado automaticamente`,
       });
 
       onSuccess();

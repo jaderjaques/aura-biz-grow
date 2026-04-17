@@ -38,6 +38,8 @@ import {
   Save,
   Package,
   Plus,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CustomerWithDetails, CustomerStatus } from "@/types/customers";
@@ -78,6 +80,7 @@ export function CustomerDetailsSidebar({
     state: "",
     status: "",
     notes: "",
+    customer_since: "",
   });
 
   if (!customer) return null;
@@ -94,6 +97,7 @@ export function CustomerDetailsSidebar({
       state: customer.state || "",
       status: customer.status || "active",
       notes: customer.notes || "",
+      customer_since: (customer as any).customer_since || "",
     });
     setIsEditing(true);
   };
@@ -231,6 +235,47 @@ export function CustomerDetailsSidebar({
               </Card>
             </div>
 
+            {/* Retenção */}
+            {(customer as any).customer_since && (
+              <div className="grid grid-cols-2 gap-3">
+                <Card>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Cliente Desde</p>
+                        <p className="text-sm font-bold">
+                          {format(new Date((customer as any).customer_since), "dd/MM/yyyy")}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-purple-500" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Retenção</p>
+                        <p className="text-sm font-bold">
+                          {(() => {
+                            const since = new Date((customer as any).customer_since);
+                            const now = new Date();
+                            const months = (now.getFullYear() - since.getFullYear()) * 12 + (now.getMonth() - since.getMonth());
+                            if (months < 1) return "< 1 mês";
+                            if (months < 12) return `${months} ${months === 1 ? "mês" : "meses"}`;
+                            const years = Math.floor(months / 12);
+                            const rem = months % 12;
+                            return rem > 0 ? `${years}a ${rem}m` : `${years} ${years === 1 ? "ano" : "anos"}`;
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             <Separator />
 
             {/* Contato */}
@@ -324,6 +369,14 @@ export function CustomerDetailsSidebar({
                         <SelectItem value="cancelled">Cancelado</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Data de Entrada (Cliente desde)</label>
+                    <Input
+                      type="date"
+                      value={form.customer_since}
+                      onChange={(e) => updateField("customer_since", e.target.value)}
+                    />
                   </div>
                 </div>
               ) : (
