@@ -21,6 +21,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   User, Phone, Mail, MapPin, Shield, Calendar,
   MessageCircle, Pencil, Save, X, Users, FileText, AlertTriangle, ClipboardList, Eye, EyeOff,
+  Receipt,
 } from "lucide-react";
 import { maskCPF, formatCPF } from "@/lib/format-utils";
 import { PatientWithDetails, PatientStatus, GENDER_LABELS, Insurance } from "@/types/patients";
@@ -78,6 +79,23 @@ export function PatientDetailsSidebar({
       address_zip: patient.address_zip || "",
       notes: patient.notes || "",
       allergies: patient.allergies || "",
+      // Fiscal
+      fiscal_same_as_patient: patient.fiscal_same_as_patient ?? true,
+      fiscal_document_type: patient.fiscal_document_type || "cpf",
+      fiscal_name: patient.fiscal_name || "",
+      fiscal_document: patient.fiscal_document || "",
+      fiscal_email: patient.fiscal_email || "",
+      fiscal_phone: patient.fiscal_phone || "",
+      fiscal_company_name: patient.fiscal_company_name || "",
+      fiscal_ie: patient.fiscal_ie || "",
+      fiscal_im: patient.fiscal_im || "",
+      fiscal_address_street: patient.fiscal_address_street || "",
+      fiscal_address_number: patient.fiscal_address_number || "",
+      fiscal_address_complement: patient.fiscal_address_complement || "",
+      fiscal_address_neighborhood: patient.fiscal_address_neighborhood || "",
+      fiscal_address_city: patient.fiscal_address_city || "",
+      fiscal_address_state: patient.fiscal_address_state || "",
+      fiscal_address_zip: patient.fiscal_address_zip || "",
     });
     setIsEditing(true);
   };
@@ -471,6 +489,121 @@ export function PatientDetailsSidebar({
                 </div>
               </>
             ) : null}
+
+            {/* Dados Fiscais */}
+            <Separator />
+            {isEditing ? (
+              <div className="space-y-3">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Receipt className="h-4 w-4" /> Dados Fiscais (NF)
+                </h4>
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={form.fiscal_same_as_patient}
+                    onCheckedChange={(v) => set("fiscal_same_as_patient", v)}
+                  />
+                  <Label className="text-xs font-normal">NF no nome do próprio paciente</Label>
+                </div>
+                {!form.fiscal_same_as_patient && (
+                  <div className="space-y-3 pl-1">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Tipo de Documento</Label>
+                        <Select value={form.fiscal_document_type} onValueChange={(v) => set("fiscal_document_type", v)}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cpf">CPF (Pessoa Física)</SelectItem>
+                            <SelectItem value="cnpj">CNPJ (Pessoa Jurídica)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">{form.fiscal_document_type === "cnpj" ? "CNPJ" : "CPF"}</Label>
+                        <Input value={form.fiscal_document} onChange={(e) => set("fiscal_document", e.target.value)} placeholder={form.fiscal_document_type === "cnpj" ? "00.000.000/0000-00" : "000.000.000-00"} />
+                      </div>
+                      <div className="space-y-1 col-span-2">
+                        <Label className="text-xs text-muted-foreground">{form.fiscal_document_type === "cnpj" ? "Razão Social" : "Nome para NF"}</Label>
+                        <Input value={form.fiscal_name} onChange={(e) => set("fiscal_name", e.target.value)} />
+                      </div>
+                      {form.fiscal_document_type === "cnpj" && (
+                        <>
+                          <div className="space-y-1 col-span-2">
+                            <Label className="text-xs text-muted-foreground">Nome Fantasia</Label>
+                            <Input value={form.fiscal_company_name} onChange={(e) => set("fiscal_company_name", e.target.value)} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">IE</Label>
+                            <Input value={form.fiscal_ie} onChange={(e) => set("fiscal_ie", e.target.value)} placeholder="Isento ou número" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">IM</Label>
+                            <Input value={form.fiscal_im} onChange={(e) => set("fiscal_im", e.target.value)} />
+                          </div>
+                        </>
+                      )}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">E-mail NF</Label>
+                        <Input type="email" value={form.fiscal_email} onChange={(e) => set("fiscal_email", e.target.value)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Telefone NF</Label>
+                        <Input value={form.fiscal_phone} onChange={(e) => set("fiscal_phone", e.target.value)} />
+                      </div>
+                      <div className="col-span-2 space-y-1">
+                        <Label className="text-xs text-muted-foreground">Endereço NF</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Input className="col-span-2" value={form.fiscal_address_street} onChange={(e) => set("fiscal_address_street", e.target.value)} placeholder="Rua" />
+                          <Input value={form.fiscal_address_number} onChange={(e) => set("fiscal_address_number", e.target.value)} placeholder="Nº" />
+                          <Input value={form.fiscal_address_neighborhood} onChange={(e) => set("fiscal_address_neighborhood", e.target.value)} placeholder="Bairro" />
+                          <Input value={form.fiscal_address_zip} onChange={(e) => set("fiscal_address_zip", e.target.value)} placeholder="CEP" />
+                          <Input value={form.fiscal_address_complement} onChange={(e) => set("fiscal_address_complement", e.target.value)} placeholder="Compl." />
+                          <Input className="col-span-2" value={form.fiscal_address_city} onChange={(e) => set("fiscal_address_city", e.target.value)} placeholder="Cidade" />
+                          <Input value={form.fiscal_address_state} onChange={(e) => set("fiscal_address_state", e.target.value)} placeholder="UF" maxLength={2} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (patient.fiscal_same_as_patient === false && patient.fiscal_name) ? (
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-primary" /> Dados Fiscais (NF)
+                </h4>
+                <div className="text-sm space-y-1 pl-6">
+                  <p className="font-medium">{patient.fiscal_name}</p>
+                  {patient.fiscal_document && (
+                    <p className="text-muted-foreground">
+                      {patient.fiscal_document_type?.toUpperCase()}: {patient.fiscal_document}
+                    </p>
+                  )}
+                  {patient.fiscal_company_name && <p className="text-muted-foreground">{patient.fiscal_company_name}</p>}
+                  {patient.fiscal_email && <p className="text-muted-foreground">{patient.fiscal_email}</p>}
+                  {patient.fiscal_phone && <p className="text-muted-foreground">{patient.fiscal_phone}</p>}
+                  {(patient.fiscal_ie || patient.fiscal_im) && (
+                    <p className="text-muted-foreground">
+                      {patient.fiscal_ie && `IE: ${patient.fiscal_ie}`}
+                      {patient.fiscal_ie && patient.fiscal_im && " · "}
+                      {patient.fiscal_im && `IM: ${patient.fiscal_im}`}
+                    </p>
+                  )}
+                  {patient.fiscal_address_street && (
+                    <p className="text-muted-foreground text-xs">
+                      {[patient.fiscal_address_street, patient.fiscal_address_number,
+                        patient.fiscal_address_neighborhood, patient.fiscal_address_city,
+                        patient.fiscal_address_state, patient.fiscal_address_zip].filter(Boolean).join(", ")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-muted-foreground" /> Dados Fiscais (NF)
+                </h4>
+                <p className="text-xs text-muted-foreground pl-6">NF emitida no nome do próprio paciente.</p>
+              </div>
+            )}
 
             {/* Footer de edição */}
             {isEditing && (

@@ -44,6 +44,23 @@ export interface Patient {
   updated_at: string;
   created_by: string | null;
   deleted_at: string | null;
+  // Dados fiscais (responsável pela NF)
+  fiscal_same_as_patient: boolean | null;
+  fiscal_name: string | null;
+  fiscal_document_type: "cpf" | "cnpj" | null;
+  fiscal_document: string | null;
+  fiscal_email: string | null;
+  fiscal_phone: string | null;
+  fiscal_company_name: string | null;
+  fiscal_ie: string | null;
+  fiscal_im: string | null;
+  fiscal_address_street: string | null;
+  fiscal_address_number: string | null;
+  fiscal_address_complement: string | null;
+  fiscal_address_neighborhood: string | null;
+  fiscal_address_city: string | null;
+  fiscal_address_state: string | null;
+  fiscal_address_zip: string | null;
 }
 
 export interface PatientWithDetails extends Patient {

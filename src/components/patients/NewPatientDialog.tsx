@@ -51,6 +51,23 @@ const INITIAL_FORM = {
   responsible_relationship: "",
   notes: "",
   status: "active" as Patient["status"],
+  // Fiscal
+  fiscal_same_as_patient: true,
+  fiscal_document_type: "cpf" as "cpf" | "cnpj",
+  fiscal_name: "",
+  fiscal_document: "",
+  fiscal_email: "",
+  fiscal_phone: "",
+  fiscal_company_name: "",
+  fiscal_ie: "",
+  fiscal_im: "",
+  fiscal_address_street: "",
+  fiscal_address_number: "",
+  fiscal_address_complement: "",
+  fiscal_address_neighborhood: "",
+  fiscal_address_city: "",
+  fiscal_address_state: "",
+  fiscal_address_zip: "",
 };
 
 export function NewPatientDialog({
@@ -98,7 +115,27 @@ export function NewPatientDialog({
         notes: form.notes || null,
         status: form.status,
       };
-      await onSave(payload);
+      const fiscalPayload = form.fiscal_same_as_patient ? {
+        fiscal_same_as_patient: true,
+      } : {
+        fiscal_same_as_patient: false,
+        fiscal_document_type: form.fiscal_document_type,
+        fiscal_name: form.fiscal_name || null,
+        fiscal_document: form.fiscal_document || null,
+        fiscal_email: form.fiscal_email || null,
+        fiscal_phone: form.fiscal_phone || null,
+        fiscal_company_name: form.fiscal_company_name || null,
+        fiscal_ie: form.fiscal_ie || null,
+        fiscal_im: form.fiscal_im || null,
+        fiscal_address_street: form.fiscal_address_street || null,
+        fiscal_address_number: form.fiscal_address_number || null,
+        fiscal_address_complement: form.fiscal_address_complement || null,
+        fiscal_address_neighborhood: form.fiscal_address_neighborhood || null,
+        fiscal_address_city: form.fiscal_address_city || null,
+        fiscal_address_state: form.fiscal_address_state || null,
+        fiscal_address_zip: form.fiscal_address_zip || null,
+      };
+      await onSave({ ...payload, ...fiscalPayload });
       setForm({ ...INITIAL_FORM });
       onOpenChange(false);
     } finally {
@@ -114,10 +151,11 @@ export function NewPatientDialog({
         </DialogHeader>
 
         <Tabs defaultValue="pessoal">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="pessoal">Dados Pessoais</TabsTrigger>
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="outros">Convênio / Obs.</TabsTrigger>
+            <TabsTrigger value="fiscal">Dados Fiscais</TabsTrigger>
           </TabsList>
 
           {/* DADOS PESSOAIS */}
@@ -407,6 +445,140 @@ export function NewPatientDialog({
                 rows={4}
               />
             </div>
+          </TabsContent>
+        </Tabs>
+
+          {/* DADOS FISCAIS */}
+          <TabsContent value="fiscal" className="space-y-4 mt-4">
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={form.fiscal_same_as_patient}
+                onCheckedChange={(v) => set("fiscal_same_as_patient", v)}
+              />
+              <Label className="text-sm">NF no nome do próprio paciente</Label>
+            </div>
+
+            {!form.fiscal_same_as_patient && (
+              <div className="space-y-4">
+                <Separator />
+
+                {/* Tipo de documento */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label>Tipo de Documento</Label>
+                    <Select value={form.fiscal_document_type} onValueChange={(v) => set("fiscal_document_type", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cpf">CPF (Pessoa Física)</SelectItem>
+                        <SelectItem value="cnpj">CNPJ (Pessoa Jurídica)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>{form.fiscal_document_type === "cnpj" ? "CNPJ" : "CPF"}</Label>
+                    <Input
+                      value={form.fiscal_document}
+                      onChange={(e) => set("fiscal_document", e.target.value)}
+                      placeholder={form.fiscal_document_type === "cnpj" ? "00.000.000/0000-00" : "000.000.000-00"}
+                    />
+                  </div>
+                </div>
+
+                {/* Nome / Razão Social */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label>{form.fiscal_document_type === "cnpj" ? "Razão Social" : "Nome Completo"}</Label>
+                    <Input
+                      value={form.fiscal_name}
+                      onChange={(e) => set("fiscal_name", e.target.value)}
+                      placeholder={form.fiscal_document_type === "cnpj" ? "Empresa Ltda." : "Nome do responsável"}
+                    />
+                  </div>
+                  {form.fiscal_document_type === "cnpj" && (
+                    <div className="space-y-1">
+                      <Label>Nome Fantasia</Label>
+                      <Input
+                        value={form.fiscal_company_name}
+                        onChange={(e) => set("fiscal_company_name", e.target.value)}
+                        placeholder="Nome fantasia"
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <Label>E-mail para NF</Label>
+                    <Input
+                      type="email"
+                      value={form.fiscal_email}
+                      onChange={(e) => set("fiscal_email", e.target.value)}
+                      placeholder="email@exemplo.com"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Telefone</Label>
+                    <Input
+                      value={form.fiscal_phone}
+                      onChange={(e) => set("fiscal_phone", e.target.value)}
+                      placeholder="(31) 99999-9999"
+                    />
+                  </div>
+                  {form.fiscal_document_type === "cnpj" && (
+                    <>
+                      <div className="space-y-1">
+                        <Label>Inscrição Estadual (IE)</Label>
+                        <Input
+                          value={form.fiscal_ie}
+                          onChange={(e) => set("fiscal_ie", e.target.value)}
+                          placeholder="Isento ou número"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Inscrição Municipal (IM)</Label>
+                        <Input
+                          value={form.fiscal_im}
+                          onChange={(e) => set("fiscal_im", e.target.value)}
+                          placeholder="Número"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Endereço fiscal */}
+                <p className="text-sm font-semibold text-muted-foreground">Endereço para NF</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2 space-y-1">
+                    <Label>Rua / Logradouro</Label>
+                    <Input value={form.fiscal_address_street} onChange={(e) => set("fiscal_address_street", e.target.value)} placeholder="Rua das Flores" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Número</Label>
+                    <Input value={form.fiscal_address_number} onChange={(e) => set("fiscal_address_number", e.target.value)} placeholder="123" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Complemento</Label>
+                    <Input value={form.fiscal_address_complement} onChange={(e) => set("fiscal_address_complement", e.target.value)} placeholder="Sala 2" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Bairro</Label>
+                    <Input value={form.fiscal_address_neighborhood} onChange={(e) => set("fiscal_address_neighborhood", e.target.value)} placeholder="Centro" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>CEP</Label>
+                    <Input value={form.fiscal_address_zip} onChange={(e) => set("fiscal_address_zip", e.target.value)} placeholder="30000-000" />
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <Label>Cidade</Label>
+                    <Input value={form.fiscal_address_city} onChange={(e) => set("fiscal_address_city", e.target.value)} placeholder="Belo Horizonte" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Estado</Label>
+                    <Input value={form.fiscal_address_state} onChange={(e) => set("fiscal_address_state", e.target.value)} placeholder="MG" maxLength={2} />
+                  </div>
+                </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
