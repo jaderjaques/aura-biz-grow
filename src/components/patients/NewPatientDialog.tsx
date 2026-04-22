@@ -23,11 +23,23 @@ interface NewPatientDialogProps {
   insurances: Insurance[];
 }
 
+const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const EDUCATION_LEVELS = [
+  "Fundamental (Incompleto)", "Fundamental (Completo)",
+  "Ensino Médio", "Graduado (Bacharel)", "Graduado (Licenciatura)",
+  "Pós-Graduado", "Mestrado", "Doutorado", "Outro",
+];
+
 const INITIAL_FORM = {
   full_name: "",
+  social_name: "",
+  nickname: "",
   cpf: "",
   birth_date: "",
   gender: "" as Patient["gender"] | "",
+  blood_type: "",
+  education_level: "",
+  prontuario_number: "",
   phone: "",
   email: "",
   whatsapp: "",
@@ -88,9 +100,14 @@ export function NewPatientDialog({
     try {
       const payload: Partial<Patient> = {
         full_name: form.full_name,
+        social_name: form.social_name || null,
+        nickname: form.nickname || null,
+        prontuario_number: form.prontuario_number || null,
         cpf: form.cpf || null,
         birth_date: form.birth_date || null,
         gender: (form.gender as Patient["gender"]) || null,
+        blood_type: form.blood_type || null,
+        education_level: form.education_level || null,
         phone: form.phone,
         email: form.email || null,
         whatsapp: form.whatsapp || form.phone,
@@ -171,6 +188,33 @@ export function NewPatientDialog({
               </div>
 
               <div className="space-y-1">
+                <Label>Nome Social</Label>
+                <Input
+                  value={form.social_name}
+                  onChange={(e) => set("social_name", e.target.value)}
+                  placeholder="Como prefere ser chamado(a)"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Apelido</Label>
+                <Input
+                  value={form.nickname}
+                  onChange={(e) => set("nickname", e.target.value)}
+                  placeholder="Apelido"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Nº Prontuário</Label>
+                <Input
+                  value={form.prontuario_number}
+                  onChange={(e) => set("prontuario_number", e.target.value)}
+                  placeholder="Ex: 1042"
+                />
+              </div>
+
+              <div className="space-y-1">
                 <Label>CPF</Label>
                 <Input
                   value={form.cpf}
@@ -197,6 +241,30 @@ export function NewPatientDialog({
                     <SelectItem value="F">Feminino</SelectItem>
                     <SelectItem value="O">Outro</SelectItem>
                     <SelectItem value="N">Prefiro não informar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Tipo Sanguíneo</Label>
+                <Select value={form.blood_type || ""} onValueChange={(v) => set("blood_type", v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {BLOOD_TYPES.map((bt) => (
+                      <SelectItem key={bt} value={bt}>{bt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Escolaridade</Label>
+                <Select value={form.education_level || ""} onValueChange={(v) => set("education_level", v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {EDUCATION_LEVELS.map((el) => (
+                      <SelectItem key={el} value={el}>{el}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

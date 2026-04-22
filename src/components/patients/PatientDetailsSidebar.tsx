@@ -56,9 +56,21 @@ export function PatientDetailsSidebar({
   const set = (field: string, value: any) =>
     setForm((prev: any) => ({ ...prev, [field]: value }));
 
+  const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+  const EDUCATION_LEVELS = [
+    "Fundamental (Incompleto)", "Fundamental (Completo)",
+    "Ensino Médio", "Graduado (Bacharel)", "Graduado (Licenciatura)",
+    "Pós-Graduado", "Mestrado", "Doutorado", "Outro",
+  ];
+
   const startEditing = () => {
     setForm({
       full_name: patient.full_name,
+      social_name: patient.social_name || "",
+      nickname: patient.nickname || "",
+      prontuario_number: patient.prontuario_number || "",
+      blood_type: patient.blood_type || "",
+      education_level: patient.education_level || "",
       cpf: patient.cpf || "",
       birth_date: patient.birth_date || "",
       gender: patient.gender || "",
@@ -342,6 +354,18 @@ export function PatientDetailsSidebar({
               {isEditing ? (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Nº Prontuário</Label>
+                    <Input value={form.prontuario_number} onChange={(e) => set("prontuario_number", e.target.value)} placeholder="Ex: 1042" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Nome Social</Label>
+                    <Input value={form.social_name} onChange={(e) => set("social_name", e.target.value)} placeholder="Como prefere ser chamado(a)" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Apelido</Label>
+                    <Input value={form.nickname} onChange={(e) => set("nickname", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">CPF</Label>
                     <Input value={form.cpf} onChange={(e) => set("cpf", e.target.value)} placeholder="000.000.000-00" />
                   </div>
@@ -361,9 +385,45 @@ export function PatientDetailsSidebar({
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Tipo Sanguíneo</Label>
+                    <Select value={form.blood_type || ""} onValueChange={(v) => set("blood_type", v)}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {BLOOD_TYPES.map((bt) => <SelectItem key={bt} value={bt}>{bt}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Escolaridade</Label>
+                    <Select value={form.education_level || ""} onValueChange={(v) => set("education_level", v)}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {EDUCATION_LEVELS.map((el) => <SelectItem key={el} value={el}>{el}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               ) : (
                 <div className="grid gap-2 text-sm">
+                  {patient.prontuario_number && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Prontuário:</span>
+                      <span className="font-mono">#{patient.prontuario_number}</span>
+                    </div>
+                  )}
+                  {patient.social_name && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Nome Social:</span>
+                      <span>{patient.social_name}</span>
+                    </div>
+                  )}
+                  {patient.nickname && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Apelido:</span>
+                      <span>{patient.nickname}</span>
+                    </div>
+                  )}
                   {patient.cpf && (
                     <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">CPF:</span>
@@ -386,15 +446,25 @@ export function PatientDetailsSidebar({
                   {patient.birth_date && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Nascimento:</span>
-                      <span>
-                        {format(new Date(patient.birth_date), "dd/MM/yyyy")} ({calcAge(patient.birth_date)} anos)
-                      </span>
+                      <span>{format(new Date(patient.birth_date), "dd/MM/yyyy")} ({calcAge(patient.birth_date)} anos)</span>
                     </div>
                   )}
                   {patient.gender && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Gênero:</span>
                       <span>{GENDER_LABELS[patient.gender]}</span>
+                    </div>
+                  )}
+                  {patient.blood_type && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tipo Sanguíneo:</span>
+                      <span className="font-medium">{patient.blood_type}</span>
+                    </div>
+                  )}
+                  {patient.education_level && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Escolaridade:</span>
+                      <span>{patient.education_level}</span>
                     </div>
                   )}
                   <div className="flex justify-between">

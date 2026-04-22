@@ -36,6 +36,12 @@ export interface Patient {
   notes: string | null;
   allergies: string | null;
   tags: string[] | null;
+  // Campos clínicos adicionais
+  prontuario_number: string | null;
+  social_name: string | null;
+  nickname: string | null;
+  blood_type: string | null;
+  education_level: string | null;
   preferred_professional_id: string | null;
   preferred_day: string | null;
   preferred_time: string | null;
