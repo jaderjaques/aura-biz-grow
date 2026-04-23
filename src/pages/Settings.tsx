@@ -1,12 +1,23 @@
+import React from "react";
 import { Link, useLocation, Navigate } from "react-router-dom";
-import { Shield, Users, Key, Bell, Building, FileText } from "lucide-react";
+import { Shield, Users, Key, Bell, Building, FileText, TrendingUp } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { cn } from "@/lib/utils";
 
-const settingsTabs = [
+type SettingsTab = {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  href: string;
+  comingSoon?: boolean;
+  adminOnly?: boolean;
+};
+
+const BASE_TABS: SettingsTab[] = [
   { id: "roles", label: "Cargos", icon: Shield, href: "/configuracoes/roles" },
   { id: "auditoria", label: "Auditoria", icon: FileText, href: "/configuracoes/auditoria" },
   { id: "integracoes", label: "Integrações", icon: Key, href: "/configuracoes/integracoes" },
@@ -15,9 +26,18 @@ const settingsTabs = [
   { id: "empresa", label: "Empresa", icon: Building, href: "/configuracoes/empresa" },
 ];
 
+const ADMIN_TABS: SettingsTab[] = [
+  { id: "precificacao", label: "Precificação", icon: TrendingUp, href: "/configuracoes/precificacao", adminOnly: true },
+];
+
 export default function Settings() {
   const location = useLocation();
   const currentTab = location.pathname.split("/").pop() || "roles";
+  const { isAdmin } = useAuth();
+
+  const settingsTabs = isAdmin
+    ? [...BASE_TABS, ...ADMIN_TABS]
+    : BASE_TABS;
 
   // Redirect to roles page if on /configuracoes
   if (location.pathname === "/configuracoes") {

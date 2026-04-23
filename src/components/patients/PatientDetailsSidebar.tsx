@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
@@ -21,8 +21,9 @@ import { Switch } from "@/components/ui/switch";
 import {
   User, Phone, Mail, MapPin, Shield, Calendar,
   MessageCircle, Pencil, Save, X, Users, FileText, AlertTriangle, ClipboardList, Eye, EyeOff,
-  Receipt,
+  Receipt, Camera, Trash2,
 } from "lucide-react";
+import { usePatientPhoto } from "@/hooks/usePatientPhoto";
 import { maskCPF, formatCPF } from "@/lib/format-utils";
 import { PatientWithDetails, PatientStatus, GENDER_LABELS, Insurance } from "@/types/patients";
 import { MedicalRecordsTab } from "./MedicalRecordsTab";
@@ -50,6 +51,8 @@ export function PatientDetailsSidebar({
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>({});
   const [showCPF, setShowCPF] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(patient.photo_url ?? null);
+  const { uploading: uploadingPhoto, uploadPhoto, removePhoto } = usePatientPhoto();
 
   if (!patient) return null;
 
@@ -159,11 +162,46 @@ export function PatientDetailsSidebar({
         <SheetHeader>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12">
-                <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                  {getInitials(patient.full_name)}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative group">
+                <Avatar className="h-14 w-14">
+                  <AvatarImage src={photoUrl ?? undefined} alt={patient.full_name} className="object-cover" />
+                  <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                    {getInitials(patient.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                {isEditing && (
+                  <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <label htmlFor="patient-photo-input" className="cursor-pointer p-1">
+                      {uploadingPhoto
+                        ? <span className="text-white text-[10px]">...</span>
+                        : <Camera className="h-4 w-4 text-white" />}
+                    </label>
+                  </div>
+                )}
+                {isEditing && photoUrl && (
+                  <button
+                    type="button"
+                    className="absolute -top-1 -right-1 bg-destructive text-white rounded-full h-4 w-4 flex items-center justify-center hover:bg-destructive/80"
+                    onClick={() => removePhoto(patient.id, () => setPhotoUrl(null))}
+                    title="Remover foto"
+                  >
+                    <Trash2 className="h-2.5 w-2.5" />
+                  </button>
+                )}
+                {isEditing && (
+                  <input
+                    id="patient-photo-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadPhoto(patient.id, file, (url) => setPhotoUrl(url));
+                      e.target.value = "";
+                    }}
+                  />
+                )}
+              </div>
               <div>
                 <SheetTitle className="text-xl">
                   {isEditing ? (

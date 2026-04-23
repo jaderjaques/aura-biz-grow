@@ -37,6 +37,7 @@ import AgendaRouter from "./pages/AgendaRouter";
 import Profissionais from "./pages/Profissionais";
 import Consultorios from "./pages/Consultorios";
 import EmpresaConfig from "./pages/EmpresaConfig";
+import PricingSettings from "./components/settings/PricingSettings";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminTenants from "./pages/admin/AdminTenants";
 import AdminTenantDetail from "./pages/admin/AdminTenantDetail";
@@ -240,6 +241,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireAdmin>
                   <Integrations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes/precificacao"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <PricingSettings />
                 </ProtectedRoute>
               }
             />

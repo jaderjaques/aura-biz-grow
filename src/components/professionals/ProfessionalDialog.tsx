@@ -14,11 +14,12 @@ import {
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Plus } from "lucide-react";
+import { X, Plus, DollarSign, Percent } from "lucide-react";
 import {
   Professional, ProfessionalWithProfile,
   WorkingHours, DEFAULT_WORKING_HOURS, DAY_LABELS, DAYS_OF_WEEK,
 } from "@/types/professionals";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   open: boolean;
@@ -39,6 +40,7 @@ export function ProfessionalDialog({
   open, onOpenChange, professional, availableProfiles, onSave,
 }: Props) {
   const isEdit = !!professional;
+  const { isAdmin } = useAuth();
 
   const [profileId, setProfileId] = useState(professional?.profile_id ?? "none");
   const [licenseType, setLicenseType] = useState(professional?.license_type ?? "CRO");
@@ -52,6 +54,16 @@ export function ProfessionalDialog({
   const [workingHours, setWorkingHours] = useState<WorkingHours>(
     (professional?.working_hours as WorkingHours) ?? DEFAULT_WORKING_HOURS
   );
+  // Comissionamento
+  const [commissionType, setCommissionType] = useState<"percent" | "fixed">(
+    (professional?.commission_type as "percent" | "fixed") ?? "percent"
+  );
+  const [commissionPercent, setCommissionPercent] = useState<string>(
+    professional?.commission_percent != null ? String(professional.commission_percent) : ""
+  );
+  const [commissionFixed, setCommissionFixed] = useState<string>(
+    professional?.commission_fixed != null ? String(professional.commission_fixed) : ""
+  );
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -64,6 +76,9 @@ export function ProfessionalDialog({
       setRooms(professional.rooms ?? []);
       setDuration(professional.default_appointment_duration ?? 60);
       setWorkingHours((professional.working_hours as WorkingHours) ?? DEFAULT_WORKING_HOURS);
+      setCommissionType((professional.commission_type as "percent" | "fixed") ?? "percent");
+      setCommissionPercent(professional.commission_percent != null ? String(professional.commission_percent) : "");
+      setCommissionFixed(professional.commission_fixed != null ? String(professional.commission_fixed) : "");
     }
   }, [professional]);
 
@@ -102,6 +117,11 @@ export function ProfessionalDialog({
         rooms: rooms.length > 0 ? rooms : null,
         default_appointment_duration: duration,
         working_hours: workingHours as any,
+        ...(isAdmin && {
+          commission_type: commissionPercent || commissionFixed ? commissionType : null,
+          commission_percent: commissionType === "percent" && commissionPercent ? parseFloat(commissionPercent) : null,
+          commission_fixed: commissionType === "fixed" && commissionFixed ? parseFloat(commissionFixed) : null,
+        }),
       });
       onOpenChange(false);
     } finally {
@@ -119,10 +139,16 @@ export function ProfessionalDialog({
         </DialogHeader>
 
         <Tabs defaultValue="dados" className="mt-2">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${isAdmin ? "grid-cols-4" : "grid-cols-3"}`}>
             <TabsTrigger value="dados">Dados</TabsTrigger>
             <TabsTrigger value="horarios">Horários</TabsTrigger>
             <TabsTrigger value="consultorios">Consultórios</TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="comissionamento">
+                <DollarSign className="h-3.5 w-3.5 mr-1" />
+                Comissão
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* ABA DADOS */}
@@ -315,6 +341,119 @@ export function ProfessionalDialog({
             )}
           </TabsContent>
         </Tabs>
+
+          {/* ABA COMISSIONAMENTO — só admin vê */}
+          {isAdmin && (
+            <TabsContent value="comissionamento" className="mt-4 space-y-6">
+              <p className="text-sm text-muted-foreground">
+                Configure como este profissional será comissionado a cada procedimento realizado.
+              </p>
+
+              {/* Tipo de comissionamento */}
+              <div className="space-y-3">
+                <Label>Tipo de comissionamento</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCommissionType("percent")}
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-colors text-left ${
+                      commissionType === "percent"
+                        ? "border-primary bg-primary/5"
+                        : "border-muted hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-full ${commissionType === "percent" ? "bg-primary/10" : "bg-muted"}`}>
+                      <Percent className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Percentual</p>
+                      <p className="text-xs text-muted-foreground">% sobre o procedimento</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCommissionType("fixed")}
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-colors text-left ${
+                      commissionType === "fixed"
+                        ? "border-primary bg-primary/5"
+                        : "border-muted hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-full ${commissionType === "fixed" ? "bg-primary/10" : "bg-muted"}`}>
+                      <DollarSign className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Valor fixo</p>
+                      <p className="text-xs text-muted-foreground">R$ por procedimento</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Campo de valor */}
+              {commissionType === "percent" ? (
+                <div className="space-y-2 max-w-[200px]">
+                  <Label>Percentual de comissão (%)</Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.5}
+                      value={commissionPercent}
+                      onChange={(e) => setCommissionPercent(e.target.value)}
+                      placeholder="Ex: 30"
+                      className="pr-8"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    O dentista receberá {commissionPercent || "—"}% do valor de cada procedimento.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-w-[200px]">
+                  <Label>Valor fixo por procedimento (R$)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      value={commissionFixed}
+                      onChange={(e) => setCommissionFixed(e.target.value)}
+                      placeholder="Ex: 50,00"
+                      className="pl-9"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    O dentista receberá R$ {commissionFixed || "—"} por procedimento realizado.
+                  </p>
+                </div>
+              )}
+
+              {/* Preview do comissionamento */}
+              {(commissionPercent || commissionFixed) && (
+                <div className="rounded-lg bg-muted p-4 text-sm space-y-1">
+                  <p className="font-medium">Resumo do comissionamento</p>
+                  <p className="text-muted-foreground">
+                    Tipo: <span className="text-foreground">{commissionType === "percent" ? "Percentual" : "Valor fixo"}</span>
+                  </p>
+                  <p className="text-muted-foreground">
+                    Valor:{" "}
+                    <span className="text-foreground font-medium">
+                      {commissionType === "percent"
+                        ? `${commissionPercent}% sobre cada procedimento`
+                        : `R$ ${parseFloat(commissionFixed || "0").toFixed(2)} por procedimento`}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          )}
 
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>

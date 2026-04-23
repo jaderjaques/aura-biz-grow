@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -74,6 +74,7 @@ export function PatientsTable({ patients, onView, onDelete }: PatientsTableProps
             <TableCell>
               <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
+                  <AvatarImage src={patient.photo_url ?? undefined} alt={patient.full_name} className="object-cover" />
                   <AvatarFallback className="text-xs bg-primary/10 text-primary">
                     {getInitials(patient.full_name)}
                   </AvatarFallback>
