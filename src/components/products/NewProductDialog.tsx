@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Product } from "@/types/products";
+import { ModuleProductConfig } from "@/config/moduleProductConfig";
 import { Camera, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -28,6 +29,7 @@ interface NewProductDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: Partial<Product>) => Promise<void>;
   editingProduct?: Product | null;
+  config: ModuleProductConfig;
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -38,6 +40,7 @@ export function NewProductDialog({
   onOpenChange,
   onSubmit,
   editingProduct,
+  config,
 }: NewProductDialogProps) {
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -181,7 +184,7 @@ export function NewProductDialog({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editingProduct ? "Editar Produto" : "Novo Produto/Serviço"}
+            {editingProduct ? `Editar ${config.dialogTitle}` : config.dialogTitle}
           </DialogTitle>
         </DialogHeader>
 
@@ -229,11 +232,11 @@ export function NewProductDialog({
           {/* Básico */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">Nome do Produto *</Label>
+              <Label htmlFor="name">Nome *</Label>
               <Input
                 id="name"
                 required
-                placeholder="Ex: Setup Marketing Digital"
+                placeholder={config.namePlaceholder}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
@@ -244,7 +247,7 @@ export function NewProductDialog({
               <Textarea
                 id="description"
                 rows={3}
-                placeholder="Descreva o produto/serviço..."
+                placeholder={config.descriptionPlaceholder}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
@@ -262,10 +265,11 @@ export function NewProductDialog({
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="marketing">Marketing Digital</SelectItem>
-                    <SelectItem value="automation">Automação</SelectItem>
-                    <SelectItem value="consulting">Consultorias</SelectItem>
-                    <SelectItem value="addon">Add-ons/Integrações</SelectItem>
+                    {config.categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -281,10 +285,11 @@ export function NewProductDialog({
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="setup">Setup (uma vez)</SelectItem>
-                    <SelectItem value="monthly">Mensalidade</SelectItem>
-                    <SelectItem value="one_time">Pagamento único</SelectItem>
-                    <SelectItem value="hourly">Por hora</SelectItem>
+                    {config.types.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -349,70 +354,78 @@ export function NewProductDialog({
             )}
           </div>
 
-          {/* Recorrência */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="is_recurring"
-                checked={formData.is_recurring}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, is_recurring: checked as boolean })
-                }
-              />
-              <Label htmlFor="is_recurring" className="font-normal">
-                Serviço recorrente (cobrança mensal/anual)
-              </Label>
-            </div>
-
-            {formData.is_recurring && (
-              <div>
-                <Label htmlFor="billing_cycle">Ciclo de Cobrança *</Label>
-                <Select
-                  value={formData.billing_cycle}
-                  onValueChange={(value) => setFormData({ ...formData, billing_cycle: value })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Mensal</SelectItem>
-                    <SelectItem value="quarterly">Trimestral</SelectItem>
-                    <SelectItem value="yearly">Anual</SelectItem>
-                  </SelectContent>
-                </Select>
+          {/* Recorrência — apenas para módulos que fazem sentido */}
+          {config.showRecurring && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="is_recurring"
+                  checked={formData.is_recurring}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, is_recurring: checked as boolean })
+                  }
+                />
+                <Label htmlFor="is_recurring" className="font-normal">
+                  Serviço recorrente (cobrança mensal/anual)
+                </Label>
               </div>
-            )}
-          </div>
 
-          {/* Opções */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="requires_setup"
-                checked={formData.requires_setup}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, requires_setup: checked as boolean })
-                }
-              />
-              <Label htmlFor="requires_setup" className="font-normal">
-                Requer setup antes de ativar
-              </Label>
+              {formData.is_recurring && (
+                <div>
+                  <Label htmlFor="billing_cycle">Ciclo de Cobrança *</Label>
+                  <Select
+                    value={formData.billing_cycle}
+                    onValueChange={(value) => setFormData({ ...formData, billing_cycle: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                      <SelectItem value="quarterly">Trimestral</SelectItem>
+                      <SelectItem value="yearly">Anual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
+          )}
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="available_for_upsell"
-                checked={formData.available_for_upsell}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, available_for_upsell: checked as boolean })
-                }
-              />
-              <Label htmlFor="available_for_upsell" className="font-normal">
-                Disponível para upsell (oferecer para clientes ativos)
-              </Label>
+          {/* Opções extras — apenas para módulos que fazem sentido */}
+          {(config.showSetup || config.showUpsell) && (
+            <div className="space-y-2">
+              {config.showSetup && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="requires_setup"
+                    checked={formData.requires_setup}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, requires_setup: checked as boolean })
+                    }
+                  />
+                  <Label htmlFor="requires_setup" className="font-normal">
+                    Requer setup antes de ativar
+                  </Label>
+                </div>
+              )}
+
+              {config.showUpsell && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="available_for_upsell"
+                    checked={formData.available_for_upsell}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, available_for_upsell: checked as boolean })
+                    }
+                  />
+                  <Label htmlFor="available_for_upsell" className="font-normal">
+                    Disponível para upsell (oferecer para clientes ativos)
+                  </Label>
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

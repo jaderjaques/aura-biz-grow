@@ -4,16 +4,30 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Package, RefreshCw, DollarSign, Megaphone, Bot } from "lucide-react";
+import { Plus, Search, Package, RefreshCw, Megaphone, Bot,
+         ShieldCheck, Sparkles, GitMerge, Anchor, Scissors,
+         Leaf, Activity, Layers, Baby, MoreHorizontal, Stethoscope } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { ProductCard } from "@/components/products/ProductCard";
 import { NewProductDialog } from "@/components/products/NewProductDialog";
 import { Product } from "@/types/products";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import { useTenantModule } from "@/hooks/useTenantModule";
+import { getModuleProductConfig } from "@/config/moduleProductConfig";
+
+// Mapa de ícones por nome
+const ICON_MAP: Record<string, React.ElementType> = {
+  Package, RefreshCw, Megaphone, Bot,
+  ShieldCheck, Sparkles, GitMerge, Anchor, Scissors,
+  Leaf, Activity, Layers, Baby, MoreHorizontal, Stethoscope,
+};
 
 export default function Products() {
   const { isAdmin } = useAuth();
+  const { module } = useTenantModule();
+  const cfg = getModuleProductConfig(module);
+
   const {
     products,
     loading,
@@ -22,14 +36,12 @@ export default function Products() {
     toggleProductActive,
     getCategoryCount,
   } = useProducts();
+
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Apenas admins podem acessar esta página
-  if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (data: Partial<Product>) => {
     if (editingProduct) {
@@ -45,29 +57,19 @@ export default function Products() {
   };
 
   const handleDuplicate = async (product: Product) => {
-    await createProduct({
-      ...product,
-      name: `${product.name} (cópia)`,
-      sku: null,
-    });
+    await createProduct({ ...product, name: `${product.name} (cópia)`, sku: null });
   };
 
   const handleCloseDialog = (open: boolean) => {
-    if (!open) {
-      setEditingProduct(null);
-    }
+    if (!open) setEditingProduct(null);
     setShowNewDialog(open);
   };
 
   const filterProducts = (category?: string) => {
     let filtered = products;
-    
-    // Filtro por categoria
     if (category && category !== "all") {
       filtered = filtered.filter((p) => p.category === category);
     }
-    
-    // Filtro por busca
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -76,89 +78,53 @@ export default function Products() {
           p.description?.toLowerCase().includes(term)
       );
     }
-    
     return filtered;
   };
 
-  const recurringCount = products.filter((p) => p.is_recurring).length;
-  const totalRecurringValue = products
-    .filter((p) => p.is_recurring && p.active)
-    .reduce((sum, p) => sum + Number(p.base_price), 0);
+  const getStatValue = (key: string) => {
+    if (key === "total") return products.length;
+    if (key === "recurring") return products.filter((p) => p.is_recurring).length;
+    return getCategoryCount(key);
+  };
 
   return (
     <AppLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Gestão de Produtos</h1>
-            <p className="text-muted-foreground">Gerencie o catálogo de produtos e serviços</p>
+            <h1 className="text-3xl font-bold">{cfg.pageTitle}</h1>
+            <p className="text-muted-foreground">{cfg.pageSubtitle}</p>
           </div>
           <Button
             onClick={() => setShowNewDialog(true)}
             className="bg-gradient-to-r from-primary to-accent"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Novo Produto
+            {cfg.newButtonLabel}
           </Button>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Produtos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" />
-                <span className="text-2xl font-bold">{products.length}</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Serviços Recorrentes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <RefreshCw className="h-5 w-5 text-green-500" />
-                <span className="text-2xl font-bold">{recurringCount}</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Marketing
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Megaphone className="h-5 w-5 text-purple-500" />
-                <span className="text-2xl font-bold">{getCategoryCount("marketing")}</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Automação
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Bot className="h-5 w-5 text-blue-500" />
-                <span className="text-2xl font-bold">{getCategoryCount("automation")}</span>
-              </div>
-            </CardContent>
-          </Card>
+          {cfg.statsCards.map((stat) => {
+            const Icon = ICON_MAP[stat.icon] ?? Package;
+            return (
+              <Card key={stat.key}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.label}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Icon className={`h-5 w-5 ${stat.color}`} />
+                    <span className="text-2xl font-bold">{getStatValue(stat.key)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Search */}
@@ -167,7 +133,7 @@ export default function Products() {
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar produtos..."
+                placeholder={`Buscar ${cfg.pageTitle.toLowerCase()}...`}
                 className="pl-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -176,30 +142,32 @@ export default function Products() {
           </CardContent>
         </Card>
 
+        {/* Tabs por categoria */}
         <Tabs defaultValue="all">
-          <TabsList>
-            <TabsTrigger value="all">Todos ({filterProducts("all").length})</TabsTrigger>
-            <TabsTrigger value="marketing">
-              Marketing ({getCategoryCount("marketing")})
+          <TabsList className="flex flex-wrap h-auto gap-1 bg-transparent p-0">
+            <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-white">
+              Todos ({filterProducts("all").length})
             </TabsTrigger>
-            <TabsTrigger value="automation">
-              Automação ({getCategoryCount("automation")})
-            </TabsTrigger>
-            <TabsTrigger value="consulting">
-              Consultorias ({getCategoryCount("consulting")})
-            </TabsTrigger>
-            <TabsTrigger value="addon">Add-ons ({getCategoryCount("addon")})</TabsTrigger>
+            {cfg.categories.map((cat) => (
+              <TabsTrigger
+                key={cat.value}
+                value={cat.value}
+                className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              >
+                {cat.label} ({getCategoryCount(cat.value)})
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          {["all", "marketing", "automation", "consulting", "addon"].map((cat) => (
-            <TabsContent key={cat} value={cat} className="space-y-4">
+          {["all", ...cfg.categories.map((c) => c.value)].map((cat) => (
+            <TabsContent key={cat} value={cat} className="space-y-4 mt-4">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Carregando produtos...
+                  Carregando...
                 </div>
               ) : filterProducts(cat).length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Nenhum produto encontrado
+                  Nenhum {cfg.pageTitle === "Procedimentos" ? "procedimento" : "produto"} encontrado
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -207,6 +175,7 @@ export default function Products() {
                     <ProductCard
                       key={product.id}
                       product={product}
+                      config={cfg}
                       onEdit={handleEdit}
                       onDuplicate={handleDuplicate}
                       onToggleActive={toggleProductActive}
@@ -224,6 +193,7 @@ export default function Products() {
         onOpenChange={handleCloseDialog}
         onSubmit={handleSubmit}
         editingProduct={editingProduct}
+        config={cfg}
       />
     </AppLayout>
   );
