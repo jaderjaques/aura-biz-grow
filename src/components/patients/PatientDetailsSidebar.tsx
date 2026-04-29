@@ -51,8 +51,12 @@ export function PatientDetailsSidebar({
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>({});
   const [showCPF, setShowCPF] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(patient.photo_url ?? null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(patient?.photo_url ?? null);
   const { uploading: uploadingPhoto, uploadPhoto, removePhoto } = usePatientPhoto();
+
+  useEffect(() => {
+    setPhotoUrl(patient?.photo_url ?? null);
+  }, [patient?.id]);
 
   if (!patient) return null;
 

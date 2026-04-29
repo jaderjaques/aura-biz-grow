@@ -40,12 +40,18 @@ export default function Consultorios() {
 
   const fetchAll = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("consultorios")
-      .select("*")
-      .order("name");
-    setConsultorios(data ?? []);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("consultorios")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      setConsultorios(data ?? []);
+    } catch (err: any) {
+      toast.error("Erro ao carregar consultórios: " + (err.message ?? ""));
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchAll(); }, []);
