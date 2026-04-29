@@ -514,7 +514,6 @@ export function NewPatientDialog({
               />
             </div>
           </TabsContent>
-        </Tabs>
 
           {/* DADOS FISCAIS */}
           <TabsContent value="fiscal" className="space-y-4 mt-4">
