@@ -169,6 +169,12 @@ Contexto EU: DB hoje em `sa-east-1` (São Paulo). UE = GDPR + residência de dad
   - **Filtro `from_me` → FEITO** (versão ativa `6b535aaf`): `GRUPO1` agora ignora `is_group` **OU** `from_me`. Sem isso, mensagens enviadas pela IA/negócio viravam chat-fantasma + resposta-a-si-mesmo. Descoberto pela execução 755 (processava o nº do negócio `553196402610`).
   - **Limpeza:** removidos 2 chats-fantasma do "Jader" (nº do negócio `553196402610` e LID `154734887473310`); mantido o real `b33019fa` (553194770836, 61 msgs).
   - **Backlog (n8n):** filtrar também `status@broadcast` (status do WhatsApp viram chat). Resiliência no Gemini 503 (retry). Inbox em tempo real (salvar antes do buffer de 15s). Limpar fantasmas antigos restantes (Renan/Santiago/Cliente com número `@lid`, chat `status@broadcast`).
+  - **Fase 2.1 → FEITO (portão multi-tenant COMPLETO):**
+    - `mavie-chat` v9: passou a gravar `tenant_id` na **coluna** de `chat_messages` (antes só no `metadata`, dependia do default).
+    - Virados os **60 defaults** `tenant_id` de `'responde-uai'` → `get_my_tenant_id()` (loop). Confirmado: 0 com `'responde-uai'`, 69 com `get_my_tenant_id()`. _(migration — não está no git)_
+    - Efeito: autenticado que esquecer tenant_id pega o próprio tenant; `service_role` que esquecer **estoura alto** (não vaza). Pipeline ativo todo (n8n + edge functions) seta explícito.
+    - **Fase 2 fechada:** 2.1 ✅ · 2.2 ✅ · 2.3 ✅ · 2.4 ✅ · role_permissions ✅. Sistema pronto, em isolamento, pra entrar o 2º tenant (clínicas-modelo).
+    - **⚠️ RISCO/DRIFT descoberto:** o `supabase/functions/mavie-chat/index.ts` do **repo** é uma versão DIFERENTE da **deployada**. Repo = tools ATIVAS (insere em `leads/appointments/tasks/escalation_logs`); deployado (v9) = simples (tools off). **Não fazer `supabase functions deploy mavie-chat` do repo sem reconciliar** — mudaria o comportamento do cérebro compartilhado E os inserts da versão do repo precisam setar `tenant_id` (agora obrigatório). Reconciliar deliberadamente: decidir a fonte de verdade + garantir `tenant_id` nos inserts.
 
 ### 2026-05-23
 - **O que mudou:**
