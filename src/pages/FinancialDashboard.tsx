@@ -73,7 +73,7 @@ import {
   Legend,
 } from "recharts";
 import { useInvoices, useFinancialMetrics, useFinancialAlerts } from "@/hooks/useInvoices";
-import { useTenantModule } from "@/hooks/useTenantModule";
+import { useModuleConfig } from "@/config/moduleConfig";
 import { NewInvoiceDialog } from "@/components/financial/NewInvoiceDialog";
 import { MarkAsPaidDialog } from "@/components/financial/MarkAsPaidDialog";
 import { InvoiceWithDetails } from "@/types/financial";
@@ -103,8 +103,8 @@ interface ProjectionData {
 
 export default function FinancialDashboard() {
   const navigate = useNavigate();
-  const { isClinic } = useTenantModule();
-  const patientsRoute = isClinic ? "/pacientes" : "/clientes";
+  const moduleCfg = useModuleConfig();
+  const patientsRoute = moduleCfg.customerRoute;
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [showNewInvoice, setShowNewInvoice] = useState(false);
@@ -479,7 +479,7 @@ export default function FinancialDashboard() {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">{isClinic ? "Pacientes Ativos" : "Clientes Ativos"}</p>
+                      <p className="text-sm text-muted-foreground">{moduleCfg.customerLabelPlural} Ativos</p>
                       <p className="text-xl font-bold">{extraMetrics.activeCustomers}</p>
                     </div>
                     <Badge variant="secondary">Ativo</Badge>

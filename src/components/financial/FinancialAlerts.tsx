@@ -21,7 +21,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { useTenantModule } from "@/hooks/useTenantModule";
+import { useModuleConfig } from "@/config/moduleConfig";
 
 interface AlertItem {
   id: string;
@@ -50,9 +50,9 @@ const formatCurrency = (value: number) =>
 
 export function FinancialAlerts() {
   const navigate = useNavigate();
-  const { isClinic } = useTenantModule();
-  const patientsRoute = isClinic ? "/pacientes" : "/clientes";
-  const patientsLabel = isClinic ? "Pacientes" : "Clientes";
+  const moduleCfg = useModuleConfig();
+  const patientsRoute = moduleCfg.customerRoute;
+  const patientsLabel = moduleCfg.customerLabelPlural;
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [cashflowProjection, setCashflowProjection] = useState({

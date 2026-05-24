@@ -119,6 +119,16 @@ Contexto EU: DB hoje em `sa-east-1` (São Paulo). UE = GDPR + residência de dad
 
 ---
 
+## ADRs (decisões de arquitetura)
+
+### ADR-001 — Configuração de vertical: incremental, não plataforma (2026-05-24)
+- **Contexto:** sistema multi-vertical (agência, clínicas) com forks por módulo espalhados (`isClinic ? ...`). Opções: (a) plataforma de config "pra tudo" (estilo metadata da Salesforce) vs (b) consolidação incremental.
+- **Decisão:** **incremental.** Criado `src/config/moduleConfig.ts` como **seam canônico do vertical**, começando pela terminologia (Cliente/Paciente, rota). Telas genuinamente diferentes (`ClinicDashboard`×`AgencyDashboard`, `ClinicAgenda`×`Agenda`) seguem **explícitas via routers**. Catálogo em `moduleProductConfig.ts`.
+- **Por quê:** estágio "provar o modelo" (2 verticais + UE lean). Abstração prematura custa mais que duplicação (Sandi Metz / AHA). Salesforce/Shopify construíram a plataforma de metadado **incrementalmente**, não em big-bang. Investir na plataforma só com estratégia + recursos pra muitos verticais.
+- **Gatilho de promoção:** reavaliar migrar mais traços (menus, etapas de funil) pro registro — ou construir uma plataforma de config — **quando: (1) entrar o 3º vertical, OU (2) a UE virar produto recorrente.** Decisão por evidência, não aposta.
+- **Regra:** `moduleConfig` é só **dado declarativo** (não vira 2ª linguagem). Comportamento fica no código. Crescer pela Regra de Três.
+- **Feito (v1):** `moduleConfig.ts` + `useModuleConfig()`; refatorados `FinancialDashboard`, `GoalsTab`, `FinancialAlerts` (terminologia).
+
 ## Backlog de correções (UX/produto)
 - **Mavie envia "textão"** — respostas muito longas num único balão de WhatsApp. Pouco natural. Corrigir com: (a) prompt mais conciso e/ou (b) quebrar a resposta em mensagens menores antes de enviar. O workflow `ATTO - Mavie` já faz isso (Parser Chain → SPLIT → Loop com `DIGITANDO`/Wait); replicar no `ATTO - Mavie CRM`. Prioridade: média. _(reportado 2026-05-24)_
 
@@ -149,6 +159,16 @@ Contexto EU: DB hoje em `sa-east-1` (São Paulo). UE = GDPR + residência de dad
   - **pg_cron** `bant-daily-summary` diário às **11:03 UTC (08:03 BRT)** chamando a função. _(migration — não está no git)_
   - Card **"Resumo da Mavie IA"** no Dashboard da agência (`Dashboard.tsx`).
   - Decisão: aprovado A+A (card + pg_cron). WhatsApp pro gestor = incremento futuro.
+- **Fase 2 — portão multi-tenant (início):**
+  - **2.3 RLS clínico → VERIFICADO (sem migration):** `odontogram`, `procedure_prices`, `treatment_plan_items` já estavam isolados por subquery na tabela-pai (patients/procedures/treatment_plans + `get_my_tenant_id()`). Dado de paciente protegido.
+  - **`role_permissions` isolado:** `rp_select`/`rp_write` escopados pela tabela `roles` (leitura inclui cargos globais `tenant_id IS NULL`; escrita só do próprio tenant + `is_tenant_admin()`). _(migration — não está no git)_
+  - **2.1 (default `responde-uai`, 60 colunas) → ADIADO e ACOPLADO ao 2.2.** Trocar o default agora quebraria o `SALVAR_MENSAGEM` do n8n (insere em `chat_messages` sem `tenant_id`, depende do default). Será feito junto de tornar o n8n tenant-agnóstico (setar `tenant_id` explícito). É o próximo passo do portão multi-tenant.
+  - **2.2 n8n tenant-agnóstico → FEITO** (versão ativa `3b586302`): nós `RESOLVE_DEVICE` (lookup em `whatsapp_devices` por `api_token = body.token` do webhook) + `TENANT` (tenant_id/api_token resolvidos, fallback `responde-uai`). `CRIAR_CHAT`/`SALVAR_MENSAGEM` setam `tenant_id`; `Converte_LID`/`ENVIAR_WHATSAPP` usam o token do tenant. _(n8n não está no git)_
+  - **2.1 ainda pendente:** falta confirmar que TODO insert `service_role` nas 60 tabelas seta `tenant_id` (ex.: o insert da resposta do assistente em `chat_messages` feito pela `mavie-chat`) antes de virar os defaults. Verificar antes de aplicar.
+  - **Backlog:** o webhook traz `SenderAlt` (número real, ex. `553194770836@s.whatsapp.net`) mesmo em `@lid` → poderia substituir a chamada `Converte_LID`. Otimização futura.
+  - **Filtro `from_me` → FEITO** (versão ativa `6b535aaf`): `GRUPO1` agora ignora `is_group` **OU** `from_me`. Sem isso, mensagens enviadas pela IA/negócio viravam chat-fantasma + resposta-a-si-mesmo. Descoberto pela execução 755 (processava o nº do negócio `553196402610`).
+  - **Limpeza:** removidos 2 chats-fantasma do "Jader" (nº do negócio `553196402610` e LID `154734887473310`); mantido o real `b33019fa` (553194770836, 61 msgs).
+  - **Backlog (n8n):** filtrar também `status@broadcast` (status do WhatsApp viram chat). Resiliência no Gemini 503 (retry). Inbox em tempo real (salvar antes do buffer de 15s). Limpar fantasmas antigos restantes (Renan/Santiago/Cliente com número `@lid`, chat `status@broadcast`).
 
 ### 2026-05-23
 - **O que mudou:**

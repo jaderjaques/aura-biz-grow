@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTenantModule } from "@/hooks/useTenantModule";
+import { useModuleConfig } from "@/config/moduleConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentProfile } from "@/lib/tenant-utils";
 import { toast } from "sonner";
@@ -80,9 +80,9 @@ function formatCurrency(value: number) {
 
 export function GoalsTab() {
   const { user } = useAuth();
-  const { isClinic } = useTenantModule();
-  const newCustomersLabel = isClinic ? "Novos Pacientes" : "Novos Clientes";
-  const newCustomersHint = isClinic ? "Quantidade de novos pacientes" : "Quantidade de novos clientes";
+  const moduleCfg = useModuleConfig();
+  const newCustomersLabel = `Novos ${moduleCfg.customerLabelPlural}`;
+  const newCustomersHint = `Quantidade de novos ${moduleCfg.customerLabelPlural.toLowerCase()}`;
   const typeLabels: Record<string, string> = {
     ...baseTypeLabels,
     new_customers: newCustomersLabel,
