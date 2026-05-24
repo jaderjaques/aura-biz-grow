@@ -119,10 +119,30 @@ Contexto EU: DB hoje em `sa-east-1` (São Paulo). UE = GDPR + residência de dad
 
 ---
 
+## Backlog de correções (UX/produto)
+- **Mavie envia "textão"** — respostas muito longas num único balão de WhatsApp. Pouco natural. Corrigir com: (a) prompt mais conciso e/ou (b) quebrar a resposta em mensagens menores antes de enviar. O workflow `ATTO - Mavie` já faz isso (Parser Chain → SPLIT → Loop com `DIGITANDO`/Wait); replicar no `ATTO - Mavie CRM`. Prioridade: média. _(reportado 2026-05-24)_
+
 ## Diário de bordo
 
 > Atualizado por mim (Claude) ao fim das sessões + por job automático diário (~20:51) a partir do git.
 > Mudanças de banco (migrations via MCP) não aparecem no git → registradas manualmente aqui.
+
+### 2026-05-24
+- **O que mudou (commit `3a38bb4`):** Fase 1.2 fechada.
+  - G1 Relatórios: religado à página real `Reports`; removidos os dados mock (receita, crescimento %, MRR, CAC) — reais onde há fonte, zero honesto onde não há.
+  - G3 Tarefas: criado `TaskDetailsSheet` (detalhe + checklist + status + excluir).
+  - G2 Configurações: removidas abas "Em breve" (Equipe redundante c/ Usuários; Notificações sem motor).
+  - G4 Fiscal: senha do certificado não é mais retornada ao navegador (write-only).
+- **Por quê:** tornar a agência operacional e honesta (nada de "operacional falso"), conforme diretriz de vitrine.
+- **Decisões registradas:**
+  - **G4 camada 2** (criptografia at-rest da senha) → **gated**: fazer junto com a ativação da NFS-e (precisa do assinador + chave no Vault).
+  - **Relatórios Salvos** (criar/rodar/duplicar/editar/agendar) → **feature dedicada futura**, não micro-fix. Hoje só favoritar/deletar funcionam.
+  - `Integracoes.tsx` (/google-calendar) vs `Integrations.tsx` (/configuracoes/integracoes) → **não é drift**; páginas distintas, nomes confusos. Renome opcional, baixa prioridade.
+- **Fase 1.3 — IA cadastra/atualiza lead (CONCLUÍDA):**
+  - Nova edge function **`extract-lead`** (isolada; `mavie-chat` intocada) — lê a conversa, faz upsert do lead por `chat_id` (merge, nunca apaga com null), BANT **progressivo** (score recalculado), tags sugeridas pela IA, auditoria (`Mavie IA`). Deploy v1 + testada (criou lead real `a9eb990d`).
+  - n8n: nó **`EXTRAIR_LEAD`** após `ENVIAR_WHATSAPP` (fire-and-forget). Workflow `ATTO - Mavie CRM` publicado (versão `4ccab499`).
+  - **Pendência:** roda só no caminho `ai_mode=auto`; capturar lead no caminho operador é melhoria futura. Custo: +1 chamada LLM por rajada.
+  - **Mudança de n8n NÃO está no git** (registro manual aqui).
 
 ### 2026-05-23
 - **O que mudou:**
