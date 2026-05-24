@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Users, DollarSign, TrendingUp, TrendingDown,
   Briefcase, CheckCircle, Clock, AlertCircle,
-  ArrowRight, RefreshCw, Target,
+  ArrowRight, RefreshCw, Target, Sparkles,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -101,6 +101,7 @@ function AgencyDashboard() {
   const [revenueChart, setRevenueChart] = useState<any[]>([]);
   const [leadSourceChart, setLeadSourceChart] = useState<any[]>([]);
   const [pipelineChart, setPipelineChart] = useState<any[]>([]);
+  const [dailySummary, setDailySummary] = useState<{ content: string; actions: string[]; summary_date: string } | null>(null);
 
   const firstName = profile?.full_name?.split(" ")[0] || "Usuário";
 
@@ -110,7 +111,7 @@ function AgencyDashboard() {
 
   async function loadAllData() {
     setLoading(true);
-    await Promise.all([loadMetrics(), loadCharts()]);
+    await Promise.all([loadMetrics(), loadCharts(), loadDailySummary()]);
     setLoading(false);
   }
 
@@ -261,6 +262,20 @@ function AgencyDashboard() {
     }
   }
 
+  async function loadDailySummary() {
+    try {
+      const { data } = await supabase
+        .from("ai_daily_summaries")
+        .select("content, actions, summary_date")
+        .order("summary_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setDailySummary(data as { content: string; actions: string[]; summary_date: string });
+    } catch (error) {
+      console.error("Erro ao carregar resumo da IA:", error);
+    }
+  }
+
   if (loading) {
     return (
       <AppLayout>
@@ -298,6 +313,37 @@ function AgencyDashboard() {
             Atualizar
           </Button>
         </div>
+
+        {/* Resumo diário da IA interna (Mavie) */}
+        {dailySummary && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <CardTitle className="text-base">Resumo da Mavie IA</CardTitle>
+              </div>
+              <CardDescription>
+                {format(new Date(dailySummary.summary_date + "T00:00:00"), "dd 'de' MMMM", { locale: ptBR })}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm leading-relaxed">{dailySummary.content}</p>
+              {dailySummary.actions?.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Ações sugeridas</p>
+                  <ul className="space-y-1.5">
+                    {dailySummary.actions.map((a, i) => (
+                      <li key={i} className="flex gap-2 text-sm">
+                        <Target className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <span>{a}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* KPIs */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

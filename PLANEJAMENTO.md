@@ -143,6 +143,12 @@ Contexto EU: DB hoje em `sa-east-1` (São Paulo). UE = GDPR + residência de dad
   - n8n: nó **`EXTRAIR_LEAD`** após `ENVIAR_WHATSAPP` (fire-and-forget). Workflow `ATTO - Mavie CRM` publicado (versão `4ccab499`).
   - **Pendência:** roda só no caminho `ai_mode=auto`; capturar lead no caminho operador é melhoria futura. Custo: +1 chamada LLM por rajada.
   - **Mudança de n8n NÃO está no git** (registro manual aqui).
+- **Fase 1.4 — IA interna: resumo BANT diário (CONCLUÍDA):**
+  - Tabela `ai_daily_summaries` (RLS: leitura por tenant, escrita service_role). _(migration — não está no git)_
+  - Edge function **`bant-daily-summary`**: lê leads, calcula funil (por etapa, qualificados, quente/morno/frio, parados >7d), IA gera resumo + ações, grava por tenant/dia. Deploy v1 + testada (resumo real gerado).
+  - **pg_cron** `bant-daily-summary` diário às **11:03 UTC (08:03 BRT)** chamando a função. _(migration — não está no git)_
+  - Card **"Resumo da Mavie IA"** no Dashboard da agência (`Dashboard.tsx`).
+  - Decisão: aprovado A+A (card + pg_cron). WhatsApp pro gestor = incremento futuro.
 
 ### 2026-05-23
 - **O que mudou:**
