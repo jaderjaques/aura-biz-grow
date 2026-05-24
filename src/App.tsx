@@ -30,7 +30,6 @@ import Agenda from "./pages/Agenda";
 import WhatsAppConfig from "./pages/WhatsAppConfig";
 import IntegracoesPage from "./pages/Integracoes";
 import GoogleCallbackPage from "./pages/GoogleCallback";
-import Relatorios from "./pages/Relatorios";
 import PipelineConfig from "./pages/PipelineConfig";
 import Patients from "./pages/Patients";
 import AgendaRouter from "./pages/AgendaRouter";
@@ -224,7 +223,7 @@ const App = () => (
               path="/relatorios"
               element={
                 <ProtectedRoute>
-                  <Relatorios />
+                  <Reports />
                 </ProtectedRoute>
               }
             />

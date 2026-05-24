@@ -66,7 +66,17 @@ export function useTenantFiscalConfig() {
       if (!tenantId) return null;
       const { data, error } = await supabase
         .from("tenant_fiscal_config")
-        .select("*")
+        // certificate_password NUNCA é retornada ao cliente (write-only via upload) — G4 segurança
+        .select(`
+          id, tenant_id, razao_social, nome_fantasia, cnpj,
+          inscricao_municipal, inscricao_estadual, email, phone, logo_url,
+          address_street, address_number, address_complement, address_neighborhood,
+          address_city, address_state, address_zip,
+          nfse_ambiente, nfse_serie_rps, nfse_numero_rps, nfse_codigo_servico,
+          nfse_cnae, nfse_aliquota_iss, nfse_regime_tributario, nfse_optante_simples,
+          nfse_incentivador, nfse_natureza_operacao,
+          certificate_path, certificate_expires_at, certificate_subject
+        `)
         .eq("tenant_id", tenantId)
         .maybeSingle();
       if (error) throw error;

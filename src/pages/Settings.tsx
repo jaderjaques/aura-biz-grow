@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, Navigate } from "react-router-dom";
-import { Shield, Users, Key, Bell, Building, FileText, TrendingUp } from "lucide-react";
+import { Shield, Key, Building, FileText, TrendingUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,8 +21,6 @@ const BASE_TABS: SettingsTab[] = [
   { id: "roles", label: "Cargos", icon: Shield, href: "/configuracoes/roles" },
   { id: "auditoria", label: "Auditoria", icon: FileText, href: "/configuracoes/auditoria" },
   { id: "integracoes", label: "Integrações", icon: Key, href: "/configuracoes/integracoes" },
-  { id: "equipe", label: "Equipe", icon: Users, href: "/configuracoes/equipe", comingSoon: true },
-  { id: "notificacoes", label: "Notificações", icon: Bell, href: "/configuracoes/notificacoes", comingSoon: true },
   { id: "empresa", label: "Empresa", icon: Building, href: "/configuracoes/empresa" },
 ];
 

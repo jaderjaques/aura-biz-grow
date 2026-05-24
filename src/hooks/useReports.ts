@@ -146,15 +146,42 @@ export function useOverviewMetrics() {
         ? ((convertedLeads || 0) / totalLeads) * 100 
         : 0;
 
+      const now = new Date();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+      const { count: leadsThis } = await supabase.from("leads")
+        .select("*", { count: "exact", head: true }).gte("created_at", thisMonthStart);
+      const { count: leadsLast } = await supabase.from("leads")
+        .select("*", { count: "exact", head: true }).gte("created_at", lastMonthStart).lt("created_at", thisMonthStart);
+      const leadsGrowth = (leadsLast || 0) > 0
+        ? (((leadsThis || 0) - (leadsLast || 0)) / (leadsLast || 1)) * 100 : 0;
+
+      const { count: convThis } = await supabase.from("leads")
+        .select("*", { count: "exact", head: true }).eq("status", "convertido").gte("created_at", thisMonthStart);
+      const { count: convLast } = await supabase.from("leads")
+        .select("*", { count: "exact", head: true }).eq("status", "convertido").gte("created_at", lastMonthStart).lt("created_at", thisMonthStart);
+      const rateThis = (leadsThis || 0) > 0 ? ((convThis || 0) / (leadsThis || 1)) * 100 : 0;
+      const rateLast = (leadsLast || 0) > 0 ? ((convLast || 0) / (leadsLast || 1)) * 100 : 0;
+      const conversionGrowth = rateLast > 0 ? rateThis - rateLast : 0;
+
+      const { data: wonThis } = await supabase.from("deals")
+        .select("total_value").eq("status", "won").gte("actual_close_date", thisMonthStart.slice(0, 10));
+      const { data: wonLast } = await supabase.from("deals")
+        .select("total_value").eq("status", "won").gte("actual_close_date", lastMonthStart.slice(0, 10)).lt("actual_close_date", thisMonthStart.slice(0, 10));
+      const avgThis = wonThis && wonThis.length ? wonThis.reduce((s, d) => s + (Number(d.total_value) || 0), 0) / wonThis.length : 0;
+      const avgLast = wonLast && wonLast.length ? wonLast.reduce((s, d) => s + (Number(d.total_value) || 0), 0) / wonLast.length : 0;
+      const ticketGrowth = avgLast > 0 ? ((avgThis - avgLast) / avgLast) * 100 : 0;
+
       return {
         totalLeads: totalLeads || 0,
-        leadsGrowth: 12.5, // Mock - would need historical data
+        leadsGrowth: Math.round(leadsGrowth * 10) / 10,
         conversionRate: Math.round(conversionRate * 10) / 10,
-        conversionGrowth: 2.3, // Mock
+        conversionGrowth: Math.round(conversionGrowth * 10) / 10,
         mrr,
-        mrrGrowth: 8.2, // Mock
+        mrrGrowth: 0, // requer histórico de MRR (metrics_snapshots) — Fase 1.4
         avgDealValue,
-        ticketGrowth: 15.0 // Mock
+        ticketGrowth: Math.round(ticketGrowth * 10) / 10
       };
     },
     enabled: !!user
@@ -312,13 +339,27 @@ export function useRevenueData() {
     staleTime: 30000,
     gcTime: 300000,
     queryFn: async (): Promise<RevenueDataPoint[]> => {
-      // Mock data - in production, this would aggregate from invoices
-      const months = ['Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-      return months.map((month, i) => ({
-        month,
-        receita: Math.round((50000 + Math.random() * 30000) * (1 + i * 0.1)),
-        mrr: Math.round((30000 + Math.random() * 10000) * (1 + i * 0.05))
-      }));
+      const now = new Date();
+      const monthNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("total_amount, issue_date")
+        .gte("issue_date", start.toISOString().slice(0, 10));
+
+      const points: RevenueDataPoint[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const receita = (invoices || [])
+          .filter((inv) => {
+            if (!inv.issue_date) return false;
+            const id = new Date(inv.issue_date);
+            return id.getMonth() === d.getMonth() && id.getFullYear() === d.getFullYear();
+          })
+          .reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
+        points.push({ month: monthNames[d.getMonth()], receita, mrr: 0 });
+      }
+      return points;
     },
     enabled: !!user
   });
@@ -374,14 +415,13 @@ export function useMrrMovement(): { data: MrrMovement | undefined; isLoading: bo
     staleTime: 30000,
     gcTime: 300000,
     queryFn: async (): Promise<MrrMovement> => {
-      // Mock data - would need historical MRR tracking
-      return {
-        previous: 45000,
-        new: 8500,
-        expansion: 2500,
-        churn: 1500,
-        current: 54500
-      };
+      // MRR atual real; componentes de movimento exigem histórico (metrics_snapshots) — Fase 1.4
+      const { data: customers } = await supabase
+        .from("customers")
+        .select("monthly_value")
+        .eq("status", "active");
+      const current = customers?.reduce((sum, c) => sum + (Number(c.monthly_value) || 0), 0) || 0;
+      return { previous: 0, new: 0, expansion: 0, churn: 0, current };
     },
     enabled: !!user
   });
@@ -402,15 +442,15 @@ export function useLtvCacMetrics(): { data: LtvCacMetrics | undefined; isLoading
 
       const avgLtv = customers && customers.length > 0
         ? customers.reduce((sum, c) => sum + (Number(c.lifetime_value) || 0), 0) / customers.length
-        : 5000;
+        : 0;
 
-      // Mock CAC - would need marketing spend data
-      const cac = 1200;
+      // CAC requer dado de gasto de marketing (sem fonte ainda) → 0 até integrar
+      const cac = 0;
 
       return {
-        ltv: avgLtv || 5000,
+        ltv: avgLtv,
         cac,
-        ratio: avgLtv ? avgLtv / cac : 4.2
+        ratio: cac > 0 ? avgLtv / cac : 0
       };
     },
     enabled: !!user

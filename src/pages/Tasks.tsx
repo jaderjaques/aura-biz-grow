@@ -25,6 +25,7 @@ import { TasksKanban } from "@/components/tasks/TasksKanban";
 import { TasksList } from "@/components/tasks/TasksList";
 import { NewTaskDialog } from "@/components/tasks/NewTaskDialog";
 import { CompleteTaskDialog } from "@/components/tasks/CompleteTaskDialog";
+import { TaskDetailsSheet } from "@/components/tasks/TaskDetailsSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { TaskWithDetails } from "@/types/tasks";
@@ -39,11 +40,13 @@ export default function Tasks() {
   const [taskToComplete, setTaskToComplete] = useState<TaskWithDetails | null>(null);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
-  const { tasks, isLoading, metrics } = useTasks({
+  const { tasks, isLoading, metrics, updateTask, updateTaskStatus, deleteTask } = useTasks({
     assignedTo: filterAssigned,
     priority: filterPriority,
     dueDate: filterDueDate,
   });
+
+  const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
 
   const { data: users = [] } = useQuery({
     queryKey: ["users-list"],
@@ -59,7 +62,6 @@ export default function Tasks() {
 
   const handleOpenTask = (taskId: string) => {
     setSelectedTaskId(taskId);
-    // TODO: Open task details sidebar/modal
   };
 
   const handleCompleteTask = (task: TaskWithDetails) => {
@@ -239,6 +241,17 @@ export default function Tasks() {
           setShowCompleteDialog(open);
           if (!open) setTaskToComplete(null);
         }}
+      />
+
+      <TaskDetailsSheet
+        task={selectedTask}
+        open={!!selectedTaskId}
+        onOpenChange={(o) => {
+          if (!o) setSelectedTaskId(null);
+        }}
+        onStatusChange={(id, status) => updateTaskStatus.mutate({ id, status })}
+        onUpdate={(id, updates) => updateTask.mutate({ id, ...updates })}
+        onDelete={(id) => deleteTask.mutate(id)}
       />
     </AppLayout>
   );
