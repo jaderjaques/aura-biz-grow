@@ -19,6 +19,13 @@ Operação em dois mercados: **Brasil** (produto completo) e **Europa** (modelo 
 
 ---
 
+## Onde estamos (RETOMAR POR AQUI) — 2026-05-24
+- **Fases 0 (fundação/RLS), 1 (Agência 100%) e 2 (portão multi-tenant): TODAS concluídas.** Detalhes no Diário de bordo (fim do arquivo).
+- **No ar:** edge functions `mavie-chat` v9, `extract-lead`, `bant-daily-summary`; workflow n8n `ATTO - Mavie CRM` (ID `LXSbJkuL4PDyUZ1E`) publicado — resolve tenant pelo dispositivo, ignora grupo/`from_me`, converte LID, buffer 15s, responde (Mavie), envia, captura/atualiza lead (BANT) e tem resumo diário (cron 11:03 UTC).
+- **Dados de teste do `responde-uai` zerados** (chats/mensagens/leads/resumos) para teste do zero. Config/produtos/usuários mantidos.
+- **PRÓXIMO:** testar o fluxo do zero no WhatsApp → depois **Fase 3 (Módulo Clínica + clínicas-modelo como cockpit)**.
+- **Backlog ativo (ver seções abaixo):** tags inflando na `extract-lead`; "textão" da Mavie; filtrar `status@broadcast` no n8n; resiliência Gemini 503; inbox em tempo real; **drift `mavie-chat` repo (tools on) × deployado (v9 simples)**.
+
 ## Princípios de arquitetura (travados)
 
 - **Tenant e Vertical = DADO, não CÓDIGO.** Onboarding = inserir config; nunca fork/clone por cliente. Região = alvo de deploy.
