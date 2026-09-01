@@ -58,7 +58,6 @@ interface NavItem {
 
 const topLevelItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: Home },
-  { title: "Mavie IA", href: "/mavie", icon: Sparkles },
   { title: "Inbox", href: "/inbox", icon: MessageCircle },
 ];
 
@@ -296,8 +295,7 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
               isMobile={!!isMobile}
             />
 
-            {/* Financeiro (Agency) */}
-            {renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
+            {/* Financeiro (Agency) — oculto: foco em CRM puro (ago/2026) */}
           </>
         )}
 
