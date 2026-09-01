@@ -144,6 +144,17 @@ Contexto EU: DB hoje em `sa-east-1` (São Paulo). UE = GDPR + residência de dad
 > Atualizado por mim (Claude) ao fim das sessões + por job automático diário (~20:51) a partir do git.
 > Mudanças de banco (migrations via MCP) não aparecem no git → registradas manualmente aqui.
 
+### 2026-09-01
+- **O que mudou:** Sem atividade de dev entre 24/05 e hoje (job automático de diário também parou de rodar nesse período). Retomado com uma sessão grande:
+  - **Pivô de produto — "CRM puro":** ocultados do menu Financeiro, Mavie IA, Inbox e Integrações (código/rotas mantidos, só saíram da navegação). Sidebar "Produtos" virou "Serviços"; categorias fixas de serviço (Marketing Digital/Automação/Consultorias/Add-ons) viraram campo livre por tenant, com sugestão do que já foi cadastrado.
+  - **Leads:** novo seletor Pessoa Jurídica/Pessoa Física (troca CNPJ↔Nome Completo) + campo "Origem do cliente" (Tráfego Pago/Orgânico/Prospecção Ativa/Indicação/Outro), gravado em `how_found_us` (coluna já existia, sem uso). Migration `person_type` em `leads` (default `pj`).
+  - **Dashboard:** removidos MRR, "Resumo da Mavie IA" e "Receita Mensal" (financeiro/IA fora da fase atual); removido "Tickets abertos" (página órfã, sem entrada no menu). "Leads por Origem" agora usa `how_found_us` em vez do `source` técnico.
+  - **Primeiro tenant de teste criado:** `ulisses-teste` (agency, isolado), usuário `ulisseslopes1993@gmail.com` — acesso manual via SQL direto (signup + `accept_invite`), não pelo fluxo padrão de convite por e-mail.
+  - **🔴 Achado e corrigido em produção (crítico):** 12 views (`patient_summary`, `customer_360_view`, `financial_summary_view`, `whatsapp_devices_safe` etc.) eram `SECURITY DEFINER` com grant de leitura pro papel `anon` — qualquer pessoa sem login lia dado de todos os tenants (CPF de paciente real da Oddom incluso). Corrigido com `security_invoker=on` + revoke de `anon`; testado e confirmado fechado. Também travadas 2 funções de limpeza (`cleanup_old_messages_balanced`, `cleanup_chat_webhook_logs`) que `anon` podia disparar pra apagar dado de todos os tenants.
+  - **Pendência de segurança, não urgente:** 51 funções RPC ainda chamáveis por `anon`/`authenticated` (maioria inofensiva, tenant-scoped) e 66 funções sem `search_path` fixo — merece varredura dedicada depois, não bloqueia lançamento.
+- **Por quê:** primeiro cliente possível se aproximando; simplificar o produto pro essencial de CRM e fechar o buraco de segurança antes de qualquer onboarding real.
+- **Áreas/arquivos:** `AppSidebar.tsx`, `moduleProductConfig.ts`, `NewProductDialog.tsx`, `ProductSelectorDialog.tsx`, `Products.tsx`, `NewLeadDialog.tsx`, `Dashboard.tsx`, `AppHeader.tsx`, `useProducts.ts`; banco (migration `person_type`, views/funções de segurança — não estão no git).
+
 ### 2026-05-24
 - **O que mudou (commit `3a38bb4`):** Fase 1.2 fechada.
   - G1 Relatórios: religado à página real `Reports`; removidos os dados mock (receita, crescimento %, MRR, CAC) — reais onde há fonte, zero honesto onde não há.

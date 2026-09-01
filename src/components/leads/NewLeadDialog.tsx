@@ -25,12 +25,21 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Tag, Lead } from "@/types/leads";
 import { Building2, User, Phone, Globe } from "lucide-react";
 
+const ORIGEM_OPTIONS = [
+  { value: "trafego_pago", label: "Tráfego Pago" },
+  { value: "organico", label: "Orgânico" },
+  { value: "prospeccao_ativa", label: "Prospecção Ativa" },
+  { value: "indicacao", label: "Indicação" },
+  { value: "outro", label: "Outro" },
+];
+
 const formSchema = z.object({
-  company_name: z.string().min(1, "Nome da empresa é obrigatório"),
+  company_name: z.string().min(1, "Nome é obrigatório"),
   cnpj: z.string().optional(),
   segment: z.string().optional(),
   contact_name: z.string().optional(),
@@ -42,6 +51,7 @@ const formSchema = z.object({
   needs: z.string().optional(),
   estimated_value: z.string().optional(),
   assigned_to: z.string().optional(),
+  how_found_us: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -59,6 +69,7 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [pipelineStages, setPipelineStages] = useState<{ id: string; name: string }[]>([]);
   const [selectedStage, setSelectedStage] = useState<string>("");
+  const [personType, setPersonType] = useState<"pj" | "pf">("pj");
 
   const {
     register,
@@ -106,7 +117,8 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
         .from("leads")
         .insert({
           company_name: data.company_name,
-          cnpj: data.cnpj || null,
+          person_type: personType,
+          cnpj: personType === "pj" ? data.cnpj || null : null,
           segment: data.segment || null,
           contact_name: data.contact_name || null,
           position: data.position || null,
@@ -118,6 +130,7 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
           estimated_value: data.estimated_value ? parseFloat(data.estimated_value) : null,
           assigned_to: data.assigned_to || null,
           assigned_at: data.assigned_to ? new Date().toISOString() : null,
+          how_found_us: data.how_found_us || null,
           source: "manual",
           status: "novo",
           stage: selectedStage || "Contato Inicial",
@@ -141,6 +154,7 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
 
       reset();
       setSelectedTags([]);
+      setPersonType("pj");
       onOpenChange(false);
       onSuccess();
     } catch (error) {
@@ -162,33 +176,64 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
 
         <ScrollArea className="max-h-[60vh] pr-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Dados da Empresa */}
+            {/* Tipo de pessoa */}
+            <div className="space-y-2">
+              <Tabs value={personType} onValueChange={(v) => setPersonType(v as "pj" | "pf")}>
+                <TabsList>
+                  <TabsTrigger value="pj">Pessoa Jurídica</TabsTrigger>
+                  <TabsTrigger value="pf">Pessoa Física</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Origem do cliente */}
+            <div className="space-y-2">
+              <Label htmlFor="how_found_us">Origem do cliente</Label>
+              <Select onValueChange={(value) => setValue("how_found_us", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Como o cliente chegou até você?" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ORIGEM_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dados da Empresa / Pessoa */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Building2 className="h-4 w-4" />
-                Dados da Empresa
+                {personType === "pj" ? "Dados da Empresa" : "Dados da Pessoa"}
               </div>
               <Separator />
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="company_name">Nome da Empresa *</Label>
+                  <Label htmlFor="company_name">
+                    {personType === "pj" ? "Nome da Empresa *" : "Nome Completo *"}
+                  </Label>
                   <Input
                     id="company_name"
                     {...register("company_name")}
-                    placeholder="Ex: Clínica ABC"
+                    placeholder={personType === "pj" ? "Ex: Clínica ABC" : "Ex: João da Silva"}
                   />
                   {errors.company_name && (
                     <p className="text-xs text-destructive">{errors.company_name.message}</p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ</Label>
-                  <Input
-                    id="cnpj"
-                    {...register("cnpj")}
-                    placeholder="00.000.000/0000-00"
-                  />
-                </div>
+                {personType === "pj" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="cnpj">CNPJ</Label>
+                    <Input
+                      id="cnpj"
+                      {...register("cnpj")}
+                      placeholder="00.000.000/0000-00"
+                    />
+                  </div>
+                )}
                 <div className="col-span-2 space-y-2">
                   <Label htmlFor="segment">Segmento</Label>
                   <Select onValueChange={(value) => setValue("segment", value)}>

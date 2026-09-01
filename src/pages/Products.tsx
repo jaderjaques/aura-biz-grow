@@ -43,6 +43,15 @@ export default function Products() {
 
   if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
+  // Categorias dinâmicas: quando o módulo não define uma lista fixa (ex: agência),
+  // as abas vêm das categorias que o próprio tenant já usou em seus serviços.
+  const dynamicCategories =
+    cfg.categories.length > 0
+      ? cfg.categories.map((c) => ({ value: c.value, label: c.label }))
+      : Array.from(new Set(products.map((p) => p.category).filter(Boolean)))
+          .sort()
+          .map((c) => ({ value: c, label: c }));
+
   const handleSubmit = async (data: Partial<Product>) => {
     if (editingProduct) {
       await updateProduct(editingProduct.id, data);
@@ -148,7 +157,7 @@ export default function Products() {
             <TabsTrigger value="all" className="data-[state=active]:bg-primary data-[state=active]:text-white">
               Todos ({filterProducts("all").length})
             </TabsTrigger>
-            {cfg.categories.map((cat) => (
+            {dynamicCategories.map((cat) => (
               <TabsTrigger
                 key={cat.value}
                 value={cat.value}
@@ -159,7 +168,7 @@ export default function Products() {
             ))}
           </TabsList>
 
-          {["all", ...cfg.categories.map((c) => c.value)].map((cat) => (
+          {["all", ...dynamicCategories.map((c) => c.value)].map((cat) => (
             <TabsContent key={cat} value={cat} className="space-y-4 mt-4">
               {loading ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -167,7 +176,7 @@ export default function Products() {
                 </div>
               ) : filterProducts(cat).length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Nenhum {cfg.pageTitle === "Procedimentos" ? "procedimento" : "produto"} encontrado
+                  Nenhum {cfg.pageTitle === "Procedimentos" ? "procedimento" : "serviço"} encontrado
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -194,6 +203,7 @@ export default function Products() {
         onSubmit={handleSubmit}
         editingProduct={editingProduct}
         config={cfg}
+        existingCategories={dynamicCategories.map((c) => c.value)}
       />
     </AppLayout>
   );

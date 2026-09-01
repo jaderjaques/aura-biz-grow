@@ -29,6 +29,9 @@ export function ProductSelectorDialog({
   const [category, setCategory] = useState("all");
 
   const activeProducts = getActiveProducts();
+  const categories = Array.from(
+    new Set(activeProducts.map((p) => p.category).filter(Boolean))
+  ).sort();
 
   const filteredProducts = activeProducts.filter((product) => {
     const matchesSearch =
@@ -94,16 +97,19 @@ export function ProductSelectorDialog({
             />
           </div>
 
-          {/* Filtro por categoria */}
-          <Tabs defaultValue="all" onValueChange={setCategory}>
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="marketing">Marketing</TabsTrigger>
-              <TabsTrigger value="automation">Automação</TabsTrigger>
-              <TabsTrigger value="consulting">Consultorias</TabsTrigger>
-              <TabsTrigger value="addon">Add-ons</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Filtro por categoria — dinâmico, conforme os serviços cadastrados */}
+          {categories.length > 0 && (
+            <Tabs defaultValue="all" onValueChange={setCategory}>
+              <TabsList className="flex flex-wrap h-auto gap-1">
+                <TabsTrigger value="all">Todos</TabsTrigger>
+                {categories.map((cat) => (
+                  <TabsTrigger key={cat} value={cat}>
+                    {getCategoryLabel(cat)}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          )}
 
           {/* Lista de produtos */}
           <div className="max-h-96 overflow-y-auto space-y-2">

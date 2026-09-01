@@ -23,7 +23,7 @@ export function useProducts() {
     } catch (error: any) {
       console.error("Error fetching products:", error);
       toast({
-        title: "Erro ao carregar produtos",
+        title: "Erro ao carregar catálogo",
         description: error.message,
         variant: "destructive",
       });
@@ -52,7 +52,7 @@ export function useProducts() {
       if (error) throw error;
 
       toast({
-        title: "Produto criado!",
+        title: "Criado!",
         description: `${data.name} foi adicionado ao catálogo`,
       });
 
@@ -61,7 +61,7 @@ export function useProducts() {
     } catch (error: any) {
       console.error("Error creating product:", error);
       toast({
-        title: "Erro ao criar produto",
+        title: "Erro ao criar",
         description: error.message,
         variant: "destructive",
       });
@@ -81,7 +81,7 @@ export function useProducts() {
       if (error) throw error;
 
       toast({
-        title: "Produto atualizado!",
+        title: "Atualizado!",
         description: `${data.name} foi atualizado`,
       });
 
@@ -90,7 +90,7 @@ export function useProducts() {
     } catch (error: any) {
       console.error("Error updating product:", error);
       toast({
-        title: "Erro ao atualizar produto",
+        title: "Erro ao atualizar",
         description: error.message,
         variant: "destructive",
       });
@@ -108,14 +108,14 @@ export function useProducts() {
       if (error) throw error;
 
       toast({
-        title: active ? "Produto ativado!" : "Produto desativado!",
+        title: active ? "Ativado!" : "Desativado!",
       });
 
       await fetchProducts();
     } catch (error: any) {
       console.error("Error toggling product:", error);
       toast({
-        title: "Erro ao alterar produto",
+        title: "Erro ao alterar",
         description: error.message,
         variant: "destructive",
       });
@@ -132,14 +132,14 @@ export function useProducts() {
       if (error) throw error;
 
       toast({
-        title: "Produto excluído!",
+        title: "Excluído!",
       });
 
       await fetchProducts();
     } catch (error: any) {
       console.error("Error deleting product:", error);
       toast({
-        title: "Erro ao excluir produto",
+        title: "Erro ao excluir",
         description: error.message,
         variant: "destructive",
       });

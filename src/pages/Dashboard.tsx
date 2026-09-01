@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Users, DollarSign, TrendingUp, TrendingDown,
-  Briefcase, CheckCircle, Clock, AlertCircle,
-  ArrowRight, RefreshCw, Target, Sparkles,
+  Users, TrendingUp, TrendingDown,
+  Briefcase, Clock, AlertCircle,
+  ArrowRight, RefreshCw, Target,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
@@ -39,6 +39,14 @@ function formatCurrency(value: number) {
   }).format(value || 0);
 }
 
+const ORIGEM_LABELS: Record<string, string> = {
+  trafego_pago: "Tráfego Pago",
+  organico: "Orgânico",
+  prospeccao_ativa: "Prospecção Ativa",
+  indicacao: "Indicação",
+  outro: "Outro",
+};
+
 function getStageLabel(stage: string) {
   const labels: Record<string, string> = {
     contato_inicial: "Contato",
@@ -53,17 +61,12 @@ function getStageLabel(stage: string) {
 interface Metrics {
   activeCustomers: number;
   customersGrowth: number;
-  mrr: number;
-  mrrGrowth: number;
-  totalRevenue: number;
-  revenueGrowth: number;
   pipelineValue: number;
   totalDeals: number;
   dealsWon: number;
   winRate: number;
   pendingTasks: number;
   overdueTasks: number;
-  openTickets: number;
 }
 
 // Wrapper que escolhe o dashboard correto ANTES de qualquer hook condicional
@@ -85,23 +88,16 @@ function AgencyDashboard() {
   const [metrics, setMetrics] = useState<Metrics>({
     activeCustomers: 0,
     customersGrowth: 0,
-    mrr: 0,
-    mrrGrowth: 0,
-    totalRevenue: 0,
-    revenueGrowth: 0,
     pipelineValue: 0,
     totalDeals: 0,
     dealsWon: 0,
     winRate: 0,
     pendingTasks: 0,
     overdueTasks: 0,
-    openTickets: 0,
   });
 
-  const [revenueChart, setRevenueChart] = useState<any[]>([]);
   const [leadSourceChart, setLeadSourceChart] = useState<any[]>([]);
   const [pipelineChart, setPipelineChart] = useState<any[]>([]);
-  const [dailySummary, setDailySummary] = useState<{ content: string; actions: string[]; summary_date: string } | null>(null);
 
   const firstName = profile?.full_name?.split(" ")[0] || "Usuário";
 
@@ -111,7 +107,7 @@ function AgencyDashboard() {
 
   async function loadAllData() {
     setLoading(true);
-    await Promise.all([loadMetrics(), loadCharts(), loadDailySummary()]);
+    await Promise.all([loadMetrics(), loadCharts()]);
     setLoading(false);
   }
 
@@ -125,8 +121,6 @@ function AgencyDashboard() {
     try {
       const now = new Date();
       const lastMonth = subMonths(now, 1);
-      const thisMonthStart = startOfMonth(now);
-      const lastMonthStart = startOfMonth(lastMonth);
       const lastMonthEnd = endOfMonth(lastMonth);
 
       // Customers
@@ -144,29 +138,6 @@ function AgencyDashboard() {
           ? ((activeCustomers.length - lastMonthCustomers.length) / lastMonthCustomers.length) * 100
           : 0;
 
-      // MRR
-      const currentMRR = activeCustomers.reduce((sum, c) => sum + (Number(c.monthly_value) || 0), 0);
-      const lastMRR = lastMonthCustomers.reduce((sum, c) => sum + (Number(c.monthly_value) || 0), 0);
-      const mrrGrowth = lastMRR > 0 ? ((currentMRR - lastMRR) / lastMRR) * 100 : 0;
-
-      // Revenue this month
-      const { data: thisMonthRevenue } = await supabase
-        .from("cash_transactions")
-        .select("amount")
-        .eq("type", "revenue")
-        .gte("transaction_date", format(thisMonthStart, "yyyy-MM-dd"));
-
-      const { data: lastMonthRevenue } = await supabase
-        .from("cash_transactions")
-        .select("amount")
-        .eq("type", "revenue")
-        .gte("transaction_date", format(lastMonthStart, "yyyy-MM-dd"))
-        .lte("transaction_date", format(lastMonthEnd, "yyyy-MM-dd"));
-
-      const currentRevenue = thisMonthRevenue?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      const previousRevenue = lastMonthRevenue?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-      const revenueGrowth = previousRevenue > 0 ? ((currentRevenue - previousRevenue) / previousRevenue) * 100 : 0;
-
       // Deals
       const { data: deals } = await supabase.from("deals").select("id, stage, total_value");
       const openDeals = deals?.filter((d) => !["ganho", "perdido", "cancelado"].includes(d.stage || "")) || [];
@@ -180,26 +151,15 @@ function AgencyDashboard() {
       const pendingTasks = tasks?.filter((t) => t.status !== "done" && t.status !== "cancelled") || [];
       const overdueTasks = pendingTasks.filter((t) => t.due_date && new Date(t.due_date) < now);
 
-      // Tickets
-      const { data: tickets } = await supabase
-        .from("tickets")
-        .select("id")
-        .in("status", ["open", "in_progress"]);
-
       setMetrics({
         activeCustomers: activeCustomers.length,
         customersGrowth,
-        mrr: currentMRR,
-        mrrGrowth,
-        totalRevenue: currentRevenue,
-        revenueGrowth,
         totalDeals: deals?.length || 0,
         dealsWon: wonDeals.length,
         winRate,
         pipelineValue,
         pendingTasks: pendingTasks.length,
         overdueTasks: overdueTasks.length,
-        openTickets: tickets?.length || 0,
       });
     } catch (error) {
       console.error("Erro ao carregar métricas:", error);
@@ -208,33 +168,11 @@ function AgencyDashboard() {
 
   async function loadCharts() {
     try {
-      // Revenue last 6 months
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const date = subMonths(new Date(), i);
-        const start = startOfMonth(date);
-        const end = endOfMonth(date);
-
-        const { data } = await supabase
-          .from("cash_transactions")
-          .select("amount")
-          .eq("type", "revenue")
-          .gte("transaction_date", format(start, "yyyy-MM-dd"))
-          .lte("transaction_date", format(end, "yyyy-MM-dd"));
-
-        const total = data?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-        months.push({
-          month: format(date, "MMM/yy", { locale: ptBR }),
-          receita: total,
-        });
-      }
-      setRevenueChart(months);
-
-      // Leads by source
-      const { data: leads } = await supabase.from("leads").select("source").is("deleted_at", null);
+      // Leads by origin (Tráfego Pago, Orgânico, Prospecção Ativa, etc.)
+      const { data: leads } = await supabase.from("leads").select("how_found_us").is("deleted_at", null);
       const sourceCount: Record<string, number> = {};
       leads?.forEach((lead) => {
-        const source = lead.source || "Não informado";
+        const source = ORIGEM_LABELS[lead.how_found_us || ""] || "Não informado";
         sourceCount[source] = (sourceCount[source] || 0) + 1;
       });
       setLeadSourceChart(Object.entries(sourceCount).map(([name, value]) => ({ name, value })));
@@ -262,27 +200,13 @@ function AgencyDashboard() {
     }
   }
 
-  async function loadDailySummary() {
-    try {
-      const { data } = await supabase
-        .from("ai_daily_summaries")
-        .select("content, actions, summary_date")
-        .order("summary_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (data) setDailySummary(data as { content: string; actions: string[]; summary_date: string });
-    } catch (error) {
-      console.error("Erro ao carregar resumo da IA:", error);
-    }
-  }
-
   if (loading) {
     return (
       <AppLayout>
         <div className="space-y-6 animate-fade-in">
           <Skeleton className="h-10 w-64" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-32" />
             ))}
           </div>
@@ -314,47 +238,8 @@ function AgencyDashboard() {
           </Button>
         </div>
 
-        {/* Resumo diário da IA interna (Mavie) */}
-        {dailySummary && (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base">Resumo da Mavie IA</CardTitle>
-              </div>
-              <CardDescription>
-                {format(new Date(dailySummary.summary_date + "T00:00:00"), "dd 'de' MMMM", { locale: ptBR })}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm leading-relaxed">{dailySummary.content}</p>
-              {dailySummary.actions?.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Ações sugeridas</p>
-                  <ul className="space-y-1.5">
-                    {dailySummary.actions.map((a, i) => (
-                      <li key={i} className="flex gap-2 text-sm">
-                        <Target className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                        <span>{a}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
         {/* KPIs */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <KpiCard
-            title="MRR"
-            value={formatCurrency(metrics.mrr)}
-            growth={metrics.mrrGrowth}
-            icon={DollarSign}
-            iconClass="text-success"
-            onClick={() => navigate("/financeiro")}
-          />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <KpiCard
             title={patientsLabel}
             value={metrics.activeCustomers}
@@ -383,46 +268,6 @@ function AgencyDashboard() {
 
         {/* Charts */}
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Revenue */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Receita Mensal</CardTitle>
-              <CardDescription>Últimos 6 meses</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <AreaChart data={revenueChart}>
-                  <defs>
-                    <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(v) => `R$${v / 1000}k`} />
-                  <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="receita"
-                    name="Receita"
-                    stroke="hsl(var(--primary))"
-                    fillOpacity={1}
-                    fill="url(#colorReceita)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
           {/* Pipeline */}
           <Card>
             <CardHeader>
@@ -448,25 +293,22 @@ function AgencyDashboard() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Leads by source + Action cards */}
-        <div className="grid gap-6 md:grid-cols-3">
           {/* Leads pie */}
-          <Card className="md:col-span-1">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base">Leads por Origem</CardTitle>
             </CardHeader>
             <CardContent>
               {leadSourceChart.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
+                <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
                     <Pie
                       data={leadSourceChart}
                       cx="50%"
                       cy="50%"
                       label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
+                      outerRadius={90}
                       dataKey="value"
                     >
                       {leadSourceChart.map((_, index) => (
@@ -477,45 +319,38 @@ function AgencyDashboard() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-[220px] text-muted-foreground text-sm">
+                <div className="flex items-center justify-center h-[280px] text-muted-foreground text-sm">
                   Nenhum lead cadastrado
                 </div>
               )}
             </CardContent>
           </Card>
-
-          {/* Quick action cards */}
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-base">Ações Rápidas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <ActionCard
-                  icon={Clock}
-                  value={metrics.pendingTasks}
-                  label="Tarefas pendentes"
-                  variant={metrics.pendingTasks > 0 ? "warning" : "default"}
-                  onClick={() => navigate("/tarefas")}
-                />
-                <ActionCard
-                  icon={AlertCircle}
-                  value={metrics.overdueTasks}
-                  label="Tarefas atrasadas"
-                  variant={metrics.overdueTasks > 0 ? "destructive" : "default"}
-                  onClick={() => navigate("/tarefas")}
-                />
-                <ActionCard
-                  icon={CheckCircle}
-                  value={metrics.openTickets}
-                  label="Tickets abertos"
-                  variant={metrics.openTickets > 0 ? "info" : "default"}
-                  onClick={() => navigate("/tickets")}
-                />
-              </div>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* Quick action cards */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Ações Rápidas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ActionCard
+                icon={Clock}
+                value={metrics.pendingTasks}
+                label="Tarefas pendentes"
+                variant={metrics.pendingTasks > 0 ? "warning" : "default"}
+                onClick={() => navigate("/tarefas")}
+              />
+              <ActionCard
+                icon={AlertCircle}
+                value={metrics.overdueTasks}
+                label="Tarefas atrasadas"
+                variant={metrics.overdueTasks > 0 ? "destructive" : "default"}
+                onClick={() => navigate("/tarefas")}
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );

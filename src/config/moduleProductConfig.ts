@@ -33,18 +33,14 @@ export interface ModuleProductConfig {
 }
 
 const AGENCY_CONFIG: ModuleProductConfig = {
-  pageTitle: "Gestão de Produtos",
-  pageSubtitle: "Gerencie o catálogo de produtos e serviços",
-  newButtonLabel: "Novo Produto",
-  dialogTitle: "Novo Produto/Serviço",
-  namePlaceholder: "Ex: Setup Marketing Digital",
-  descriptionPlaceholder: "Descreva o produto/serviço...",
-  categories: [
-    { value: "marketing",  label: "Marketing Digital", icon: "Megaphone",   color: "text-purple-500" },
-    { value: "automation", label: "Automação",          icon: "Bot",         color: "text-blue-500"   },
-    { value: "consulting", label: "Consultorias",       icon: "Users",       color: "text-amber-500"  },
-    { value: "addon",      label: "Add-ons/Integrações", icon: "Puzzle",     color: "text-green-500"  },
-  ],
+  pageTitle: "Gestão de Serviços",
+  pageSubtitle: "Gerencie seus serviços.",
+  newButtonLabel: "Novo Serviço",
+  dialogTitle: "Novo Serviço",
+  namePlaceholder: "Ex: Gestão de Redes Sociais",
+  descriptionPlaceholder: "Descreva o serviço...",
+  // Sem categorias fixas: cada tenant cria as suas próprias (ver NewProductDialog/Products.tsx).
+  categories: [],
   types: [
     { value: "setup",     label: "Setup (uma vez)" },
     { value: "monthly",   label: "Mensalidade" },
@@ -52,10 +48,8 @@ const AGENCY_CONFIG: ModuleProductConfig = {
     { value: "hourly",    label: "Por hora" },
   ],
   statsCards: [
-    { key: "total",       label: "Total Produtos",      icon: "Package",    color: "text-primary"      },
+    { key: "total",       label: "Total de Serviços",    icon: "Package",    color: "text-primary"      },
     { key: "recurring",   label: "Serviços Recorrentes", icon: "RefreshCw", color: "text-green-500"   },
-    { key: "marketing",   label: "Marketing",            icon: "Megaphone", color: "text-purple-500"   },
-    { key: "automation",  label: "Automação",            icon: "Bot",       color: "text-blue-500"     },
   ],
   showRecurring: true,
   showSetup: true,

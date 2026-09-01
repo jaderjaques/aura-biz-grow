@@ -58,7 +58,6 @@ interface NavItem {
 
 const topLevelItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: Home },
-  { title: "Inbox", href: "/inbox", icon: MessageCircle },
 ];
 
 const financeiroItems: NavItem[] = [
@@ -67,7 +66,7 @@ const financeiroItems: NavItem[] = [
   { title: "Relatórios", href: "/relatorios", icon: FileBarChart },
 ];
 
-const produtosItem: NavItem = { title: "Produtos", href: "/produtos", icon: Package };
+const produtosItem: NavItem = { title: "Serviços", href: "/produtos", icon: Package };
 
 const vendasItems: NavItem[] = [
   { title: "Leads", href: "/leads", icon: Users },
@@ -310,8 +309,6 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
           collapsed && !isMobile,
           !!isMobile
         )}
-        {/* Integrações */}
-        {renderSection(Plug, "Integrações", integracoesItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
       </nav>
 
       <Separator />
@@ -383,6 +380,7 @@ export function AppSidebar() {
             variant="ghost"
             size="icon"
             className="md:hidden fixed top-3 left-3 z-50"
+            aria-label="Abrir menu"
           >
             <Menu className="h-5 w-5" />
           </Button>

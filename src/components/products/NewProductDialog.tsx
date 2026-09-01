@@ -30,6 +30,7 @@ interface NewProductDialogProps {
   onSubmit: (data: Partial<Product>) => Promise<void>;
   editingProduct?: Product | null;
   config: ModuleProductConfig;
+  existingCategories?: string[];
 }
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -41,6 +42,7 @@ export function NewProductDialog({
   onSubmit,
   editingProduct,
   config,
+  existingCategories = [],
 }: NewProductDialogProps) {
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -256,22 +258,40 @@ export function NewProductDialog({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="category">Categoria *</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {config.categories.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {config.categories.length > 0 ? (
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {config.categories.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <>
+                    <Input
+                      id="category"
+                      required
+                      list="category-suggestions"
+                      placeholder="Ex: Social Media, Tráfego Pago..."
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    />
+                    <datalist id="category-suggestions">
+                      {existingCategories.map((cat) => (
+                        <option key={cat} value={cat} />
+                      ))}
+                    </datalist>
+                  </>
+                )}
               </div>
 
               <div>
@@ -436,7 +456,7 @@ export function NewProductDialog({
               disabled={loading}
               className="bg-gradient-to-r from-primary to-accent"
             >
-              {loading ? "Salvando..." : editingProduct ? "Salvar" : "Criar Produto"}
+              {loading ? "Salvando..." : editingProduct ? "Salvar" : config.newButtonLabel.replace("Novo ", "Criar ")}
             </Button>
           </DialogFooter>
         </form>

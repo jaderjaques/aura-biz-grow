@@ -105,7 +105,7 @@ export function AppHeader() {
           </div>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative" aria-label="Notificações">
             <Bell className="h-5 w-5" />
             <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] gradient-bg border-0">
               0
@@ -113,7 +113,7 @@ export function AppHeader() {
           </Button>
 
           {/* Theme toggle */}
-          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}>
             {isDark ? (
               <Sun className="h-5 w-5" />
             ) : (
