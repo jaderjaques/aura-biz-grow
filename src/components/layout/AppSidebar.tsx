@@ -262,6 +262,22 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
           />
         ))}
 
+        {/* Mavie IA + Inbox: ocultos no CRM puro, liberados só pra você (super admin) */}
+        {isSuperAdmin && (
+          <>
+            <NavItemLink
+              item={{ title: "Mavie IA", href: "/mavie", icon: Sparkles }}
+              collapsed={collapsed && !isMobile}
+              isMobile={!!isMobile}
+            />
+            <NavItemLink
+              item={{ title: "Inbox", href: "/inbox", icon: MessageCircle }}
+              collapsed={collapsed && !isMobile}
+              isMobile={!!isMobile}
+            />
+          </>
+        )}
+
         <Separator className="my-2" />
 
         {isClinic ? (
@@ -294,7 +310,9 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
               isMobile={!!isMobile}
             />
 
-            {/* Financeiro (Agency) — oculto: foco em CRM puro (ago/2026) */}
+            {/* Financeiro (Agency) — oculto no CRM puro, liberado só pra você (super admin) */}
+            {isSuperAdmin &&
+              renderSection(DollarSign, "Financeiro", financeiroItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
           </>
         )}
 
@@ -309,6 +327,9 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
           collapsed && !isMobile,
           !!isMobile
         )}
+        {/* Integrações — oculta no CRM puro, liberada só pra você (super admin) */}
+        {isSuperAdmin &&
+          renderSection(Plug, "Integrações", integracoesItems, !!isAdmin, collapsed && !isMobile, !!isMobile)}
       </nav>
 
       <Separator />
