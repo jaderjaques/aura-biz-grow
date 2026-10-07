@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Tag, Lead } from "@/types/leads";
 import { Building2, User, Phone, Globe } from "lucide-react";
@@ -159,6 +160,12 @@ export function NewLeadDialog({ open, onOpenChange, onSuccess, tags }: NewLeadDi
       onSuccess();
     } catch (error) {
       console.error("Error creating lead:", error);
+      const code = (error as { code?: string } | null)?.code;
+      toast.error(
+        code === "23505"
+          ? "Já existe um lead com este telefone."
+          : "Não foi possível criar o lead."
+      );
     } finally {
       setLoading(false);
     }

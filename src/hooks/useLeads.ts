@@ -284,7 +284,14 @@ export function useLeads() {
       invalidate();
       return data;
     } catch (error: unknown) {
-      toast({ title: 'Erro ao importar leads', description: error instanceof Error ? error.message : 'Erro desconhecido', variant: 'destructive' });
+      const code = (error as { code?: string } | null)?.code;
+      toast({
+        title: 'Erro ao importar leads',
+        description: code === '23505'
+          ? 'Há telefones repetidos (no arquivo ou já cadastrados). Nenhum lead foi importado.'
+          : error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
       return null;
     }
   }, [user, toast, invalidate]);

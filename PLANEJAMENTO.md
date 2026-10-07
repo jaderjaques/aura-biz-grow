@@ -144,6 +144,16 @@ Contexto EU: DB hoje em `sa-east-1` (São Paulo). UE = GDPR + residência de dad
 > Atualizado por mim (Claude) ao fim das sessões + por job automático diário (~20:51) a partir do git.
 > Mudanças de banco (migrations via MCP) não aparecem no git → registradas manualmente aqui.
 
+### 2026-10-06
+- **Integração Mavie (SDR da Atto) com o CRM:** contrato em `INTEGRACAO_MAVIE_ATTO.md` (chat da Mavie). Decisões fechadas: número da Atto `553131912315` (fixo, sem 9º dígito); funil Novo, Qualificando, Proposta, Coleta de dados, Contrato enviado, Ganho, Perdido; status em inglês no banco com tradução na API; trava humana de 6h ao enviar, sem prazo ao desativar a IA.
+- **Banco (migrations, não estão no git):**
+  - `whatsapp_devices`: criado o device da Atto (553131912315) com o token único; device do `responde-uai` desativado (sem número, token inválido); `UNIQUE(api_token)`. `tenant_config`: Atto com número novo e `ai_mode=off`; `responde-uai` sem número.
+  - Endurecimento: `tenant_id` NOT NULL em 12 tabelas (leads, customers, deals, invoices, contracts, products, chats, chat_messages, tasks, audit_logs, api_keys, whatsapp_devices); `UNIQUE(tenant_id, message_id)` em `chat_messages`; função `normalize_phone_br` (fixo nunca recebe o 9); `UNIQUE` de telefone normalizado em `leads` (não apagados) e índice em `customers`; `audit_logs` só leitura para usuários.
+  - Limpeza (autorizada): 5 deals da Atto e 5 itens apagados; convite pendente da Lorrany removido do tenant Oddom e recriado no tenant da Atto. Backups `_backup_*_20261006` (fechados para a API) aguardam validação para serem apagados.
+- **n8n:** workflow `ATTO - Mavie CRM` despublicado (webhook público com fallback de tenant/token e `service_role` em texto no nó CONFIG; obsoleto sem o número do Responde Uai). Versão `6b535aaf-d9e5-40d5-8f43-b17dac39903c` para restaurar.
+- **Código:** NFS-e inativa por `NFSE_ENABLED=false` (`src/config/features.ts`); aviso de telefone duplicado ao criar/importar lead.
+- **Pendências de segurança:** rotacionar token AvisaAPI e `service_role` (estavam em texto no n8n e no `PROJETO_MASTER_CRM.md`); token do device ainda legível pelo navegador até o envio do Inbox ir para o servidor; 51 funções SECURITY DEFINER executáveis por anon/authenticated; remover `swift-action`, `mavie-chat`, `extract-lead` e pausar o cron `bant-daily-summary` se a IA interna acabou.
+
 ### 2026-09-01
 - **O que mudou:** Sem atividade de dev entre 24/05 e hoje (job automático de diário também parou de rodar nesse período). Retomado com uma sessão grande:
   - **Pivô de produto — "CRM puro":** ocultados do menu Financeiro, Mavie IA, Inbox e Integrações (código/rotas mantidos, só saíram da navegação). Sidebar "Produtos" virou "Serviços"; categorias fixas de serviço (Marketing Digital/Automação/Consultorias/Add-ons) viraram campo livre por tenant, com sugestão do que já foi cadastrado.
