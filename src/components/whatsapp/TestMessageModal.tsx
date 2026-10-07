@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { X, Send, Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -27,20 +28,11 @@ export function TestMessageModal({ device, open, onOpenChange }: TestMessageModa
 
   const sendMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(
-        `${device.api_url}/message/sendText/${device.api_token}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            number: phone.replace(/\D/g, ""),
-            text: message,
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Erro ao enviar mensagem");
-      return await response.json();
+      const { data, error } = await supabase.functions.invoke("crm-inbox", {
+        body: { action: "test", device_id: device.id, telefone: phone.replace(/\D/g, ""), mensagem: message },
+      });
+      if (error || !data?.ok) throw new Error("Erro ao enviar mensagem");
+      return data;
     },
     onSuccess: () => {
       toast.success("Mensagem enviada com sucesso! ✅");

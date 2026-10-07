@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Bot, User, AlertTriangle, Phone, Mail, Building2, Tag, StickyNote, UserCheck, Loader2 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/whatsapp-helpers";
+import { AttendantStateCard } from "./AttendantStateCard";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -115,6 +116,8 @@ export function ChatSidebar({ chatId }: ChatSidebarProps) {
       {/* Status Section */}
       <div>
         <h3 className="text-sm font-semibold mb-2">Status</h3>
+
+        <AttendantStateCard chatId={chatId} />
 
         {isAuto && !chat?.assumed_by && (
           <div className="space-y-2">

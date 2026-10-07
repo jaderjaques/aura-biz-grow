@@ -2,8 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { sendWhatsAppMessage } from "@/lib/whatsapp-helpers";
-import { getCurrentProfile } from "@/lib/tenant-utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, Bot, User } from "lucide-react";
@@ -66,31 +64,26 @@ export function MessageInput({ chatId }: MessageInputProps) {
       setMessage("");
       if (textareaRef.current) textareaRef.current.style.height = "auto";
 
-      // 1. Salvar no banco PRIMEIRO
-      const profile = await getCurrentProfile();
-      const { error } = await supabase.from("chat_messages").insert({
-        chat_id: chatId,
-        direction: "outgoing",
-        message_type: "text",
-        content: trimmed,
-        sender_id: profile.id,
-        tenant_id: profile.tenant_id,
+      // O servidor pausa a Mavie (quando a integração está ligada), salva e envia pelo WhatsApp.
+      const { data, error } = await supabase.functions.invoke("crm-inbox", {
+        body: { action: "send", chat_id: chatId, text: trimmed },
       });
-
-      if (error) {
-        toast.error("Erro ao salvar mensagem");
-        return;
+      if (error || !data?.ok) {
+        // em respostas não 2xx o supabase-js devolve o corpo em error.context
+        const body = await (error as { context?: Response } | null)?.context?.json?.().catch(() => null);
+        const code = body?.error ?? data?.error;
+        if (code === "whatsapp_falhou") {
+          toast.warning("Mensagem salva, mas não foi possível enviar via WhatsApp");
+        } else {
+          setMessage(trimmed); // nada foi salvo: devolve o texto para o usuário tentar de novo
+          toast.error(code === "pausa_nao_confirmada"
+            ? "Não foi possível pausar a Mavie agora. Tente enviar de novo em instantes."
+            : body?.message ?? "Erro ao enviar mensagem");
+        }
       }
 
-      // 2. Enviar via WhatsApp
-      try {
-        await sendWhatsAppMessage({ chatId, message: trimmed });
-      } catch {
-        toast.warning("Mensagem salva, mas não foi possível enviar via WhatsApp");
-      }
-
-      // 3. Refetch APÓS confirmação do INSERT
       await queryClient.refetchQueries({ queryKey: ["messages", chatId] });
+      queryClient.invalidateQueries({ queryKey: ["chat-attendant-state", chatId] });
     } catch {
       toast.error("Erro ao enviar mensagem");
     } finally {

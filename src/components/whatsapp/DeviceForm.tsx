@@ -20,7 +20,7 @@ const formSchema = z.object({
   device_name: z.string().min(1, "Nome obrigatório"),
   phone_number: z.string().optional(),
   api_url: z.string().url("URL inválida"),
-  api_token: z.string().min(1, "Token obrigatório"),
+  api_token: z.string().optional(), // só gravação: o token nunca volta para o navegador
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -49,7 +49,7 @@ export function DeviceForm({ device, open, onOpenChange }: DeviceFormProps) {
       device_name: device?.device_name || "",
       phone_number: device?.phone_number || "",
       api_url: device?.api_url || "https://api.avisaapi.com.br",
-      api_token: device?.api_token || "",
+      api_token: "",
     },
   });
 
@@ -62,11 +62,13 @@ export function DeviceForm({ device, open, onOpenChange }: DeviceFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
+      const token = values.api_token?.trim();
+      if (!isEdit && !token) throw new Error("Token obrigatório");
       const payload = {
         device_name: values.device_name,
         phone_number: values.phone_number || null,
         api_url: values.api_url,
-        api_token: values.api_token,
+        ...(token ? { api_token: token } : {}),
         webhook_url: webhookUrl,
         status: "connected" as const,
       };
@@ -79,7 +81,7 @@ export function DeviceForm({ device, open, onOpenChange }: DeviceFormProps) {
       } else {
         const { error } = await supabase
           .from("whatsapp_devices")
-          .insert(payload);
+          .insert({ ...payload, api_token: token! });
         if (error) throw error;
       }
     },
@@ -88,8 +90,8 @@ export function DeviceForm({ device, open, onOpenChange }: DeviceFormProps) {
       toast.success(isEdit ? "Device atualizado!" : "Device conectado!");
       onOpenChange(false);
     },
-    onError: () => {
-      toast.error("Erro ao salvar device");
+    onError: (e: Error) => {
+      toast.error(e.message === "Token obrigatório" ? e.message : "Erro ao salvar device");
     },
   });
 
@@ -129,8 +131,8 @@ export function DeviceForm({ device, open, onOpenChange }: DeviceFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>API Token *</Label>
-            <Input {...register("api_token")} type="password" placeholder="Cole seu token aqui" />
+            <Label>API Token {isEdit ? "" : "*"}</Label>
+            <Input {...register("api_token")} type="password" autoComplete="off" placeholder={isEdit ? "Deixe em branco para manter o token atual" : "Cole seu token aqui"} />
             {errors.api_token && (
               <p className="text-xs text-destructive">{errors.api_token.message}</p>
             )}
