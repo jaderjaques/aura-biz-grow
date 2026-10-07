@@ -1,9 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
-const SUPABASE_URL = "https://xgirbpyifpzjhzlpluzm.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnaXJicHlpZnB6amh6bHBsdXptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMTI5ODIsImV4cCI6MjA4Nzc4ODk4Mn0.E88ILSY4BEDcQ6dfDeq3fA03AcmCvYteeAHOTPbhEGo";
+// As chaves vêm do ambiente (Vercel em produção, .env local em desenvolvimento): nada fica escrito no código.
+// A chave "publishable" é pública por desenho (RLS protege os dados), mas segue a mesma regra.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error("Defina VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY (veja .env.example).");
+}
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
