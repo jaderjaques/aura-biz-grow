@@ -12,7 +12,7 @@ const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SE
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-interface Field { t: "string" | "number" | "boolean"; req?: boolean; max?: number; enum?: string[]; int?: boolean; min?: number; maxN?: number }
+interface Field { t: "string" | "number" | "boolean" | "array" | "object"; sub?: Record<string, Field>; maxItems?: number; req?: boolean; max?: number; enum?: string[]; int?: boolean; min?: number; maxN?: number }
 interface Route { scope: "atto:read" | "atto:write"; fn?: string; write?: boolean; fields: Record<string, Field> }
 
 const TEL: Field = { t: "string", req: true, max: 40 };
@@ -46,13 +46,52 @@ const ROUTES: Record<string, Route> = {
       enviado_em: { t: "string", req: true, max: 40 },
     },
   },
-  // Fase 2 (ainda sem implementação): respondem 501 depois da autenticação e do escopo.
-  "/v1/escrita/lead": { scope: "atto:write", write: true, fields: {} },
-  "/v1/escrita/evento": { scope: "atto:write", write: true, fields: {} },
-  "/v1/escrita/etapa": { scope: "atto:write", write: true, fields: {} },
-  "/v1/escrita/tarefa": { scope: "atto:write", write: true, fields: {} },
-  "/v1/escrita/converter-lead": { scope: "atto:write", write: true, fields: {} },
-  "/v1/escrita/cliente": { scope: "atto:write", write: true, fields: {} },
+  "/v1/escrita/lead": {
+    scope: "atto:write", write: true, fn: "integration_escrita_lead",
+    fields: {
+      telefone: TEL, nome: { t: "string", max: 120 }, empresa: { t: "string", max: 120 }, tipo_pessoa: { t: "string", enum: ["pf", "pj"] },
+      email: { t: "string", max: 254 }, cargo: { t: "string", max: 80 }, interesse: { t: "string", max: 500 },
+      como_conheceu: { t: "string", enum: ["trafego_pago", "organico", "prospeccao_ativa", "indicacao", "outro"] },
+      observacoes: { t: "string", max: 1000 }, tags: { t: "array", maxItems: 10, max: 40 },
+      bant: { t: "object", sub: { orcamento: { t: "string", max: 300 }, autoridade: { t: "string", max: 300 }, necessidade: { t: "string", max: 300 }, prazo: { t: "string", max: 300 } } },
+    },
+  },
+  "/v1/escrita/evento": {
+    scope: "atto:write", write: true, fn: "integration_escrita_evento",
+    fields: {
+      telefone: TEL,
+      tipo: { t: "string", req: true, enum: ["proposta_aceita", "coleta_iniciada", "coleta_concluida", "contrato_enviado", "contrato_aberto", "contrato_assinado", "followup", "pediu_humano", "optout", "recusa", "outro"] },
+      detalhes: { t: "string", max: 500 }, numero_toque: { t: "number", int: true, min: 1, maxN: 50 }, ocorrido_em: { t: "string", max: 40 },
+    },
+  },
+  "/v1/escrita/etapa": {
+    scope: "atto:write", write: true, fn: "integration_escrita_etapa",
+    fields: {
+      telefone: TEL,
+      etapa: { t: "string", req: true, enum: ["novo", "qualificando", "proposta", "coleta_de_dados", "contrato_enviado", "ganho", "perdido"] },
+      motivo: { t: "string", req: true, max: 200 },
+    },
+  },
+  "/v1/escrita/tarefa": {
+    scope: "atto:write", write: true, fn: "integration_escrita_tarefa",
+    fields: {
+      telefone: { t: "string", max: 40 }, titulo: { t: "string", req: true, max: 120 }, descricao: { t: "string", max: 500 },
+      prazo: { t: "string", max: 40 }, prioridade: { t: "string", enum: ["baixa", "media", "alta"] },
+    },
+  },
+  "/v1/escrita/converter-lead": {
+    scope: "atto:write", write: true, fn: "integration_escrita_converter_lead",
+    fields: {
+      telefone: TEL, empresa: { t: "string", req: true, max: 120 }, contato: { t: "string", req: true, max: 120 },
+      email: { t: "string", req: true, max: 254 }, documento: { t: "string", max: 30 }, tipo_pessoa: { t: "string", enum: ["pf", "pj"] },
+    },
+  },
+  "/v1/escrita/cliente": {
+    scope: "atto:write", write: true, fn: "integration_escrita_cliente",
+    fields: {
+      telefone: TEL, empresa: { t: "string", max: 120 }, contato: { t: "string", max: 120 }, email: { t: "string", max: 254 }, documento: { t: "string", max: 30 },
+    },
+  },
 };
 
 const MENSAGENS: Record<string, string> = {
@@ -60,6 +99,14 @@ const MENSAGENS: Record<string, string> = {
   evento_de_entrada_invalido: "Não há mensagem de entrada recente com este wa_message_id para este telefone.",
   dados_incompletos: "Dados incompletos ou inválidos.",
   telefone_e_do_proprio_device: "O telefone é o do próprio número da Atto.",
+  contato_ambiguo: "Há mais de um cadastro com este telefone.",
+  contato_inexistente: "Contato inexistente.",
+  contato_e_cliente: "Este telefone já é de um cliente sem lead.",
+  etapa_invalida: "Etapa inválida.",
+  etapa_final: "O lead já está em etapa final.",
+  evento_pendente: "Falta o evento contrato_assinado.",
+  documento_invalido: "Documento inválido.",
+  documento_duplicado: "Documento já cadastrado em outro cliente.",
 };
 
 interface Ctx { requestId: string; tenant: string; keyId: string; route: string }
@@ -148,6 +195,15 @@ function validate(body: unknown, fields: Record<string, Field>): { value: Record
   for (const [k, f] of Object.entries(fields)) {
     const v = obj[k];
     if (v === undefined || v === null) { if (f.req) bad.push(k); continue; }
+    if (f.t === "array") {
+      if (!Array.isArray(v) || v.length > (f.maxItems ?? 10) || v.some((x) => typeof x !== "string" || x.length > (f.max ?? 100))) bad.push(k);
+      continue;
+    }
+    if (f.t === "object") {
+      const inner = validate(v, f.sub ?? {});
+      if (inner.bad.length) bad.push(k);
+      continue;
+    }
     if (typeof v !== f.t) { bad.push(k); continue; }
     if (f.t === "string") {
       const s = v as string;
