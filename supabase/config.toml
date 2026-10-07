@@ -1,4 +1,7 @@
-project_id = "duhnpobrykwdhiqtoupo"
+project_id = "xgirbpyifpzjhzlpluzm"
+
+[functions.mavie-atto-api]
+verify_jwt = false
 
 [functions.mavie-chat]
 verify_jwt = false
