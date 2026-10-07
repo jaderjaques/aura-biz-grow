@@ -22,6 +22,7 @@ import {
   REGIME_TRIBUTARIO_OPTIONS,
   NATUREZA_OPERACAO_OPTIONS,
 } from "@/hooks/useTenantFiscalConfig";
+import { NFSE_ENABLED } from "@/config/features";
 import { formatCPF } from "@/lib/format-utils";
 
 function formatCNPJ(value: string): string {
@@ -95,21 +96,25 @@ export default function EmpresaConfig() {
         <div>
           <h1 className="text-2xl font-bold">Empresa</h1>
           <p className="text-muted-foreground">
-            Dados da empresa e configurações fiscais para emissão de NFS-e
+            {NFSE_ENABLED
+              ? "Dados da empresa e configurações fiscais para emissão de NFS-e"
+              : "Dados cadastrais da empresa"}
           </p>
         </div>
 
         <Tabs defaultValue="empresa">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="empresa">
-              <Building2 className="h-4 w-4 mr-2" />
-              Dados da Empresa
-            </TabsTrigger>
-            <TabsTrigger value="fiscal">
-              <Receipt className="h-4 w-4 mr-2" />
-              Configurações Fiscais
-            </TabsTrigger>
-          </TabsList>
+          {NFSE_ENABLED && (
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="empresa">
+                <Building2 className="h-4 w-4 mr-2" />
+                Dados da Empresa
+              </TabsTrigger>
+              <TabsTrigger value="fiscal">
+                <Receipt className="h-4 w-4 mr-2" />
+                Configurações Fiscais
+              </TabsTrigger>
+            </TabsList>
+          )}
 
           {/* ─── ABA DADOS DA EMPRESA ─── */}
           <TabsContent value="empresa" className="space-y-4 mt-4">
@@ -153,7 +158,7 @@ export default function EmpresaConfig() {
                     <Input
                       value={form.inscricao_municipal ?? ""}
                       onChange={(e) => set("inscricao_municipal", e.target.value)}
-                      placeholder="Necessário para NFS-e"
+                      placeholder={NFSE_ENABLED ? "Necessário para NFS-e" : ""}
                     />
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { NFSE_ENABLED } from "@/config/features";
 
 export interface TenantFiscalConfig {
   id?: string;
@@ -126,6 +127,7 @@ export function useUploadCertificate() {
 
   return useMutation({
     mutationFn: async ({ file, password }: { file: File; password: string }) => {
+      if (!NFSE_ENABLED) throw new Error("O módulo fiscal está inativo.");
       if (!tenantId) throw new Error("Tenant não identificado.");
 
       // Validar extensão

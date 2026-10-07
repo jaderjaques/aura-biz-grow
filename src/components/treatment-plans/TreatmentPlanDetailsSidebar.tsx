@@ -35,6 +35,7 @@ import {
 import { NfseEmission, NFSE_STATUS_LABELS, NFSE_STATUS_COLORS } from "@/types/nfse";
 import { useNfseByPlan, useCancelNfse } from "@/hooks/useNfse";
 import { GenerateNfseDialog } from "./GenerateNfseDialog";
+import { NFSE_ENABLED } from "@/config/features";
 
 interface Props {
   plan: TreatmentPlanWithDetails | null;
@@ -67,7 +68,7 @@ export function TreatmentPlanDetailsSidebar({
   const [cancelTarget, setCancelTarget] = useState<NfseEmission | null>(null);
 
   const { data: nfseEmissions = [], isLoading: loadingNfse } = useNfseByPlan(
-    open ? (plan?.id ?? null) : null
+    NFSE_ENABLED && open ? (plan?.id ?? null) : null
   );
   const { mutateAsync: cancelNfse, isPending: cancelling } = useCancelNfse();
 
@@ -115,7 +116,7 @@ export function TreatmentPlanDetailsSidebar({
   };
 
   const transitions = STATUS_TRANSITIONS[plan.status] ?? [];
-  const canGenerateNfse = NFSE_ELIGIBLE_STATUSES.includes(plan.status);
+  const canGenerateNfse = NFSE_ENABLED && NFSE_ELIGIBLE_STATUSES.includes(plan.status);
 
   // Verificar se já existe uma NFS-e emitida ou pendente
   const hasActiveNfse = nfseEmissions.some(
@@ -206,7 +207,7 @@ export function TreatmentPlanDetailsSidebar({
           )}
 
           <Tabs defaultValue="items" className="mt-5">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className={`grid w-full ${NFSE_ENABLED ? "grid-cols-3" : "grid-cols-2"}`}>
               <TabsTrigger value="items">
                 <FileText className="h-4 w-4 mr-1" />
                 Procedimentos
@@ -215,15 +216,17 @@ export function TreatmentPlanDetailsSidebar({
                 <DollarSign className="h-4 w-4 mr-1" />
                 Financeiro
               </TabsTrigger>
-              <TabsTrigger value="nfse" className="relative">
-                <Receipt className="h-4 w-4 mr-1" />
-                NFS-e
-                {nfseEmissions.length > 0 && (
-                  <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-primary text-primary-foreground rounded-full">
-                    {nfseEmissions.length}
-                  </span>
-                )}
-              </TabsTrigger>
+              {NFSE_ENABLED && (
+                <TabsTrigger value="nfse" className="relative">
+                  <Receipt className="h-4 w-4 mr-1" />
+                  NFS-e
+                  {nfseEmissions.length > 0 && (
+                    <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-primary text-primary-foreground rounded-full">
+                      {nfseEmissions.length}
+                    </span>
+                  )}
+                </TabsTrigger>
+              )}
             </TabsList>
 
             {/* ── ABA PROCEDIMENTOS ── */}

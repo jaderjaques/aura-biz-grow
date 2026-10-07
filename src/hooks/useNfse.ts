@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { NfseEmission } from "@/types/nfse";
+import { NFSE_ENABLED } from "@/config/features";
 
 // ── Chaves de cache ───────────────────────────────────────────────────────────
 const NFSE_KEY = (planId: string) => ["nfse-emissions", planId];
@@ -49,6 +50,7 @@ export function useCreateNfse() {
 
   return useMutation({
     mutationFn: async (payload: CreateNfsePayload) => {
+      if (!NFSE_ENABLED) throw new Error("A emissão de NFS-e está inativa.");
       if (!tenantId) throw new Error("Tenant não identificado.");
 
       // Calcular valor ISS
