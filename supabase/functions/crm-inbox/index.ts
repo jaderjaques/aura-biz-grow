@@ -120,9 +120,12 @@ async function actSend(who: Who, p: Record<string, unknown>): Promise<Response> 
   const number = (chat.contact_number || chat.remote_jid || "").replace(/\D/g, "");
   const { data: msg, error: insErr } = await db.from("chat_messages").insert({
     chat_id: chatId, tenant_id: who.tenant, direction: "outgoing", message_type: "text", content: text,
-    sender_id: who.id, sender_type: "human", metadata: { origem: "inbox", envio: "pendente" },
+    sender_id: who.id, sender_type: "human_crm", metadata: { origem: "inbox", envio: "pendente" },
   }).select("id").single();
-  if (insErr || !msg) return err(500, "erro_interno", "Erro ao salvar a mensagem.");
+  if (insErr || !msg) {
+    console.error(JSON.stringify({ erro: "insert_chat_messages", detalhe: insErr?.message?.slice(0, 200) }));
+    return err(500, "erro_interno", "Erro ao salvar a mensagem.");
+  }
 
   const enviado = await avisaSend(device.api_token, number, text);
   await db.from("chat_messages").update({ metadata: { origem: "inbox", envio: enviado ? "ok" : "falhou" } }).eq("id", msg.id);
