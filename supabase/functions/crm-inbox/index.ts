@@ -102,8 +102,8 @@ async function actSend(who: Who, p: Record<string, unknown>): Promise<Response> 
   if (chat.ai_mode === "auto") return err(409, "ia_respondendo", "A IA está respondendo esta conversa.");
   if (chat.ai_mode === "manual" && chat.assumed_by && chat.assumed_by !== who.id) return err(403, "atendido_por_outro", "Outro atendente assumiu esta conversa.");
   if (!chat.device_id) return err(422, "sem_dispositivo", "A conversa não tem dispositivo de WhatsApp.");
-  const { data: device } = await db.from("whatsapp_devices").select("api_token").eq("id", chat.device_id).eq("tenant_id", who.tenant).maybeSingle();
-  if (!device?.api_token) return err(422, "sem_dispositivo", "Dispositivo não encontrado.");
+  const { data: token } = await db.rpc("crm_device_token", { p_tenant: who.tenant, p_device: chat.device_id });
+  if (!token) return err(422, "sem_dispositivo", "Dispositivo não encontrado.");
 
   // 1) pausa a Mavie e só segue com o 2xx do n8n; sem 2xx, a mensagem NÃO sai
   const { data: st } = await db.rpc("crm_chat_state", { p_tenant: who.tenant, p_chat: chatId, p_estado: "humano", p_origem: "inbox_envio" });
@@ -127,7 +127,7 @@ async function actSend(who: Who, p: Record<string, unknown>): Promise<Response> 
     return err(500, "erro_interno", "Erro ao salvar a mensagem.");
   }
 
-  const enviado = await avisaSend(device.api_token, number, text);
+  const enviado = await avisaSend(token, number, text);
   await db.from("chat_messages").update({ metadata: { origem: "inbox", envio: enviado ? "ok" : "falhou" } }).eq("id", msg.id);
   await db.from("chats").update({
     last_message_preview: text.slice(0, 120), last_message_at: new Date().toISOString(),
@@ -159,9 +159,9 @@ async function actTest(who: Who, p: Record<string, unknown>): Promise<Response> 
   const number = String(p.telefone ?? "").replace(/\D/g, "");
   const text = typeof p.mensagem === "string" ? p.mensagem.trim() : "";
   if (!/^[0-9a-f-]{36}$/i.test(deviceId) || number.length < 10 || number.length > 15 || !text || text.length > 1000) return err(400, "requisicao_invalida", "Dados inválidos.");
-  const { data: device } = await db.from("whatsapp_devices").select("api_token").eq("id", deviceId).eq("tenant_id", who.tenant).maybeSingle();
-  if (!device?.api_token) return err(404, "sem_dispositivo", "Dispositivo não encontrado.");
-  return (await avisaSend(device.api_token, number, text)) ? json(200, { ok: true }) : err(502, "whatsapp_falhou", "Não foi possível enviar pelo WhatsApp.");
+  const { data: token } = await db.rpc("crm_device_token", { p_tenant: who.tenant, p_device: deviceId });
+  if (!token) return err(404, "sem_dispositivo", "Dispositivo não encontrado.");
+  return (await avisaSend(token, number, text)) ? json(200, { ok: true }) : err(502, "whatsapp_falhou", "Não foi possível enviar pelo WhatsApp.");
 }
 
 async function actDispatch(): Promise<Response> {
