@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { ptBR } from "date-fns/locale";
@@ -90,6 +90,8 @@ export function LeadDetailsSidebar({
   const [loading, setLoading] = useState(false);
   const [showActivityDialog, setShowActivityDialog] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const isEditingRef = useRef(false);
+  isEditingRef.current = isEditing;
   const [saving, setSaving] = useState(false);
   const [editForm, setEditForm] = useState({
     company_name: "",
@@ -104,9 +106,9 @@ export function LeadDetailsSidebar({
   const { activities, history, createActivity, fetchActivities, fetchHistory } = useLeadActivities(leadId);
 
   useEffect(() => {
-    const fetchLead = async () => {
+    const fetchLead = async (silent = false) => {
       if (!leadId) return;
-      setLoading(true);
+      if (!silent) setLoading(true);
       try {
         const { data, error } = await supabase
           .from("leads")
@@ -144,9 +146,14 @@ export function LeadDetailsSidebar({
       }
     };
 
-    if (open && leadId) {
-      fetchLead();
-    }
+    if (!open || !leadId) return;
+    fetchLead();
+    // A ficha aberta acompanha mudanças feitas por fora (Mavie, outro usuário): atualiza a cada 5 s,
+    // sem piscar e sem sobrescrever o que a pessoa está editando.
+    const interval = setInterval(() => {
+      if (!document.hidden && !isEditingRef.current) fetchLead(true);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [leadId, open]);
 
   const formatCurrency = (value: number | null) => {
@@ -279,7 +286,7 @@ export function LeadDetailsSidebar({
 
             {/* Status e Score */}
             <div className="flex flex-wrap items-center gap-3">
-              <LeadStatusBadge status={lead.status} />
+              <LeadStatusBadge status={lead.status} label={(lead as { stage?: string | null }).stage} />
               <LeadScoreBadge
                 score={lead.lead_score}
                 grade={lead.score_grade as "hot" | "warm" | "cold" | undefined}
