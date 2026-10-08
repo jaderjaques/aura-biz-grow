@@ -13,7 +13,6 @@ import {
   Package,
   DollarSign,
   Receipt,
-  Sparkles,
   MessageCircle,
   CalendarDays,
   Smartphone,
@@ -273,14 +272,6 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
           />
         ))}
 
-        {/* Mavie IA: oculta no CRM puro, liberada só pra você (super admin) */}
-        {isSuperAdmin && (
-          <NavItemLink
-            item={{ title: "Mavie IA", href: "/mavie", icon: Sparkles }}
-            collapsed={collapsed && !isMobile}
-            isMobile={!!isMobile}
-          />
-        )}
         {/* Inbox: super admin, ou tenant com a integração da Mavie ligada (webhook configurado) */}
         {(isSuperAdmin || integrationOn) && (
           <NavItemLink

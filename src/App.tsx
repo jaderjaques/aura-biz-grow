@@ -24,7 +24,6 @@ import Reports from "./pages/Reports";
 import Roles from "./pages/Roles";
 import AuditLogs from "./pages/AuditLogs";
 import AcceptInvite from "./pages/AcceptInvite";
-import MavieChat from "./pages/MavieChat";
 import Inbox from "./pages/Inbox";
 import Agenda from "./pages/Agenda";
 import WhatsAppConfig from "./pages/WhatsAppConfig";
@@ -72,14 +71,6 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/mavie"
-              element={
-                <ProtectedRoute>
-                  <MavieChat />
                 </ProtectedRoute>
               }
             />
