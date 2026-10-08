@@ -3,6 +3,8 @@
 // Toda a lógica de dados fica em funções SQL integration_* (filtro por tenant e por contato dentro do SQL).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined;
+
 const MAX_BODY = 64 * 1024;
 const WINDOW_S = 300;
 const PHONE_LIMIT_RPM = 30;
@@ -303,9 +305,10 @@ Deno.serve(async (req) => {
   }
   console.log(JSON.stringify({ request_id: ctx.requestId, route: ctx.route, key: ctx.keyId, status: res.status }));
   if (ctx.tenant && ctx.keyId) {
-    try {
-      await db.rpc("integration_audit", { p_tenant: ctx.tenant, p_key_id: ctx.keyId, p_route: ctx.route || "?", p_status: res.status, p_request_id: ctx.requestId });
-    } catch (_) { /* a auditoria nunca derruba a resposta */ }
+    // a auditoria roda depois da resposta (não atrasa a Mavie) e nunca derruba a resposta
+    const audit = Promise.resolve(db.rpc("integration_audit", { p_tenant: ctx.tenant, p_key_id: ctx.keyId, p_route: ctx.route || "?", p_status: res.status, p_request_id: ctx.requestId })).then(() => {}, () => {});
+    if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(audit);
+    else await audit;
   }
   return res;
 });
