@@ -31,6 +31,7 @@ export function ChatList({ selectedChatId, onSelectChat }: ChatListProps) {
         .limit(100);
       return data || [];
     },
+    refetchInterval: 5000, // a lista também não depende só do Realtime; o react-query pausa com a aba oculta
   });
 
   // Realtime

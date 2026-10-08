@@ -53,6 +53,7 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
+          filter: `chat_id=eq.${chatId}`, // só desta conversa: menos eventos e menos checagens de RLS no servidor
         },
         (payload) => {
           const newMsg = payload.new as any;
@@ -72,14 +73,14 @@ export function ChatWindow({ chatId, onBack, onToggleSidebar }: ChatWindowProps)
     };
   }, [chatId, queryClient]);
 
-  // Polling fallback — refetch a cada 5s caso Realtime falhe, pausa quando aba está oculta
+  // Polling fallback — refetch a cada 2s da conversa aberta caso o Realtime atrase, pausa quando aba está oculta
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
 
     const startPolling = () => {
       interval = setInterval(() => {
         queryClient.refetchQueries({ queryKey: ["messages", chatId] });
-      }, 5000);
+      }, 2000);
     };
 
     const handleVisibility = () => {
