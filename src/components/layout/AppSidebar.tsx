@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Home,
   LogOut,
@@ -219,6 +221,15 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
   const { profile, isAdmin, signOut } = useAuth();
   const { isClinic } = useTenantModule();
   const { isSuperAdmin } = useSuperAdmin();
+  const { data: integrationOn } = useQuery({
+    queryKey: ["integration-enabled"],
+    queryFn: async () => {
+      // função nova, ainda fora de types.ts
+      const { data } = await (supabase as any).rpc("crm_integration_enabled");
+      return data === true;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const getInitials = (name: string) => {
     return name
@@ -262,20 +273,21 @@ function SidebarNavContent({ collapsed, onCollapse, isMobile = false }: SidebarC
           />
         ))}
 
-        {/* Mavie IA + Inbox: ocultos no CRM puro, liberados só pra você (super admin) */}
+        {/* Mavie IA: oculta no CRM puro, liberada só pra você (super admin) */}
         {isSuperAdmin && (
-          <>
-            <NavItemLink
-              item={{ title: "Mavie IA", href: "/mavie", icon: Sparkles }}
-              collapsed={collapsed && !isMobile}
-              isMobile={!!isMobile}
-            />
-            <NavItemLink
-              item={{ title: "Inbox", href: "/inbox", icon: MessageCircle }}
-              collapsed={collapsed && !isMobile}
-              isMobile={!!isMobile}
-            />
-          </>
+          <NavItemLink
+            item={{ title: "Mavie IA", href: "/mavie", icon: Sparkles }}
+            collapsed={collapsed && !isMobile}
+            isMobile={!!isMobile}
+          />
+        )}
+        {/* Inbox: super admin, ou tenant com a integração da Mavie ligada (webhook configurado) */}
+        {(isSuperAdmin || integrationOn) && (
+          <NavItemLink
+            item={{ title: "Inbox", href: "/inbox", icon: MessageCircle }}
+            collapsed={collapsed && !isMobile}
+            isMobile={!!isMobile}
+          />
         )}
 
         <Separator className="my-2" />
