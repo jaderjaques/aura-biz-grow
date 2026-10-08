@@ -55,7 +55,17 @@ const ROUTES: Record<string, Route> = {
       email: { t: "string", max: 254 }, cargo: { t: "string", max: 80 }, interesse: { t: "string", max: 500 },
       como_conheceu: { t: "string", enum: ["trafego_pago", "organico", "prospeccao_ativa", "indicacao", "outro"] },
       observacoes: { t: "string", max: 1000 }, tags: { t: "array", maxItems: 10, max: 40 },
-      bant: { t: "object", sub: { orcamento: { t: "string", max: 300 }, autoridade: { t: "string", max: 300 }, necessidade: { t: "string", max: 300 }, prazo: { t: "string", max: 300 } } },
+      // textos (notas) e níveis estruturados; orcamento_valor = verba mensal em reais, a faixa e o score o CRM calcula
+      bant: {
+        t: "object",
+        sub: {
+          orcamento: { t: "string", max: 300 }, autoridade: { t: "string", max: 300 }, necessidade: { t: "string", max: 300 }, prazo: { t: "string", max: 300 },
+          orcamento_valor: { t: "number", min: 0, maxN: 100000000 },
+          prazo_nivel: { t: "string", enum: ["imediato", "curto", "medio", "longo"] },
+          autoridade_nivel: { t: "string", enum: ["decisor", "influenciador", "porteiro", "usuario"] },
+          necessidade_nivel: { t: "string", enum: ["critica", "importante", "desejavel", "pouco_clara"] },
+        },
+      },
     },
   },
   "/v1/escrita/evento": {
