@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
+import { parseDateOnly } from "@/lib/date-utils";
 import { useNavigate } from "react-router-dom";
 import {
   Sheet,
@@ -245,7 +246,7 @@ export function CustomerDetailsSidebar({
                       <div>
                         <p className="text-xs text-muted-foreground">Cliente Desde</p>
                         <p className="text-sm font-bold">
-                          {format(new Date((customer as any).customer_since), "dd/MM/yyyy")}
+                          {format(parseDateOnly((customer as any).customer_since)!, "dd/MM/yyyy")}
                         </p>
                       </div>
                     </div>
@@ -259,7 +260,7 @@ export function CustomerDetailsSidebar({
                         <p className="text-xs text-muted-foreground">Retenção</p>
                         <p className="text-sm font-bold">
                           {(() => {
-                            const since = new Date((customer as any).customer_since);
+                            const since = parseDateOnly((customer as any).customer_since)!;
                             const now = new Date();
                             const months = (now.getFullYear() - since.getFullYear()) * 12 + (now.getMonth() - since.getMonth());
                             if (months < 1) return "< 1 mês";
@@ -408,7 +409,7 @@ export function CustomerDetailsSidebar({
                   {customer.customer_since && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Cliente desde:</span>
-                      <span>{format(new Date(customer.customer_since), "dd/MM/yyyy")}</span>
+                      <span>{format(parseDateOnly(customer.customer_since)!, "dd/MM/yyyy")}</span>
                     </div>
                   )}
                 </div>

@@ -34,7 +34,6 @@ export default function Customers() {
     updateCustomer,
     getActiveCustomers,
     getTotalMRR,
-    getAvgLTV,
   } = useCustomers();
   const { getExpiringContracts } = useContracts();
 
@@ -130,9 +129,9 @@ export default function Customers() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">LTV Médio</p>
+                  <p className="text-sm text-muted-foreground">Ticket Médio</p>
                   <p className="text-2xl font-bold">
-                    {formatCurrency(getAvgLTV())}
+                    {formatCurrency(getTotalMRR() / Math.max(1, getActiveCustomers().length))}
                   </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-600" />

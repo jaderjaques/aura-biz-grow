@@ -15,10 +15,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Eye, FileText, Receipt, TrendingUp } from "lucide-react";
+import { MoreVertical, Eye, FileText } from "lucide-react";
+import { parseDateOnly, formatDocument } from "@/lib/date-utils";
 import { CustomerWithDetails, CustomerStatus } from "@/types/customers";
 
 interface CustomersTableProps {
@@ -76,7 +76,6 @@ export function CustomersTable({
           <TableHead>Contato</TableHead>
           <TableHead>Segmento</TableHead>
           <TableHead>MRR</TableHead>
-          <TableHead>LTV</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Responsável</TableHead>
           <TableHead>Cliente Desde</TableHead>
@@ -93,7 +92,7 @@ export function CustomersTable({
             <TableCell>
               <div>
                 <p className="font-medium">{customer.company_name}</p>
-                <p className="text-xs text-muted-foreground">{customer.cnpj}</p>
+                <p className="text-xs text-muted-foreground">{formatDocument(customer.cnpj || (customer as { cpf?: string | null }).cpf)}</p>
               </div>
             </TableCell>
             <TableCell>
@@ -108,11 +107,6 @@ export function CustomersTable({
             <TableCell>
               <p className="font-medium text-primary">
                 {formatCurrency(Number(customer.monthly_value || 0))}/mês
-              </p>
-            </TableCell>
-            <TableCell>
-              <p className="text-sm">
-                {formatCurrency(Number(customer.lifetime_value || 0))}
               </p>
             </TableCell>
             <TableCell>{getStatusBadge(customer.status as CustomerStatus)}</TableCell>
@@ -135,8 +129,8 @@ export function CustomersTable({
             </TableCell>
             <TableCell>
               <span className="text-sm text-muted-foreground">
-                {customer.customer_since
-                  ? format(new Date(customer.customer_since), "dd/MM/yyyy")
+                {parseDateOnly(customer.customer_since)
+                  ? format(parseDateOnly(customer.customer_since)!, "dd/MM/yyyy")
                   : "-"}
               </span>
             </TableCell>
@@ -155,15 +149,6 @@ export function CustomersTable({
                   <DropdownMenuItem onClick={() => onViewContracts(customer.id)}>
                     <FileText className="mr-2 h-4 w-4" />
                     Contratos
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Receipt className="mr-2 h-4 w-4" />
-                    Faturas
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    Oferecer Upgrade
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

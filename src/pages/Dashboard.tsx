@@ -154,7 +154,7 @@ function AgencyDashboard() {
       setMetrics({
         activeCustomers: activeCustomers.length,
         customersGrowth,
-        totalDeals: deals?.length || 0,
+        totalDeals: openDeals.length,
         dealsWon: wonDeals.length,
         winRate,
         pipelineValue,

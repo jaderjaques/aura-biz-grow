@@ -237,7 +237,7 @@ export default function Leads() {
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header with metrics */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -293,7 +293,7 @@ export default function Leads() {
         </div>
 
         {/* Score Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-4">
           <Card className="cursor-pointer hover:ring-2 hover:ring-destructive/50 transition-all" onClick={() => setScoreFilter(scoreFilter === "hot" ? "all" : "hot")}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">

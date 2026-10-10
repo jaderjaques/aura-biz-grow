@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { parseDateOnly } from "@/lib/date-utils";
 import { ptBR } from "date-fns/locale";
 import { DealWithDetails, getDealClientName, getDealContactName } from "@/types/products";
 import {
@@ -201,13 +202,13 @@ export function DealDetailsSheet({
               {deal.expected_close_date && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Fechamento Previsto</span>
-                  <span>{format(new Date(deal.expected_close_date), "dd/MM/yyyy")}</span>
+                  <span>{format(parseDateOnly(deal.expected_close_date)!, "dd/MM/yyyy")}</span>
                 </div>
               )}
               {deal.actual_close_date && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Fechamento Real</span>
-                  <span>{format(new Date(deal.actual_close_date), "dd/MM/yyyy")}</span>
+                  <span>{format(parseDateOnly(deal.actual_close_date)!, "dd/MM/yyyy")}</span>
                 </div>
               )}
             </div>
