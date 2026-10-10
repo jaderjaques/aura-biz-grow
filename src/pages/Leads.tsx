@@ -400,8 +400,8 @@ export default function Leads() {
         {/* Filters */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+              <div className="flex-1 relative min-w-[220px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar por empresa, contato, email ou telefone..."
@@ -413,24 +413,26 @@ export default function Leads() {
               </div>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[170px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="novo">Novos</SelectItem>
-                  <SelectItem value="em_analise">Em Análise</SelectItem>
+                  <SelectItem value="contatado">Contatados</SelectItem>
                   <SelectItem value="qualificado">Qualificados</SelectItem>
-                  <SelectItem value="descartado">Descartados</SelectItem>
+                  <SelectItem value="proposta">Em proposta</SelectItem>
+                  <SelectItem value="ganho">Ganhos</SelectItem>
+                  <SelectItem value="perdido">Perdidos</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[170px]">
                   <SelectValue placeholder="Origem" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="all">Todas as origens</SelectItem>
                   <SelectItem value="manual">Manual</SelectItem>
                   <SelectItem value="google_maps">Google Maps</SelectItem>
                   <SelectItem value="website_form">Website</SelectItem>
@@ -441,7 +443,7 @@ export default function Leads() {
               </Select>
 
               <Select value={scoreFilter} onValueChange={setScoreFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[170px]">
                   <SelectValue placeholder="Score" />
                 </SelectTrigger>
                 <SelectContent>
