@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLeads } from "@/hooks/useLeads";
 import { useDeals } from "@/hooks/useDeals";
 import { useAuth } from "@/contexts/AuthContext";
+import { useConfirm } from "@/hooks/useConfirm";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { LeadsKanban } from "@/components/leads/LeadsKanban";
 import { NewLeadDialog } from "@/components/leads/NewLeadDialog";
@@ -69,6 +70,7 @@ export default function Leads() {
   } = useLeads();
   const { createDeal } = useDeals();
   const { isAdmin } = useAuth();
+  const [confirm, confirmDialog] = useConfirm();
   const { toast } = useToast();
 
   const [viewMode, setViewMode] = useState<"table" | "kanban">("kanban");
@@ -159,8 +161,19 @@ export default function Leads() {
   };
 
   const handleDeleteLead = async (id: string) => {
+    const nome = leads.find((l) => l.id === id)?.company_name;
+    // pequena pausa para o menu "..." fechar antes de abrir a caixa (evita travar cliques na tela)
+    await new Promise((r) => setTimeout(r, 60));
+    const ok = await confirm({
+      title: nome ? `Excluir o lead "${nome}"?` : "Excluir este lead?",
+      description: "O lead e o histórico dele saem da lista. Essa ação não pode ser desfeita pela tela.",
+      confirmLabel: "Sim, excluir",
+      destructive: true,
+    });
+    if (!ok) return;
     const success = await deleteLead(id);
     if (success) {
+      setShowLeadDetails(false);
       fetchLeads();
       fetchMetrics();
     }
@@ -557,6 +570,8 @@ export default function Leads() {
         onOpenChange={setShowImportDialog}
         onImport={handleImportLeads}
       />
+
+      {confirmDialog}
 
       <LeadDetailsSidebar
         leadId={selectedLeadId}

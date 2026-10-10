@@ -270,10 +270,7 @@ export function LeadDetailsSidebar({
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={() => {
-                        onDelete(lead.id);
-                        onOpenChange(false);
-                      }}
+                      onClick={() => onDelete(lead.id)}
                       className="text-destructive"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />

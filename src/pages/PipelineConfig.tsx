@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useConfirm } from "@/hooks/useConfirm";
 import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical, Trophy, XCircle } from "lucide-react";
 
 interface PipelineStage {
@@ -26,6 +27,7 @@ export default function PipelineConfig() {
   const [loading, setLoading] = useState(true);
   const [newStageName, setNewStageName] = useState("");
   const [adding, setAdding] = useState(false);
+  const [confirm, confirmDialog] = useConfirm();
 
   const fetchStages = useCallback(async () => {
     const { data, error } = await supabase
@@ -117,6 +119,14 @@ export default function PipelineConfig() {
       return;
     }
 
+    const ok = await confirm({
+      title: `Remover a etapa "${stage.name}"?`,
+      description: "A etapa sai do funil. Essa ação não pode ser desfeita pela tela.",
+      confirmLabel: "Sim, remover",
+      destructive: true,
+    });
+    if (!ok) return;
+
     const { error } = await supabase.from("pipeline_stages").delete().eq("id", stage.id);
     if (error) {
       toast.error("Erro ao deletar etapa");
@@ -196,6 +206,7 @@ export default function PipelineConfig() {
           </CardContent>
         </Card>
       </div>
+      {confirmDialog}
     </AppLayout>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useConfirm } from "@/hooks/useConfirm";
 import { UserPlus, MoreVertical, Mail, RefreshCw, Ban, CheckCircle, Edit, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -76,6 +77,7 @@ export default function Users() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [confirm, confirmDialog] = useConfirm();
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -136,6 +138,13 @@ export default function Users() {
   };
 
   const handleCancelInvite = async (user: UserProfile) => {
+    const ok = await confirm({
+      title: `Cancelar o convite de ${user.full_name || user.email}?`,
+      description: "O convite deixa de valer e o cadastro pendente é apagado.",
+      confirmLabel: "Sim, cancelar",
+      destructive: true,
+    });
+    if (!ok) return;
     const { error } = await supabase
       .from("profiles")
       .delete()
@@ -319,6 +328,7 @@ export default function Users() {
           onSuccess={fetchUsers}
         />
       </div>
+      {confirmDialog}
     </AppLayout>
   );
 }
