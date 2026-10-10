@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Users, TrendingUp, TrendingDown,
   Briefcase, Clock, AlertCircle,
-  ArrowRight, RefreshCw, Target,
+  ArrowRight, RefreshCw, Target, Wallet,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,21 +47,12 @@ const ORIGEM_LABELS: Record<string, string> = {
   outro: "Outro",
 };
 
-function getStageLabel(stage: string) {
-  const labels: Record<string, string> = {
-    contato_inicial: "Contato",
-    qualificacao: "Qualificação",
-    diagnostico: "Diagnóstico",
-    proposta: "Proposta",
-    negociacao: "Negociação",
-  };
-  return labels[stage] || stage;
-}
-
 interface Metrics {
   activeCustomers: number;
   customersGrowth: number;
   pipelineValue: number;
+  monthlyRevenue: number;
+  openLeads: number;
   totalDeals: number;
   dealsWon: number;
   winRate: number;
@@ -89,6 +80,8 @@ function AgencyDashboard() {
     activeCustomers: 0,
     customersGrowth: 0,
     pipelineValue: 0,
+    monthlyRevenue: 0,
+    openLeads: 0,
     totalDeals: 0,
     dealsWon: 0,
     winRate: 0,
@@ -144,7 +137,14 @@ function AgencyDashboard() {
       const wonDeals = deals?.filter((d) => d.stage === "ganho") || [];
       const closedDeals = deals?.filter((d) => ["ganho", "perdido"].includes(d.stage || "")) || [];
       const winRate = closedDeals.length > 0 ? (wonDeals.length / closedDeals.length) * 100 : 0;
-      const pipelineValue = openDeals.reduce((sum, d) => sum + (Number(d.total_value) || 0), 0);
+      // No funil = propostas abertas + valor estimado dos leads ainda em andamento
+      const { data: leadsOpen } = await supabase.from("leads").select("status, estimated_value").is("deleted_at", null);
+      const openLeads = leadsOpen?.filter((l) => !["ganho", "perdido", "converted", "lost"].includes(l.status || "")) || [];
+      const pipelineValue =
+        openDeals.reduce((sum, d) => sum + (Number(d.total_value) || 0), 0) +
+        openLeads.reduce((sum, l) => sum + (Number((l as { estimated_value?: number | null }).estimated_value) || 0), 0);
+      // Faturamento mensal = mensalidades dos clientes ativos
+      const monthlyRevenue = activeCustomers.reduce((sum, c) => sum + (Number(c.monthly_value) || 0), 0);
 
       // Tasks
       const { data: tasks } = await supabase.from("tasks").select("id, status, due_date");
@@ -158,6 +158,8 @@ function AgencyDashboard() {
         dealsWon: wonDeals.length,
         winRate,
         pipelineValue,
+        monthlyRevenue,
+        openLeads: openLeads.length,
         pendingTasks: pendingTasks.length,
         overdueTasks: overdueTasks.length,
       });
@@ -169,31 +171,27 @@ function AgencyDashboard() {
   async function loadCharts() {
     try {
       // Leads by origin (Tráfego Pago, Orgânico, Prospecção Ativa, etc.)
-      const { data: leads } = await supabase.from("leads").select("how_found_us").is("deleted_at", null);
+      // how_found_us ainda não está em types.ts
+      const { data: leads } = await (supabase as any).from("leads").select("how_found_us").is("deleted_at", null);
       const sourceCount: Record<string, number> = {};
-      leads?.forEach((lead) => {
+      (leads as { how_found_us: string | null }[] | null)?.forEach((lead) => {
         const source = ORIGEM_LABELS[lead.how_found_us || ""] || "Não informado";
         sourceCount[source] = (sourceCount[source] || 0) + 1;
       });
       setLeadSourceChart(Object.entries(sourceCount).map(([name, value]) => ({ name, value })));
 
-      // Pipeline by stage
-      const { data: deals } = await supabase.from("deals").select("stage, total_value");
-      const stageData: Record<string, { count: number; value: number }> = {};
-      deals?.forEach((deal) => {
-        const stage = deal.stage || "indefinido";
-        if (!stageData[stage]) stageData[stage] = { count: 0, value: 0 };
-        stageData[stage].count += 1;
-        stageData[stage].value += Number(deal.total_value) || 0;
+      // Funil: quantos leads há em cada etapa (na ordem do funil do tenant, mesmo as vazias)
+      const [{ data: stages }, { data: stageLeads }] = await Promise.all([
+        supabase.from("pipeline_stages").select("name, stage_order").order("stage_order"),
+        supabase.from("leads").select("stage").is("deleted_at", null),
+      ]);
+      const counts: Record<string, number> = {};
+      stageLeads?.forEach((l) => {
+        const key = (l.stage || "").trim().toLowerCase();
+        if (key) counts[key] = (counts[key] || 0) + 1;
       });
       setPipelineChart(
-        Object.entries(stageData)
-          .filter(([stage]) => !["ganho", "perdido", "cancelado"].includes(stage))
-          .map(([stage, data]) => ({
-            etapa: getStageLabel(stage),
-            valor: data.value,
-            quantidade: data.count,
-          }))
+        (stages ?? []).map((s) => ({ etapa: s.name, quantidade: counts[s.name.trim().toLowerCase()] || 0 }))
       );
     } catch (error) {
       console.error("Erro ao carregar gráficos:", error);
@@ -239,7 +237,7 @@ function AgencyDashboard() {
         </div>
 
         {/* KPIs */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
           <KpiCard
             title={patientsLabel}
             value={metrics.activeCustomers}
@@ -249,12 +247,20 @@ function AgencyDashboard() {
             onClick={() => navigate(patientsRoute)}
           />
           <KpiCard
-            title="Pipeline"
+            title="Faturamento mensal"
+            value={formatCurrency(metrics.monthlyRevenue)}
+            subtitle={`recorrente de ${metrics.activeCustomers} ${metrics.activeCustomers === 1 ? "cliente" : "clientes"}`}
+            icon={Wallet}
+            iconClass="text-green-600"
+            onClick={() => navigate(patientsRoute)}
+          />
+          <KpiCard
+            title="No funil"
             value={formatCurrency(metrics.pipelineValue)}
-            subtitle={`${metrics.totalDeals} propostas abertas`}
+            subtitle={`${metrics.openLeads} ${metrics.openLeads === 1 ? "lead" : "leads"} e ${metrics.totalDeals} ${metrics.totalDeals === 1 ? "proposta aberta" : "propostas abertas"}`}
             icon={Briefcase}
             iconClass="text-info"
-            onClick={() => navigate("/propostas")}
+            onClick={() => navigate("/leads")}
           />
           <KpiCard
             title="Taxa de Conversão"
@@ -271,24 +277,24 @@ function AgencyDashboard() {
           {/* Pipeline */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Pipeline por Etapa</CardTitle>
-              <CardDescription>Valor em cada etapa do funil</CardDescription>
+              <CardTitle className="text-base">Funil de leads</CardTitle>
+              <CardDescription>Quantos leads estão em cada etapa</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={pipelineChart}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="etapa" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(v) => `R$${v / 1000}k`} />
+              <ResponsiveContainer width="100%" height={Math.max(220, pipelineChart.length * 40)}>
+                <BarChart data={pipelineChart} layout="vertical" margin={{ left: 8, right: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} className="text-xs" />
+                  <YAxis type="category" dataKey="etapa" width={120} className="text-xs" />
                   <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
+                    formatter={(value: number) => [`${value} ${value === 1 ? "lead" : "leads"}`, "Quantidade"]}
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "8px",
                     }}
                   />
-                  <Bar dataKey="valor" name="Valor" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="quantidade" name="Leads" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
