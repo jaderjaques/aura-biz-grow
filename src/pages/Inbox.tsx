@@ -34,7 +34,7 @@ export default function InboxPage() {
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-64px)] flex -m-4 md:-m-6 lg:-m-8">
+      <div className="h-[calc(100dvh-64px)] flex -m-4 md:-m-6 lg:-m-8">
         {/* Chat List */}
         <div
           className={`${
