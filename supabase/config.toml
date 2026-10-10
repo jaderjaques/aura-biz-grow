@@ -1,8 +1,15 @@
 project_id = "xgirbpyifpzjhzlpluzm"
 
+# Funções publicadas neste projeto (Supabase xgirbpyifpzjhzlpluzm).
+# A autenticação delas é própria: HMAC na mavie-atto-api; JWT do usuário ou segredo do cron na crm-inbox.
 [functions.mavie-atto-api]
 verify_jwt = false
 
+[functions.crm-inbox]
+verify_jwt = false
+
+# Funções antigas com código no repositório, mas SEM publicação neste projeto (herança do sistema anterior).
+# As entradas guardam o verify_jwt caso alguma volte a ser publicada; revisar a segurança antes de publicar.
 [functions.send-invoice]
 verify_jwt = false
 
@@ -19,6 +26,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.whatsapp-webhook]
-verify_jwt = false
-[functions.crm-inbox]
 verify_jwt = false

@@ -16,12 +16,42 @@ import {
 } from "@/components/ui/select";
 import { Search, Shield, Users } from "lucide-react";
 import { useAdminUsers, useAdminTenants } from "@/hooks/useSuperAdmin";
+import { useConfirm } from "@/hooks/useConfirm";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function AdminUsers() {
   const { users, loading, toggleUserActive, toggleSuperAdmin } = useAdminUsers();
   const { tenants } = useAdminTenants();
+  const [confirm, confirmDialog] = useConfirm();
+
+  // as duas trocas mudam o acesso de uma pessoa: pedem confirmação e avisam se o banco recusar
+  async function changeSuperAdmin(u: { id: string; full_name: string | null; email: string | null }, value: boolean) {
+    const ok = await confirm({
+      title: value ? `Tornar ${u.full_name || u.email} super admin?` : `Remover o acesso de super admin de ${u.full_name || u.email}?`,
+      description: value ? "Super admin enxerga e altera os dados de TODAS as empresas." : "Ele volta a ver só a própria empresa.",
+      confirmLabel: value ? "Sim, tornar super admin" : "Sim, remover",
+      destructive: true,
+    });
+    if (!ok) return;
+    try { await toggleSuperAdmin(u.id, value); toast.success("Acesso atualizado"); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível alterar o acesso"); }
+  }
+
+  async function changeActive(u: { id: string; full_name: string | null; email: string | null }, value: boolean) {
+    if (!value) {
+      const ok = await confirm({
+        title: `Desativar ${u.full_name || u.email}?`,
+        description: "A pessoa deixa de conseguir entrar no sistema.",
+        confirmLabel: "Sim, desativar",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    try { await toggleUserActive(u.id, value); toast.success(value ? "Usuário ativado" : "Usuário desativado"); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Não foi possível alterar o usuário"); }
+  }
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState("");
@@ -166,7 +196,7 @@ export default function AdminUsers() {
                     <TableCell>
                       <Switch
                         checked={u.is_super_admin}
-                        onCheckedChange={(v) => toggleSuperAdmin(u.id, v)}
+                        onCheckedChange={(v) => changeSuperAdmin(u, v)}
                       />
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -177,7 +207,7 @@ export default function AdminUsers() {
                     <TableCell>
                       <Switch
                         checked={u.is_active}
-                        onCheckedChange={(v) => toggleUserActive(u.id, v)}
+                        onCheckedChange={(v) => changeActive(u, v)}
                       />
                     </TableCell>
                   </TableRow>
@@ -187,6 +217,7 @@ export default function AdminUsers() {
           </div>
         )}
       </div>
+      {confirmDialog}
     </AdminLayout>
   );
 }

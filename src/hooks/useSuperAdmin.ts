@@ -55,6 +55,76 @@ export function useSuperAdmin() {
   return { isSuperAdmin, loading };
 }
 
+export interface AdminUser {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  tenant_id: string | null;
+  tenant_name: string | null;
+  role: string | null;
+  is_super_admin: boolean;
+  is_active: boolean;
+  status: string | null;
+  created_at: string | null;
+}
+
+// Usuários de todas as empresas (só o super admin enxerga todos; o banco recusa as alterações de quem não é).
+export function useAdminUsers() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchAll = async () => {
+    setLoading(true);
+    try {
+      const [profilesRes, tenantsRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, full_name, email, avatar_url, tenant_id, role, is_super_admin, is_active, status, created_at")
+          .order("created_at", { ascending: false }),
+        supabase.from("tenant_config").select("subdomain, name"),
+      ]);
+      const names: Record<string, string> = {};
+      (tenantsRes.data ?? []).forEach((t) => { names[t.subdomain] = t.name; });
+      setUsers(
+        (profilesRes.data ?? []).map((p: any) => ({
+          ...p,
+          is_super_admin: !!p.is_super_admin,
+          is_active: p.is_active !== false,
+          tenant_name: p.tenant_id ? names[p.tenant_id] ?? null : null,
+        })),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
+  const update = async (id: string, patch: Record<string, unknown>) => {
+    const { error } = await supabase.from("profiles").update(patch).eq("id", id);
+    if (error) throw error;
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } as AdminUser : u)));
+  };
+
+  const toggleUserActive = async (id: string, active: boolean) => {
+    const current = users.find((u) => u.id === id);
+    // convite pendente continua pendente; os demais viram ativo ou suspenso
+    const status = current?.status === "pending" ? "pending" : active ? "active" : "suspended";
+    await update(id, { is_active: active, status });
+  };
+
+  const toggleSuperAdmin = async (id: string, value: boolean) => {
+    const { data: auth } = await supabase.auth.getUser();
+    if (auth.user?.id === id) throw new Error("Você não pode alterar o seu próprio acesso de super admin.");
+    await update(id, { is_super_admin: value });
+  };
+
+  return { users, loading, toggleUserActive, toggleSuperAdmin, refetch: fetchAll };
+}
+
 export function useAdminTenants() {
   const [tenants, setTenants] = useState<TenantWithStats[]>([]);
   const [loading, setLoading] = useState(true);
