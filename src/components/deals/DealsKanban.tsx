@@ -30,10 +30,11 @@ interface DealsKanbanProps {
   deals: DealWithDetails[];
   onRefresh: () => void;
   onDealClick: (deal: DealWithDetails) => void;
-  onDealWon: (deal: DealWithDetails) => void;
+  // registra o ganho (criando o cliente); devolve false se o usuário cancelou
+  onWinDeal: (deal: DealWithDetails) => Promise<boolean>;
 }
 
-export function DealsKanban({ deals, onRefresh, onDealClick, onDealWon }: DealsKanbanProps) {
+export function DealsKanban({ deals, onRefresh, onDealClick, onWinDeal }: DealsKanbanProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -65,39 +66,25 @@ export function DealsKanban({ deals, onRefresh, onDealClick, onDealWon }: DealsK
 
     if (!deal || deal.stage === newStage) return;
 
+    if (newStage === "ganho") {
+      await onWinDeal(deal);
+      onRefresh();
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("deals")
         .update({
           stage: newStage,
           updated_at: new Date().toISOString(),
-          ...(newStage === "ganho" ? { status: "won", probability: 100, closed_at: new Date().toISOString(), actual_close_date: new Date().toISOString().split("T")[0] } : {}),
-          ...(newStage === "perdido" ? { status: "lost", probability: 0, closed_at: new Date().toISOString(), actual_close_date: new Date().toISOString().split("T")[0] } : {}),
+          ...(newStage === "perdido" ? { status: "lost", probability: 0, closed_at: new Date().toISOString(), actual_close_date: new Date().toLocaleDateString("sv-SE") } : {}),
         })
         .eq("id", dealId);
 
       if (error) throw error;
 
-      if (newStage === "ganho") {
-        // Fetch full deal with relationships for the won modal
-        const { data: fullDeal } = await supabase
-          .from("deals")
-          .select(`
-            *,
-            lead:leads(id, company_name, trading_name, cnpj, segment, contact_name, position, phone, email),
-            assigned_user:profiles!deals_assigned_to_fkey(id, full_name, avatar_url),
-            deal_products(*, product:products(*))
-          `)
-          .eq("id", dealId)
-          .single();
-
-        if (fullDeal) {
-          onDealWon(fullDeal as DealWithDetails);
-        }
-      } else {
-        toast({ title: "Proposta movida com sucesso!" });
-      }
-
+      toast({ title: "Proposta movida com sucesso!" });
       onRefresh();
     } catch (error: any) {
       console.error("Erro ao mover deal:", error);

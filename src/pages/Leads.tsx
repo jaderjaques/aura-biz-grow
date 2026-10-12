@@ -21,6 +21,7 @@ import { useLeads } from "@/hooks/useLeads";
 import { useDeals } from "@/hooks/useDeals";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConfirm } from "@/hooks/useConfirm";
+import { useEnsureCustomer } from "@/hooks/useEnsureCustomer";
 import { LeadsTable } from "@/components/leads/LeadsTable";
 import { LeadsKanban } from "@/components/leads/LeadsKanban";
 import { NewLeadDialog } from "@/components/leads/NewLeadDialog";
@@ -71,6 +72,7 @@ export default function Leads() {
   const { createDeal } = useDeals();
   const { isAdmin } = useAuth();
   const [confirm, confirmDialog] = useConfirm();
+  const { ensureCustomerForWin, customerDialog } = useEnsureCustomer();
   const { toast } = useToast();
 
   const [viewMode, setViewMode] = useState<"table" | "kanban">("kanban");
@@ -153,6 +155,13 @@ export default function Leads() {
   };
 
   const handleMoveStage = async (leadId: string, fromStage: string, toStage: string) => {
+    // Ganhar um lead cria o cliente sozinho (ou abre a janela para completar o que faltar)
+    const { data: target } = await supabase.from("pipeline_stages").select("is_closed_won").eq("name", toStage).maybeSingle();
+    if (target?.is_closed_won) {
+      const { data: openDeal } = await supabase.from("deals").select("id").eq("lead_id", leadId).eq("status", "open").limit(1).maybeSingle();
+      const ok = await ensureCustomerForWin({ leadId, dealId: openDeal?.id ?? null });
+      if (!ok) return;
+    }
     const success = await updateLeadStage(leadId, fromStage, toStage);
     if (success) {
       fetchLeads();
@@ -574,6 +583,7 @@ export default function Leads() {
       />
 
       {confirmDialog}
+      {customerDialog}
 
       <LeadDetailsSidebar
         leadId={selectedLeadId}

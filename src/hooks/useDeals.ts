@@ -145,12 +145,12 @@ export function useDeals(customerId?: string) {
 
   // ── Ganhar / Perder / Deletar ─────────────────────────────────────────────
   const markAsWon = async (id: string) => {
-    await updateDeal(id, { status: "won", stage: "ganho", actual_close_date: new Date().toISOString().split("T")[0], closed_at: new Date().toISOString(), probability: 100 });
+    await updateDeal(id, { status: "won", stage: "ganho", actual_close_date: new Date().toLocaleDateString("sv-SE"), closed_at: new Date().toISOString(), probability: 100 });
     toast({ title: "🎉 Proposta ganha!", description: "A proposta foi marcada como ganha" });
   };
 
   const markAsLost = async (id: string, reason?: string) => {
-    await updateDeal(id, { status: "lost", stage: "perdido", actual_close_date: new Date().toISOString().split("T")[0], closed_at: new Date().toISOString(), probability: 0, lost_reason: reason });
+    await updateDeal(id, { status: "lost", stage: "perdido", actual_close_date: new Date().toLocaleDateString("sv-SE"), closed_at: new Date().toISOString(), probability: 0, lost_reason: reason });
     toast({ title: "Proposta perdida", description: "A proposta foi marcada como perdida" });
   };
 

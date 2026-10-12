@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useNavigate } from "react-router-dom";
 import { getCurrentProfile } from "@/lib/tenant-utils";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,18 +27,18 @@ import { DealsTable } from "@/components/deals/DealsTable";
 import { DealsKanban } from "@/components/deals/DealsKanban";
 import { DealDetailsSheet } from "@/components/deals/DealDetailsSheet";
 import { NewDealDialog } from "@/components/deals/NewDealDialog";
-import { DealWonModal } from "@/components/deals/DealWonModal";
+import { useEnsureCustomer } from "@/hooks/useEnsureCustomer";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DealWithDetails, SelectedProduct, getDealClientName, getDealContactName } from "@/types/products";
 
 export default function Deals() {
-  const navigate = useNavigate();
   const {
     deals,
     loading,
     fetchDeals,
     createDeal,
+    markAsWon,
     markAsLost,
     getOpenDeals,
     getTotalValue,
@@ -56,9 +55,8 @@ export default function Deals() {
   const [selectedDeal, setSelectedDeal] = useState<DealWithDetails | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
-  // Won modal
-  const [showWonModal, setShowWonModal] = useState(false);
-  const [dealToWon, setDealToWon] = useState<DealWithDetails | null>(null);
+  // Ganhar uma proposta cria o cliente sozinho (ou abre a janela para completar o que faltar)
+  const { ensureCustomerForWin, customerDialog } = useEnsureCustomer();
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -75,9 +73,13 @@ export default function Deals() {
     setShowDetails(true);
   };
 
-  const handleMarkAsWon = (deal: DealWithDetails) => {
-    setDealToWon(deal);
-    setShowWonModal(true);
+  // Devolve true quando o ganho foi registrado; false se o usuário cancelou a janela do cliente.
+  const handleMarkAsWon = async (deal: DealWithDetails): Promise<boolean> => {
+    const ok = await ensureCustomerForWin({ dealId: deal.id });
+    if (!ok) return false;
+    await markAsWon(deal.id);
+    await fetchDeals();
+    return true;
   };
 
   const handleGenerateQuote = async (dealId: string) => {
@@ -236,7 +238,7 @@ export default function Deals() {
                 deals={deals}
                 onRefresh={fetchDeals}
                 onDealClick={handleDealClick}
-                onDealWon={handleMarkAsWon}
+                onWinDeal={handleMarkAsWon}
               />
             ) : (
               <DealsTable
@@ -272,20 +274,7 @@ export default function Deals() {
         onGenerateQuote={handleGenerateQuote}
       />
 
-      <DealWonModal
-        deal={dealToWon}
-        isOpen={showWonModal}
-        onClose={() => {
-          setShowWonModal(false);
-          setDealToWon(null);
-        }}
-        onSuccess={() => {
-          fetchDeals();
-          setShowWonModal(false);
-          setDealToWon(null);
-          navigate("/financeiro");
-        }}
-      />
+      {customerDialog}
     </AppLayout>
   );
 }
