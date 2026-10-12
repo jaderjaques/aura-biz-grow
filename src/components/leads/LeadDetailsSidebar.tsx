@@ -63,6 +63,7 @@ import {
 } from "lucide-react";
 import { AddActivityDialog } from "./AddActivityDialog";
 import { LeadTagSelector } from "./LeadTagSelector";
+import { ContactsSection } from "@/components/contacts/ContactsSection";
 
 interface LeadDetailsSidebarProps {
   leadId: string | null;
@@ -522,6 +523,12 @@ export function LeadDetailsSidebar({
                             </span>
                           </div>
                         )}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="pt-4">
+                        <ContactsSection leadId={lead.id} />
                       </CardContent>
                     </Card>
 

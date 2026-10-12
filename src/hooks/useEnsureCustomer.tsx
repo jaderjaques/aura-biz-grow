@@ -104,6 +104,7 @@ async function linkExisting(customer: { id: string; monthly_value: number | null
   }
   if (ctx.lead) {
     await db.from("leads").update({ status: "ganho", converted_to_customer_at: new Date().toISOString() }).eq("id", ctx.lead.id);
+    await db.from("contacts").update({ customer_id: customer.id }).eq("lead_id", ctx.lead.id);
   }
 }
 
@@ -136,6 +137,8 @@ async function createAndLink(d: CustomerDraft, ctx: Ctx): Promise<string> {
       // dados completados na janela voltam para o lead
       company_name: d.company_name.trim(), email: d.email.trim().toLowerCase(), phone: d.phone.trim(),
     }).eq("id", ctx.lead.id);
+    // sócios e outros contatos do lead passam a pertencer ao cliente
+    await db.from("contacts").update({ customer_id: data.id }).eq("lead_id", ctx.lead.id);
   }
   return data.id as string;
 }

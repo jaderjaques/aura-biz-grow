@@ -68,6 +68,15 @@ const ROUTES: Record<string, Route> = {
       },
     },
   },
+  "/v1/escrita/contato": {
+    scope: "atto:write", write: true, fn: "integration_escrita_contato",
+    fields: {
+      // `telefone` = quem está falando (identifica a empresa e o papel de quem registra); `contato_telefone` = telefone do contato citado
+      telefone: TEL, nome: { t: "string", req: true, max: 120 }, cargo: { t: "string", max: 80 }, setor: { t: "string", max: 80 },
+      nota: { t: "string", max: 500 }, email: { t: "string", max: 254 }, contato_telefone: { t: "string", max: 40 },
+      papel: { t: "string", enum: ["decisor", "influenciador", "usuario", "barreira"] }, principal: { t: "boolean" },
+    },
+  },
   "/v1/escrita/evento": {
     scope: "atto:write", write: true, fn: "integration_escrita_evento",
     fields: {
@@ -119,6 +128,8 @@ const MENSAGENS: Record<string, string> = {
   evento_pendente: "Falta o evento contrato_assinado.",
   documento_invalido: "Documento inválido.",
   documento_duplicado: "Documento já cadastrado em outro cliente.",
+  telefone_em_uso: "O telefone do contato já pertence a outro cadastro.",
+  papel_nao_permitido: "Só um decisor da empresa pode definir papel de decisor ou contato principal.",
 };
 
 interface Ctx { requestId: string; tenant: string; keyId: string; route: string }
@@ -257,6 +268,9 @@ async function handle(req: Request, ctx: Ctx): Promise<Response> {
   if (bad.length) return fail(400, "requisicao_invalida", "Campos inválidos.", rid, {}, { campos: bad });
 
   if (typeof value.telefone === "string" && !/^[0-9 ()+.-]{8,30}$/.test(value.telefone)) {
+    return fail(422, "telefone_invalido", MENSAGENS.telefone_invalido, rid);
+  }
+  if (typeof value.contato_telefone === "string" && !/^[0-9 ()+.-]{8,30}$/.test(value.contato_telefone)) {
     return fail(422, "telefone_invalido", MENSAGENS.telefone_invalido, rid);
   }
   if (path === "/v1/escrita/mensagem") {

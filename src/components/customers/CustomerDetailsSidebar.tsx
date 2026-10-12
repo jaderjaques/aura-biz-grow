@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { ContactsSection } from "@/components/contacts/ContactsSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -331,6 +332,10 @@ export function CustomerDetailsSidebar({
                 )}
               </div>
             </div>
+
+            <Separator />
+
+            <ContactsSection customerId={customer.id} />
 
             <Separator />
 
