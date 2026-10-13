@@ -30,7 +30,9 @@ export function CalendarView({
     const status = event.resource?.status;
     let backgroundColor = "hsl(38 92% 50%)"; // warning - scheduled
 
-    if (status === "confirmed") backgroundColor = "hsl(142 71% 45%)";
+    if (event.kind === "task") {
+      backgroundColor = event.done ? "hsl(0 0% 55%)" : event.overdue ? "hsl(0 72% 51%)" : "hsl(217 91% 55%)";
+    } else if (status === "confirmed") backgroundColor = "hsl(142 71% 45%)";
     else if (status === "completed") backgroundColor = "hsl(300 41% 39%)";
     else if (status === "cancelled") backgroundColor = "hsl(0 0% 45%)";
 
@@ -78,7 +80,7 @@ export function CalendarView({
         />
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-warning" />
           <span>Agendado</span>
@@ -94,6 +96,14 @@ export function CalendarView({
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-muted-foreground" />
           <span>Cancelado</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: "hsl(217 91% 55%)" }} />
+          <span>Tarefa</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: "hsl(0 72% 51%)" }} />
+          <span>Tarefa atrasada</span>
         </div>
       </div>
     </div>

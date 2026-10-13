@@ -2,14 +2,18 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { AgendamentoCard } from "./AgendamentoCard";
 import { CalendarDays } from "lucide-react";
+import { AgendaTaskRow } from "./AgendaTaskRow";
+import { TaskOccurrence } from "@/lib/task-occurrences";
 
 interface DayViewProps {
   date: Date;
   appointments: any[];
   onSelectAppointment: (apt: any) => void;
+  tasks?: TaskOccurrence[];
+  onSelectTask?: (taskId: string) => void;
 }
 
-export function DayView({ date, appointments, onSelectAppointment }: DayViewProps) {
+export function DayView({ date, appointments, onSelectAppointment, tasks = [], onSelectTask }: DayViewProps) {
   const sorted = [...appointments].sort(
     (a, b) => new Date(a.scheduled_for).getTime() - new Date(b.scheduled_for).getTime()
   );
@@ -30,12 +34,12 @@ export function DayView({ date, appointments, onSelectAppointment }: DayViewProp
         </div>
       </div>
 
-      {sorted.length === 0 ? (
+      {sorted.length === 0 && tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <CalendarDays className="h-10 w-10 mb-3 opacity-40" />
-          <p className="text-sm">Nenhum agendamento para este dia</p>
+          <p className="text-sm">Nada marcado para este dia</p>
         </div>
-      ) : (
+      ) : sorted.length === 0 ? null : (
         <div className="space-y-3">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
             {sorted.length} {sorted.length === 1 ? "agendamento" : "agendamentos"}
@@ -47,6 +51,17 @@ export function DayView({ date, appointments, onSelectAppointment }: DayViewProp
               onClick={() => onSelectAppointment(apt)}
               compact
             />
+          ))}
+        </div>
+      )}
+
+      {tasks.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            {tasks.length} {tasks.length === 1 ? "tarefa" : "tarefas"}
+          </p>
+          {tasks.map((occ) => (
+            <AgendaTaskRow key={occ.key} occ={occ} onClick={() => onSelectTask?.(occ.task.id)} />
           ))}
         </div>
       )}

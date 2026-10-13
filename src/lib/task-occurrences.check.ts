@@ -1,0 +1,16 @@
+import assert from "node:assert";
+import { taskOccurrences } from "./task-occurrences";
+const base: any = { id: "t", title: "x", status: "todo", is_recurring: false, recurrence_pattern: null, due_date: null, due_time: null, created_at: "2026-10-01T12:00:00Z" };
+const from = new Date(2026, 9, 1), to = new Date(2026, 9, 31);
+const days = (o: any[]) => o.map((x) => x.date.getDate());
+assert.deepEqual(days(taskOccurrences({ ...base, due_date: "2026-10-13" }, from, to)), [13], "data simples");
+assert.deepEqual(taskOccurrences({ ...base }, from, to), [], "sem data e sem recorrência fica de fora");
+assert.deepEqual(taskOccurrences({ ...base, due_date: "2026-10-13", status: "cancelled" }, from, to), [], "cancelada não aparece");
+assert.deepEqual(days(taskOccurrences({ ...base, due_date: "2026-10-13", status: "done", is_recurring: true, recurrence_pattern: "weekly" }, from, to)), [13], "concluída não se repete");
+assert.deepEqual(days(taskOccurrences({ ...base, due_date: "2026-10-06", is_recurring: true, recurrence_pattern: "weekly" }, from, to)), [6, 13, 20, 27], "semanal");
+assert.equal(taskOccurrences({ ...base, due_date: "2026-10-28", is_recurring: true, recurrence_pattern: "daily" }, from, to).length, 4, "diária a partir da data");
+assert.deepEqual(days(taskOccurrences({ ...base, due_date: "2026-01-31", is_recurring: true, recurrence_pattern: "monthly" }, new Date(2026, 1, 1), new Date(2026, 3, 30))), [28, 31, 30], "mensal fim de mês, sem deriva");
+assert.deepEqual(days(taskOccurrences({ ...base, is_recurring: true, recurrence_pattern: "weekly" }, from, to)), [1, 8, 15, 22, 29], "recorrente sem data parte do dia de criação");
+const t = taskOccurrences({ ...base, due_date: "2026-10-13", due_time: "14:30:00" }, from, to)[0];
+assert.ok(t.hasTime && t.date.getHours() === 14 && t.date.getMinutes() === 30, "horário");
+console.log("ok");

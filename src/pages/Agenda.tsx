@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { isSameDay, addMinutes } from "date-fns";
+import { isSameDay, addMinutes, addDays, startOfMonth, endOfMonth } from "date-fns";
 import { Plus, Calendar as CalendarIcon, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -11,12 +11,22 @@ import { AgendamentoCard } from "@/components/agenda/AgendamentoCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AgendaTaskRow } from "@/components/agenda/AgendaTaskRow";
+import { TaskDetailsSheet } from "@/components/tasks/TaskDetailsSheet";
+import { useTasks } from "@/hooks/useTasks";
+import { taskOccurrences } from "@/lib/task-occurrences";
 
 export default function AgendaPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [view, setView] = useState<"calendar" | "list">("calendar");
+  const [showTasks, setShowTasks] = useState(true);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+
+  // tarefas de todos; as com data e as recorrentes entram na agenda
+  const { tasks, updateTask, updateTaskStatus, deleteTask } = useTasks({ assignedTo: "all" });
 
   const { data: appointments, isLoading } = useQuery({
     queryKey: ["appointments"],
@@ -41,14 +51,45 @@ export default function AgendaPage() {
       isSameDay(new Date(apt.scheduled_for), selectedDate)
     ) || [];
 
-  const calendarEvents =
-    appointments?.map((apt) => ({
+  // janela visível (mês + sobra das semanas vizinhas); as repetições são calculadas só nela
+  const windowStart = addDays(startOfMonth(selectedDate), -7);
+  const windowEnd = addDays(endOfMonth(selectedDate), 7);
+  const occurrences = useMemo(
+    () => (showTasks ? tasks.flatMap((t) => taskOccurrences(t, windowStart, windowEnd)) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tasks, showTasks, windowStart.getTime(), windowEnd.getTime()],
+  );
+  const dayTasks = occurrences
+    .filter((o) => isSameDay(o.date, selectedDate))
+    .sort((a, b) => Number(b.hasTime) - Number(a.hasTime) || a.date.getTime() - b.date.getTime());
+  const upcomingTasks = useMemo(
+    () => (showTasks ? tasks.flatMap((t) => taskOccurrences(t, new Date(), addDays(new Date(), 60))) : [])
+      .sort((a, b) => a.date.getTime() - b.date.getTime()),
+    [tasks, showTasks],
+  );
+  const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
+
+  const todayStart = new Date().setHours(0, 0, 0, 0);
+  const calendarEvents = [
+    ...(appointments?.map((apt) => ({
       id: apt.id,
       title: `${apt.client_name} - ${apt.appointment_type}`,
       start: new Date(apt.scheduled_for),
       end: addMinutes(new Date(apt.scheduled_for), apt.duration_minutes || 60),
       resource: apt,
-    })) || [];
+    })) || []),
+    ...occurrences.map((o) => ({
+      id: o.key,
+      kind: "task",
+      title: `${o.recurring ? "↻ " : ""}${o.task.status === "done" ? "✓ " : ""}${o.task.title}`,
+      start: o.date,
+      end: o.hasTime ? addMinutes(o.date, 30) : o.date,
+      allDay: !o.hasTime,
+      done: o.task.status === "done",
+      overdue: o.task.status !== "done" && !o.recurring && o.date.getTime() < todayStart,
+      resource: o.task,
+    })),
+  ];
 
   function openCreate() {
     setSelectedAppointment(null);
@@ -98,6 +139,11 @@ export default function AgendaPage() {
               </button>
             </div>
 
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <Checkbox checked={showTasks} onCheckedChange={(v) => setShowTasks(v === true)} />
+              Mostrar tarefas
+            </label>
+
             <Button onClick={openCreate}>
               <Plus className="h-4 w-4" />
               Novo Agendamento
@@ -116,7 +162,7 @@ export default function AgendaPage() {
                 events={calendarEvents}
                 selectedDate={selectedDate}
                 onSelectDate={setSelectedDate}
-                onSelectEvent={(event) => openEdit(event.resource)}
+                onSelectEvent={(event) => (event.kind === "task" ? setSelectedTaskId(event.resource.id) : openEdit(event.resource))}
               />
             </Card>
             <Card className="p-4">
@@ -124,6 +170,8 @@ export default function AgendaPage() {
                 date={selectedDate}
                 appointments={dayAppointments}
                 onSelectAppointment={openEdit}
+                tasks={dayTasks}
+                onSelectTask={setSelectedTaskId}
               />
             </Card>
           </div>
@@ -149,7 +197,27 @@ export default function AgendaPage() {
             </div>
           </Card>
         )}
+
+        {view === "list" && upcomingTasks.length > 0 && (
+          <Card className="p-4">
+            <h3 className="font-semibold text-foreground mb-4">Tarefas dos próximos 60 dias</h3>
+            <div className="space-y-3">
+              {upcomingTasks.map((occ) => (
+                <AgendaTaskRow key={occ.key} occ={occ} showDate onClick={() => setSelectedTaskId(occ.task.id)} />
+              ))}
+            </div>
+          </Card>
+        )}
       </div>
+
+      <TaskDetailsSheet
+        task={selectedTask}
+        open={!!selectedTaskId}
+        onOpenChange={(o) => { if (!o) setSelectedTaskId(null); }}
+        onStatusChange={(id, status) => updateTaskStatus.mutate({ id, status })}
+        onUpdate={(id, updates) => updateTask.mutate({ id, ...updates })}
+        onDelete={(id) => deleteTask.mutate(id)}
+      />
 
       {showForm && (
         <AgendamentoForm
