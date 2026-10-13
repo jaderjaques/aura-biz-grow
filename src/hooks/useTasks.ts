@@ -247,7 +247,10 @@ export const useTasks = (filters?: TaskFilters) => {
       queryClient.invalidateQueries({ queryKey: ["task-metrics"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       if (data.status === "done") {
-        toast({ title: "Tarefa concluída!", description: "A tarefa foi marcada como concluída." });
+        toast({
+          title: "Tarefa concluída!",
+          description: data.is_recurring ? "A próxima repetição já foi criada." : "A tarefa foi marcada como concluída.",
+        });
       }
     },
     onError: (error) => {

@@ -58,7 +58,7 @@ export function CompleteTaskDialog({
 
       toast({
         title: "Tarefa concluída!",
-        description: "O resumo foi registrado no histórico",
+        description: task.is_recurring ? "O resumo foi registrado e a próxima repetição já foi criada." : "O resumo foi registrado no histórico",
       });
 
       // Invalidate queries to refresh data
