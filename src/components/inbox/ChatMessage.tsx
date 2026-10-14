@@ -6,8 +6,23 @@ interface ChatMessageProps {
   message: Record<string, any>;
 }
 
+// O fluxo manda um marcador entre colchetes quando a mensagem não tem texto (imagem sem legenda etc.)
+const PLACEHOLDERS: Record<string, string> = {
+  texto: "Mensagem sem texto",
+  imagem: "Imagem",
+  video: "Vídeo",
+  arquivo: "Arquivo",
+  figurinha: "Figurinha",
+  ptt: "Áudio",
+  audio: "Áudio",
+  contato: "Contato",
+  localizacao: "Localização",
+};
+
 export function ChatMessage({ message }: ChatMessageProps) {
   const isIncoming = message.direction === "incoming";
+  const isReaction = message.message_type === "reactionMessage";
+  const placeholder = /^[(w+)]$/.exec(message.content ?? "")?.[1];
   const isAudio = message.message_type === "audio" || message.message_type === "ptt";
   const sentByAI = (message as any).ai_generated === true ||
     (message.metadata as Record<string, unknown> | null)?.sent_by_ai === true;
@@ -67,8 +82,20 @@ export function ChatMessage({ message }: ChatMessageProps) {
           </div>
         )}
 
+        {isReaction && message.content && (
+          <div className="text-sm">
+            {isIncoming ? "Reagiu com" : "Você reagiu com"} <span className="text-xl align-middle">{message.content}</span>
+          </div>
+        )}
+
+        {placeholder && !isReaction && (
+          <div className="text-sm italic opacity-80">
+            {PLACEHOLDERS[placeholder] ?? "Mensagem"} (conteúdo não disponível no CRM)
+          </div>
+        )}
+
         {/* Text content */}
-        {message.content && (
+        {message.content && !isReaction && !placeholder && (
           <div className="whitespace-pre-wrap break-words text-sm">
             {message.content}
           </div>

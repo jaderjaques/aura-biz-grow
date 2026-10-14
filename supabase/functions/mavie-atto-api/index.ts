@@ -40,7 +40,8 @@ const ROUTES: Record<string, Route> = {
     fields: {
       telefone: TEL, nome_contato: { t: "string", max: 120 }, wa_message_id: WA_REQ,
       direcao: { t: "string", req: true, enum: ["entrada", "saida_mavie", "saida_humano_whatsapp"] },
-      tipo: { t: "string", req: true, enum: ["texto", "audio", "ptt", "imagem", "video", "arquivo", "localizacao", "contato", "figurinha"] },
+      // `reacao`: conteudo = o emoji da reação (ou texto curto, se a reação foi removida)
+      tipo: { t: "string", req: true, enum: ["texto", "audio", "ptt", "imagem", "video", "arquivo", "localizacao", "contato", "figurinha", "reacao"] },
       // Informe `conteudo` OU `conteudo_b64` (texto UTF-8 em base64): a Cloudflare na frente do Supabase
       // pode barrar (403 HTML) mensagens de cliente que pareçam SQL; em base64 isso não acontece.
       conteudo: { t: "string", max: 4000 },
