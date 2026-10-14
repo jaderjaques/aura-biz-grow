@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Bot } from "lucide-react";
+import { Bot, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatMessageProps {
@@ -8,6 +8,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isIncoming = message.direction === "incoming";
+  const isAudio = message.message_type === "audio" || message.message_type === "ptt";
   const sentByAI = (message as any).ai_generated === true ||
     (message.metadata as Record<string, unknown> | null)?.sent_by_ai === true;
 
@@ -38,7 +39,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
           />
         )}
 
-        {message.message_type === "audio" && message.media_url && (
+        {isAudio && message.media_url && (
           <audio controls className="mb-2 max-w-full">
             <source src={message.media_url} />
           </audio>
@@ -56,6 +57,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
           >
             📎 {message.file_name || message.media_filename || "Documento"}
           </a>
+        )}
+
+        {/* Áudio sem arquivo: o texto é a transcrição */}
+        {isAudio && !message.media_url && message.content && (
+          <div className="flex items-center gap-1 mb-1 text-xs opacity-80">
+            <Mic className="h-3 w-3" />
+            <span>Áudio transcrito</span>
+          </div>
         )}
 
         {/* Text content */}
