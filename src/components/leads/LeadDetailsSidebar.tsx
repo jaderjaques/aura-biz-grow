@@ -248,7 +248,7 @@ export function LeadDetailsSidebar({
             <div className="flex items-start justify-between">
               <div>
                 <SheetTitle className="text-2xl">{lead.company_name}</SheetTitle>
-                <SheetDescription>{lead.phone}</SheetDescription>
+                <SheetDescription>{lead.phone || lead.email}</SheetDescription>
               </div>
 
               <div className="flex items-center gap-2">
@@ -335,12 +335,15 @@ export function LeadDetailsSidebar({
 
                 {/* Quick Actions */}
                 <div className="grid grid-cols-4 gap-2">
-                  <Button variant="outline" size="sm" className="flex-col h-auto py-3" asChild>
-                    <a href={`tel:${lead.phone}`}>
-                      <Phone className="h-4 w-4 mb-1" />
-                      <span className="text-xs">Ligar</span>
-                    </a>
-                  </Button>
+                  {/* lead sem telefone (ex.: contato no exterior) não tem ligar nem WhatsApp */}
+                  {lead.phone && (
+                    <Button variant="outline" size="sm" className="flex-col h-auto py-3" asChild>
+                      <a href={`tel:${lead.phone}`}>
+                        <Phone className="h-4 w-4 mb-1" />
+                        <span className="text-xs">Ligar</span>
+                      </a>
+                    </Button>
+                  )}
                   {lead.email && (
                     <Button variant="outline" size="sm" className="flex-col h-auto py-3" asChild>
                       <a href={`mailto:${lead.email}`}>
@@ -349,16 +352,18 @@ export function LeadDetailsSidebar({
                       </a>
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" className="flex-col h-auto py-3" asChild>
-                    <a
-                      href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <MessageCircle className="h-4 w-4 mb-1" />
-                      <span className="text-xs">WhatsApp</span>
-                    </a>
-                  </Button>
+                  {lead.phone && (
+                    <Button variant="outline" size="sm" className="flex-col h-auto py-3" asChild>
+                      <a
+                        href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MessageCircle className="h-4 w-4 mb-1" />
+                        <span className="text-xs">WhatsApp</span>
+                      </a>
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -470,12 +475,14 @@ export function LeadDetailsSidebar({
                             </a>
                           </div>
                         )}
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Telefone:</span>
-                          <a href={`tel:${lead.phone}`} className="text-primary hover:underline">
-                            {lead.phone}
-                          </a>
-                        </div>
+                        {lead.phone && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Telefone:</span>
+                            <a href={`tel:${lead.phone}`} className="text-primary hover:underline">
+                              {lead.phone}
+                            </a>
+                          </div>
+                        )}
                         {lead.cnpj && (
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">CNPJ:</span>
