@@ -30,7 +30,7 @@ async function signWebhook(secret: string, ts: string, body: string): Promise<st
   return "sha256=" + hex(await crypto.subtle.sign("HMAC", k, enc.encode([ts, "POST", WEBHOOK_PATH, hash].join("\n"))));
 }
 
-interface OutboxRow { o_id: string; o_tenant: string; o_event: string; o_telefone: string; o_estado: string; o_humano_ate: string | null; o_ocorrido_em: string; o_origem: string }
+interface OutboxRow { o_id: string; o_tenant: string; o_event: string; o_telefone: string; o_estado: string | null; o_humano_ate: string | null; o_ocorrido_em: string; o_origem: string; o_tipo: string; o_payload: Record<string, unknown> | null }
 
 // Entrega um evento ao n8n. Devolve null se o n8n respondeu 2xx, ou o motivo da falha.
 async function deliver(row: OutboxRow): Promise<string | null> {
@@ -38,11 +38,20 @@ async function deliver(row: OutboxRow): Promise<string | null> {
   const cfg = (data as { o_url: string; o_key_id: string; o_secret: string }[] | null)?.[0];
   if (error || !cfg) return "webhook_nao_configurado";
   // ordem fixa dos campos e JSON compacto: é o texto que o receptor confere na assinatura
-  const body = JSON.stringify({
-    event_id: row.o_event, telefone: row.o_telefone, estado: row.o_estado,
-    humano_ate: row.o_humano_ate ? new Date(row.o_humano_ate).toISOString() : null,
-    ocorrido_em: new Date(row.o_ocorrido_em).toISOString(), origem: row.o_origem,
-  });
+  // O mesmo webhook leva dois tipos de evento. O de agenda traz "tipo"; o de estado da conversa não traz (como sempre foi).
+  const ev = row.o_payload ?? {};
+  const body = row.o_tipo === "agendamento_alterado"
+    ? JSON.stringify({
+      tipo: "agendamento_alterado", event_id: row.o_event, telefone: row.o_telefone,
+      agendamento_id: ev.agendamento_id ?? null, acao: ev.acao ?? null, inicio: ev.inicio ?? null, fim: ev.fim ?? null,
+      inicio_anterior: ev.inicio_anterior ?? null, tipo_agendamento: ev.tipo_agendamento ?? null, motivo: ev.motivo ?? null,
+      ocorrido_em: new Date(row.o_ocorrido_em).toISOString(), origem: row.o_origem,
+    })
+    : JSON.stringify({
+      event_id: row.o_event, telefone: row.o_telefone, estado: row.o_estado,
+      humano_ate: row.o_humano_ate ? new Date(row.o_humano_ate).toISOString() : null,
+      ocorrido_em: new Date(row.o_ocorrido_em).toISOString(), origem: row.o_origem,
+    });
   const ts = String(Math.floor(Date.now() / 1000));
   try {
     const res = await fetch(cfg.o_url, {
