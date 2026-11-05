@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Clock, MapPin, User, Video } from "lucide-react";
+import { Clock, MapPin, Phone, User, Video } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { Card } from "@/components/ui/card";
 
@@ -65,6 +65,11 @@ export function AgendamentoCard({ appointment, onClick, compact = false }: Agend
             <>
               <Video className="h-3.5 w-3.5 shrink-0" />
               <span>Online</span>
+            </>
+          ) : appointment.location_type === "phone" ? (
+            <>
+              <Phone className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Ligação {appointment.client_phone}</span>
             </>
           ) : (
             <>

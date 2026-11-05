@@ -34,6 +34,14 @@ const ROUTES: Record<string, Route> = {
     },
   },
   "/v1/leitura/contrato": { scope: "atto:read", fn: "integration_leitura_contrato", fields: { telefone: TEL, wa_message_id: WA_REQ } },
+  // horários livres da agenda do Jader (janela, antecedência e choques com compromissos são aplicados no banco)
+  "/v1/leitura/disponibilidade": {
+    scope: "atto:read", fn: "integration_leitura_disponibilidade",
+    fields: {
+      telefone: TEL, dias_a_frente: { t: "number", int: true, min: 1, maxN: 10 }, duracao_min: { t: "number", int: true, min: 15, maxN: 120 },
+      tipo: { t: "string", enum: ["videochamada", "ligacao"] },
+    },
+  },
   "/v1/leitura/estado-chat": { scope: "atto:read", fn: "integration_leitura_estado_chat", fields: { telefone: TEL } },
   "/v1/escrita/mensagem": {
     scope: "atto:write", write: true, fn: "integration_escrita_mensagem",
@@ -76,6 +84,15 @@ const ROUTES: Record<string, Route> = {
       telefone: TEL, nome: { t: "string", req: true, max: 120 }, cargo: { t: "string", max: 80 }, setor: { t: "string", max: 80 },
       nota: { t: "string", max: 500 }, email: { t: "string", max: 254 }, contato_telefone: { t: "string", max: 40 },
       papel: { t: "string", enum: ["decisor", "influenciador", "usuario", "barreira"] }, principal: { t: "boolean" },
+    },
+  },
+  "/v1/escrita/agendamento": {
+    scope: "atto:write", write: true, fn: "integration_escrita_agendamento",
+    fields: {
+      telefone: TEL, inicio: { t: "string", req: true, max: 40 }, duracao_min: { t: "number", int: true, min: 15, maxN: 120 },
+      tipo: { t: "string", req: true, enum: ["videochamada", "ligacao"] }, titulo: { t: "string", max: 120 },
+      // `descricao` OU `descricao_b64` (UTF-8 em base64), pelo mesmo motivo do `conteudo_b64` de escrita/mensagem
+      descricao: { t: "string", max: 2000 }, descricao_b64: { t: "string", max: 4000 },
     },
   },
   "/v1/escrita/evento": {
@@ -130,6 +147,10 @@ const MENSAGENS: Record<string, string> = {
   documento_invalido: "Documento inválido.",
   documento_duplicado: "Documento já cadastrado em outro cliente.",
   telefone_em_uso: "O telefone do contato já pertence a outro cadastro.",
+  horario_fora_da_janela: "Fora da janela de atendimento (segunda a sexta, das 08:00 às 19:00).",
+  horario_indisponivel: "Horário indisponível; veja proximos_slots.",
+  agendamento_duplicado: "Já existe um agendamento deste contato nesse horário.",
+  agenda_nao_configurada: "A agenda deste tenant não está configurada.",
   papel_nao_permitido: "Só um decisor da empresa pode definir papel de decisor ou contato principal.",
 };
 
@@ -288,6 +309,20 @@ async function handle(req: Request, ctx: Ctx): Promise<Response> {
     }
   }
 
+  if (path === "/v1/escrita/agendamento") {
+    const hasA = value.descricao !== undefined && value.descricao !== null;
+    const hasB = value.descricao_b64 !== undefined && value.descricao_b64 !== null;
+    if (hasA && hasB) return fail(400, "requisicao_invalida", "Informe descricao ou descricao_b64.", rid, {}, { campos: ["descricao", "descricao_b64"] });
+    if (hasB) {
+      try {
+        const bytes = Uint8Array.from(atob(value.descricao_b64 as string), (c) => c.charCodeAt(0));
+        value.descricao = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+        delete value.descricao_b64;
+      } catch { return fail(400, "requisicao_invalida", "descricao_b64 inválido.", rid, {}, { campos: ["descricao_b64"] }); }
+      if ((value.descricao as string).length > 2000) return fail(400, "requisicao_invalida", "Descrição acima de 2000 caracteres.", rid, {}, { campos: ["descricao_b64"] });
+    }
+  }
+
   const tel = typeof value.telefone === "string" ? value.telefone.replace(/\D/g, "").slice(0, 15) : "";
   if (tel && !(await rate(`phone:${auth.tenant}:${tel}`, PHONE_LIMIT_RPM))) return limited(rid);
 
@@ -308,8 +343,10 @@ async function handle(req: Request, ctx: Ctx): Promise<Response> {
   const { data, error } = await db.rpc(route.fn, { p_tenant: auth.tenant, p: value });
   if (error) throw error;
   if (data && typeof data === "object" && "_erro" in data) {
-    const code = String((data as { _erro: string })._erro);
-    return fail(422, code, MENSAGENS[code] ?? "Regra de negócio.", rid);
+    // além do código, devolve o que a função anexou (proximos_slots, agendamento existente)
+    const { _erro, ...extra } = data as { _erro: string } & Record<string, unknown>;
+    const code = String(_erro);
+    return fail(422, code, MENSAGENS[code] ?? "Regra de negócio.", rid, {}, extra);
   }
   const body = { ok: true, data, request_id: rid };
   if (route.write) {

@@ -350,6 +350,7 @@ export function AgendamentoForm({ appointment, onClose }: AgendamentoFormProps) 
                     <SelectItem value="online">Online (Google Meet)</SelectItem>
                     <SelectItem value="office">No Escritório</SelectItem>
                     <SelectItem value="client_location">No Cliente</SelectItem>
+                    <SelectItem value="phone">Por telefone</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -360,7 +361,7 @@ export function AgendamentoForm({ appointment, onClose }: AgendamentoFormProps) 
                 <Label>Link Google Meet</Label>
                 <Input {...register("meeting_link")} placeholder="https://meet.google.com/..." />
               </div>
-            ) : (
+            ) : locationType === "phone" ? null : (
               <div>
                 <Label>Endereço</Label>
                 <Input {...register("physical_address")} placeholder="Endereço completo" />
